@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from data_manager import DataManager
 from api_checker import APIChecker
+from stress_tester import StressTester
 from config import Config
 import os
+import threading
 
 app = Flask(__name__)
 config = Config()
@@ -11,6 +13,7 @@ app.config.from_object(config)
 # 初始化組件
 data_manager = DataManager(config.DATA_FILE)
 api_checker = APIChecker(data_manager)
+stress_tester = StressTester(data_manager)
 
 @app.route('/')
 def index():
@@ -42,6 +45,11 @@ def add_api():
     method = request.form.get('method', 'GET').strip()
     request_body = request.form.get('request_body', '').strip()
     
+    # 取得壓力測試參數
+    concurrent_requests = int(request.form.get('concurrent_requests', 1))
+    duration_seconds = int(request.form.get('duration_seconds', 10))
+    interval_seconds = float(request.form.get('interval_seconds', 1.0))
+    
     if not name or not url:
         flash('請填寫完整的 API 名稱和 URL', 'error')
         return redirect(url_for('admin'))
@@ -61,9 +69,26 @@ def add_api():
             flash('Request Body 必須是有效的 JSON 格式', 'error')
             return redirect(url_for('admin'))
     
+    # 驗證壓力測試參數
+    if not (1 <= concurrent_requests <= 100):
+        flash('併發請求數必須在 1-100 之間', 'error')
+        return redirect(url_for('admin'))
+    
+    if not (5 <= duration_seconds <= 300):
+        flash('持續時間必須在 5-300 秒之間', 'error')
+        return redirect(url_for('admin'))
+    
+    if not (0.1 <= interval_seconds <= 10):
+        flash('請求間隔必須在 0.1-10 秒之間', 'error')
+        return redirect(url_for('admin'))
+    
     try:
-        new_api = data_manager.add_api(name, url, api_type, method, request_body if request_body else None)
-        flash(f'成功新增 API: {name} ({method})', 'success')
+        new_api = data_manager.add_api(
+            name, url, api_type, method, 
+            request_body if request_body else None,
+            concurrent_requests, duration_seconds, interval_seconds
+        )
+        flash(f'成功新增 API: {name} ({method}) - 壓力測試配置已設定', 'success')
         
         # 立即檢查新增的 API
         try:
@@ -116,6 +141,66 @@ def api_status():
         'apis': apis,
         'stats': stats
     })
+
+@app.route('/stress-test/<api_id>')
+def start_stress_test(api_id):
+    """啟動壓力測試"""
+    try:
+        # 檢查 API 是否存在
+        api = data_manager.get_api_by_id(api_id)
+        if not api:
+            flash('找不到指定的 API', 'error')
+            return redirect(url_for('index'))
+        
+        # 檢查是否已有測試在執行
+        if stress_tester.is_test_running(api_id):
+            flash(f'API {api["name"]} 的壓力測試正在執行中', 'error')
+            return redirect(url_for('index'))
+        
+        # 在背景執行壓力測試
+        def run_test():
+            try:
+                stress_tester.run_stress_test_sync(api_id)
+                print(f"壓力測試完成: {api['name']}")
+            except Exception as e:
+                print(f"壓力測試錯誤: {e}")
+        
+        test_thread = threading.Thread(target=run_test, daemon=True)
+        test_thread.start()
+        
+        flash(f'已啟動 API {api["name"]} 的壓力測試', 'success')
+        
+    except Exception as e:
+        flash(f'啟動壓力測試時發生錯誤: {str(e)}', 'error')
+    
+    return redirect(url_for('index'))
+
+@app.route('/stress-test-results/<api_id>')
+def stress_test_results(api_id):
+    """顯示壓力測試結果"""
+    api = data_manager.get_api_by_id(api_id)
+    if not api:
+        flash('找不到指定的 API', 'error')
+        return redirect(url_for('index'))
+    
+    return render_template('stress_results.html', api=api)
+
+@app.route('/api/stress-test-status/<api_id>')
+def stress_test_status(api_id):
+    """取得壓力測試狀態（AJAX 用）"""
+    is_running = stress_tester.is_test_running(api_id)
+    api = data_manager.get_api_by_id(api_id)
+    
+    result = {
+        'is_running': is_running,
+        'api_name': api['name'] if api else 'Unknown'
+    }
+    
+    if api and api.get('stress_test', {}).get('results'):
+        latest_result = api['stress_test']['results'][-1]
+        result['latest_result'] = latest_result
+    
+    return jsonify(result)
 
 @app.route('/health')
 def health_check():

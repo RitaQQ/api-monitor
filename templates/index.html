@@ -63,7 +63,7 @@
             padding: 20px;
             border-bottom: 1px solid #eee;
             display: grid;
-            grid-template-columns: 1fr auto auto auto auto;
+            grid-template-columns: 1fr auto auto auto auto auto;
             gap: 20px;
             align-items: center;
         }
@@ -144,6 +144,30 @@
         .auto-refresh {
             font-size: 0.9em;
             color: #666;
+        }
+        .btn-stress {
+            background-color: #6f42c1;
+            color: white;
+            font-size: 0.8em;
+            padding: 6px 12px;
+        }
+        .stress-running {
+            background-color: #fd7e14;
+            color: white;
+            font-size: 0.8em;
+            padding: 6px 12px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        .btn-results {
+            background-color: #17a2b8;
+            color: white;
+            font-size: 0.8em;
+            padding: 6px 12px;
         }
     </style>
     <script>
@@ -236,6 +260,17 @@
                 <div>
                     {% if api.error_count > 0 %}
                         <span class="error-count">錯誤 {{ api.error_count }} 次</span>
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 5px; flex-direction: column;">
+                    <a href="/stress-test/{{ api.id }}" class="btn btn-stress" 
+                       onclick="return confirm('確定要開始壓力測試嗎？\\n\\n參數:\\n併發: {{ api.stress_test.concurrent_requests if api.stress_test else 1 }} 個請求\\n持續: {{ api.stress_test.duration_seconds if api.stress_test else 10 }} 秒\\n間隔: {{ api.stress_test.interval_seconds if api.stress_test else 1.0 }} 秒')">
+                        🔥 壓力測試
+                    </a>
+                    {% if api.stress_test and api.stress_test.results %}
+                    <a href="/stress-test-results/{{ api.id }}" class="btn btn-results">
+                        📊 查看結果 ({{ api.stress_test.results|length }})
+                    </a>
                     {% endif %}
                 </div>
             </div>

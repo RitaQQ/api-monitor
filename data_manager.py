@@ -28,7 +28,8 @@ class DataManager:
         with open(self.data_file, 'w', encoding='utf-8') as f:
             json.dump(apis, f, ensure_ascii=False, indent=2)
     
-    def add_api(self, name: str, url: str, api_type: str = "REST", method: str = "GET", request_body: str = None) -> Dict:
+    def add_api(self, name: str, url: str, api_type: str = "REST", method: str = "GET", request_body: str = None, 
+                concurrent_requests: int = 1, duration_seconds: int = 10, interval_seconds: float = 1.0) -> Dict:
         """新增 API"""
         apis = self.load_apis()
         new_api = {
@@ -42,7 +43,15 @@ class DataManager:
             "response_time": 0,
             "last_check": None,
             "error_count": 0,
-            "last_error": None
+            "last_error": None,
+            "stress_test": {
+                "concurrent_requests": concurrent_requests,
+                "duration_seconds": duration_seconds,
+                "interval_seconds": interval_seconds,
+                "enabled": False,
+                "last_test": None,
+                "results": []
+            }
         }
         apis.append(new_api)
         self.save_apis(apis)
@@ -85,3 +94,39 @@ class DataManager:
             if api.get("id") == api_id:
                 return api
         return None
+    
+    def update_stress_test_config(self, api_id: str, concurrent_requests: int, duration_seconds: int, interval_seconds: float, enabled: bool = False):
+        """更新壓力測試配置"""
+        apis = self.load_apis()
+        for api in apis:
+            if api.get("id") == api_id:
+                if "stress_test" not in api:
+                    api["stress_test"] = {"results": []}
+                
+                api["stress_test"].update({
+                    "concurrent_requests": concurrent_requests,
+                    "duration_seconds": duration_seconds,
+                    "interval_seconds": interval_seconds,
+                    "enabled": enabled
+                })
+                break
+        self.save_apis(apis)
+    
+    def save_stress_test_result(self, api_id: str, result: Dict):
+        """儲存壓力測試結果"""
+        apis = self.load_apis()
+        for api in apis:
+            if api.get("id") == api_id:
+                if "stress_test" not in api:
+                    api["stress_test"] = {"results": []}
+                elif "results" not in api["stress_test"]:
+                    api["stress_test"]["results"] = []
+                
+                api["stress_test"]["results"].append(result)
+                api["stress_test"]["last_test"] = datetime.now().isoformat()
+                
+                # 只保留最近 10 次測試結果
+                if len(api["stress_test"]["results"]) > 10:
+                    api["stress_test"]["results"] = api["stress_test"]["results"][-10:]
+                break
+        self.save_apis(apis)
