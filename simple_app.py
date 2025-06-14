@@ -212,9 +212,9 @@ def health_check():
 
 if __name__ == '__main__':
     print("🚀 啟動 API 監控系統（簡化版）...")
-    print("請訪問: http://127.0.0.1:3000")
-    print("管理頁面: http://127.0.0.1:3000/admin")
+    print("請訪問: http://127.0.0.1:5001")
+    print("管理頁面: http://127.0.0.1:5001/admin")
     print("按 Ctrl+C 停止服務")
     
     # 啟動 Flask 應用程式
-    app.run(debug=True, host='127.0.0.1', port=3000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
