@@ -2,7 +2,7 @@
 
 # 範例推送腳本 - 請將 YOUR_USERNAME 替換為您的 GitHub 用戶名
 
-USERNAME="YOUR_USERNAME"  # 請修改這裡
+USERNAME="RitaQQ"  # 您的 GitHub 用戶名
 
 echo "🚀 推送 API 監控系統到 GitHub..."
 echo "目標倉庫: https://github.com/$USERNAME/api-monitor"
