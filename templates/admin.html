@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 管理後台</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .api-list {
+            margin-top: 30px;
+        }
+        .api-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .api-details h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        .api-details p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status-healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-unhealthy {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-unknown {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ API 管理後台</h1>
+            <p>新增、刪除和管理監控的 API</p>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/" class="btn btn-secondary">← 返回監控頁面</a>
+        </div>
+        
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <div class="card">
+            <h2>🆕 新增 API</h2>
+            <form method="POST" action="/admin/add">
+                <div class="form-group">
+                    <label for="name">API 名稱</label>
+                    <input type="text" id="name" name="name" required 
+                           placeholder="例如: 用戶服務 API">
+                </div>
+                <div class="form-group">
+                    <label for="url">API URL</label>
+                    <input type="url" id="url" name="url" required 
+                           placeholder="https://api.example.com/health">
+                </div>
+                <div class="form-group">
+                    <label for="method">HTTP 方法</label>
+                    <select id="method" name="method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="type">API 類型</label>
+                    <select id="type" name="type">
+                        <option value="REST">REST API</option>
+                        <option value="GraphQL">GraphQL</option>
+                        <option value="WebSocket">WebSocket</option>
+                        <option value="Other">其他</option>
+                    </select>
+                </div>
+                <div class="form-group" id="request-body-group" style="display: none;">
+                    <label for="request_body">Request Body (JSON 格式)</label>
+                    <textarea id="request_body" name="request_body" rows="8" 
+                              placeholder='例如: {"key": "value", "timestamp": "{{timestamp}}"}' 
+                              style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.9em; resize: vertical;"></textarea>
+                    <small style="color: #666; font-size: 0.85em;">
+                        💡 提示: 使用 {{timestamp}} 作為動態時間戳佔位符
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary">✅ 新增 API</button>
+                
+                <script>
+                // 根據選擇的 HTTP 方法顯示/隱藏 Request Body 欄位
+                document.getElementById('method').addEventListener('change', function() {
+                    const method = this.value;
+                    const requestBodyGroup = document.getElementById('request-body-group');
+                    
+                    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+                        requestBodyGroup.style.display = 'block';
+                    } else {
+                        requestBodyGroup.style.display = 'none';
+                        document.getElementById('request_body').value = '';
+                    }
+                });
+                
+                // 頁面載入時檢查初始狀態
+                document.addEventListener('DOMContentLoaded', function() {
+                    const method = document.getElementById('method').value;
+                    const requestBodyGroup = document.getElementById('request-body-group');
+                    
+                    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+                        requestBodyGroup.style.display = 'block';
+                    }
+                });
+                </script>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h2>📋 目前監控的 API</h2>
+            <div class="api-list">
+                {% for api in apis %}
+                <div class="api-item">
+                    <div class="api-details">
+                        <h4>
+                            {{ api.name }}
+                            <span class="status-badge status-{{ api.status }}">
+                                {{ '✅ 正常' if api.status == 'healthy' else ('❌ 異常' if api.status == 'unhealthy' else '❓ 未知') }}
+                            </span>
+                        </h4>
+                        <p><strong>URL:</strong> {{ api.url }}</p>
+                        <p><strong>方法:</strong> {{ api.method or 'GET' }} | <strong>類型:</strong> {{ api.type }}</p>
+                        {% if api.request_body %}
+                        <details style="margin: 10px 0;">
+                            <summary style="cursor: pointer; color: #007bff; font-weight: bold;">📄 Request Body</summary>
+                            <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; overflow-x: auto; white-space: pre-wrap;">{{ api.request_body }}</pre>
+                        </details>
+                        {% endif %}
+                        {% if api.last_response %}
+                        <details style="margin: 10px 0;">
+                            <summary style="cursor: pointer; color: #28a745; font-weight: bold;">📥 最新回應</summary>
+                            <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; overflow-x: auto; white-space: pre-wrap; max-height: 300px; border: 1px solid #dee2e6;">{{ api.last_response }}</pre>
+                        </details>
+                        {% endif %}
+                        {% if api.last_check %}
+                        <p><strong>最後檢查:</strong> {{ api.last_check[:19].replace('T', ' ') }}</p>
+                        {% endif %}
+                        {% if api.error_count > 0 %}
+                        <p><strong>錯誤次數:</strong> {{ api.error_count }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <form method="POST" action="/admin/delete/{{ api.id }}" 
+                              style="display: inline-block;"
+                              onsubmit="return confirm('確定要刪除這個 API 嗎？')">
+                            <button type="submit" class="btn btn-danger">🗑️ 刪除</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="api-item">
+                    <div style="text-align: center; color: #666; width: 100%;">
+                        <p>🔍 尚未添加任何 API</p>
+                        <p>使用上方表單新增您要監控的 API</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
