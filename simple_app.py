@@ -660,4 +660,4 @@ if __name__ == '__main__':
     print("按 Ctrl+C 停止服務")
     
     # 啟動 Flask 應用程式
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=True, host='127.0.0.1', port=5001)
