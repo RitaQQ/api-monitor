@@ -130,3 +130,38 @@ class DataManager:
                     api["stress_test"]["results"] = api["stress_test"]["results"][-10:]
                 break
         self.save_apis(apis)
+    
+    def update_api(self, api_id: str, name: str, url: str, api_type: str = "REST", method: str = "GET", 
+                   request_body: str = None, concurrent_requests: int = 1, duration_seconds: int = 10, 
+                   interval_seconds: float = 1.0) -> bool:
+        """更新 API 資訊"""
+        apis = self.load_apis()
+        for api in apis:
+            if api.get("id") == api_id:
+                # 更新基本資訊
+                api["name"] = name
+                api["url"] = url
+                api["type"] = api_type
+                api["method"] = method
+                api["request_body"] = request_body
+                
+                # 更新壓力測試配置
+                if "stress_test" not in api:
+                    api["stress_test"] = {"results": []}
+                
+                api["stress_test"].update({
+                    "concurrent_requests": concurrent_requests,
+                    "duration_seconds": duration_seconds,
+                    "interval_seconds": interval_seconds
+                })
+                
+                # 重置監控狀態 (因為 URL 或配置可能有變更)
+                api["status"] = "unknown"
+                api["response_time"] = 0
+                api["last_check"] = None
+                api["error_count"] = 0
+                api["last_error"] = None
+                
+                self.save_apis(apis)
+                return True
+        return False

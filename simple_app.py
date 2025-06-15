@@ -114,9 +114,96 @@ def delete_api(api_id):
     
     return redirect(url_for('admin'))
 
+@app.route('/admin/edit/<api_id>')
+def edit_api(api_id):
+    """編輯 API 頁面"""
+    api = data_manager.get_api_by_id(api_id)
+    if not api:
+        flash('找不到指定的 API', 'error')
+        return redirect(url_for('admin'))
+    return render_template('edit_api.html', api=api)
+
+@app.route('/admin/edit/<api_id>', methods=['POST'])
+def update_api(api_id):
+    """更新 API"""
+    name = request.form.get('name', '').strip()
+    url = request.form.get('url', '').strip()
+    api_type = request.form.get('type', 'REST').strip()
+    method = request.form.get('method', 'GET').strip()
+    request_body = request.form.get('request_body', '').strip()
+    
+    # 取得壓力測試參數
+    concurrent_requests = int(request.form.get('concurrent_requests', 1))
+    duration_seconds = int(request.form.get('duration_seconds', 10))
+    interval_seconds = float(request.form.get('interval_seconds', 1.0))
+    
+    if not name or not url:
+        flash('請填寫完整的 API 名稱和 URL', 'error')
+        return redirect(url_for('edit_api', api_id=api_id))
+    
+    # 檢查 URL 是否與其他 API 重複（排除當前 API）
+    existing_apis = data_manager.load_apis()
+    for api in existing_apis:
+        if api.get('id') != api_id and api.get('url') == url:
+            flash('這個 URL 已經存在於其他 API 中', 'error')
+            return redirect(url_for('edit_api', api_id=api_id))
+    
+    # 驗證 request body 格式（如果有填寫）
+    if request_body and method in ['POST', 'PUT', 'PATCH']:
+        try:
+            import json as json_module
+            json_module.loads(request_body)  # 驗證是否為有效的 JSON
+        except json_module.JSONDecodeError:
+            flash('Request Body 必須是有效的 JSON 格式', 'error')
+            return redirect(url_for('edit_api', api_id=api_id))
+    
+    # 驗證壓力測試參數
+    if not (1 <= concurrent_requests <= 100):
+        flash('併發請求數必須在 1-100 之間', 'error')
+        return redirect(url_for('edit_api', api_id=api_id))
+    
+    if not (5 <= duration_seconds <= 300):
+        flash('持續時間必須在 5-300 秒之間', 'error')
+        return redirect(url_for('edit_api', api_id=api_id))
+    
+    if not (0.1 <= interval_seconds <= 10):
+        flash('請求間隔必須在 0.1-10 秒之間', 'error')
+        return redirect(url_for('edit_api', api_id=api_id))
+    
+    try:
+        success = data_manager.update_api(
+            api_id, name, url, api_type, method, 
+            request_body if request_body else None,
+            concurrent_requests, duration_seconds, interval_seconds
+        )
+        
+        if success:
+            flash(f'成功更新 API: {name} ({method})', 'success')
+            
+            # 立即檢查更新後的 API
+            try:
+                api_checker.check_all_apis()
+            except Exception as check_error:
+                print(f"檢查 API 時發生錯誤: {check_error}")
+            
+            return redirect(url_for('admin'))
+        else:
+            flash('找不到要更新的 API', 'error')
+            return redirect(url_for('edit_api', api_id=api_id))
+        
+    except Exception as e:
+        flash(f'更新 API 時發生錯誤: {str(e)}', 'error')
+        return redirect(url_for('edit_api', api_id=api_id))
+
 @app.route('/check-now')
 def check_now():
     """立即執行檢查"""
+    # 先顯示loading頁面，然後重定向到結果頁面
+    return redirect(url_for('loading') + '?redirect=' + url_for('check_now_process') + '&delay=2000')
+
+@app.route('/check-now-process')
+def check_now_process():
+    """實際執行檢查的處理"""
     try:
         api_checker.check_all_apis()
         flash('已執行立即檢查', 'success')
@@ -124,7 +211,12 @@ def check_now():
         flash(f'執行檢查時發生錯誤: {str(e)}', 'error')
         print(f"檢查錯誤詳情: {e}")
     
-    return redirect(url_for('index'))
+    return redirect(url_for('index') + '?from_loading=true')
+
+@app.route('/loading')
+def loading():
+    """載入頁面"""
+    return render_template('loading.html')
 
 @app.route('/api/status')
 def api_status():
@@ -170,10 +262,23 @@ def start_stress_test(api_id):
         
         flash(f'已啟動 API {api["name"]} 的壓力測試', 'success')
         
+        # 先顯示loading頁面，然後重定向到實時監控頁面
+        return redirect(url_for('loading') + '?redirect=' + url_for('stress_test_live', api_id=api_id) + '&delay=1500')
+        
     except Exception as e:
         flash(f'啟動壓力測試時發生錯誤: {str(e)}', 'error')
     
     return redirect(url_for('index'))
+
+@app.route('/stress-test-live/<api_id>')
+def stress_test_live(api_id):
+    """壓力測試實時監控頁面"""
+    api = data_manager.get_api_by_id(api_id)
+    if not api:
+        flash('找不到指定的 API', 'error')
+        return redirect(url_for('index'))
+    
+    return render_template('stress_live.html', api=api)
 
 @app.route('/stress-test-results/<api_id>')
 def stress_test_results(api_id):
@@ -198,7 +303,30 @@ def stress_test_status(api_id):
     
     if api and api.get('stress_test', {}).get('results'):
         latest_result = api['stress_test']['results'][-1]
-        result['latest_result'] = latest_result
+        result['latest_result'] = {
+            'total_requests': latest_result['statistics']['total_requests'],
+            'successful_requests': latest_result['statistics']['successful_requests'],
+            'failed_requests': latest_result['statistics']['failed_requests'],
+            'success_rate': latest_result['statistics']['success_rate'],
+            'avg_response_time': latest_result['statistics']['avg_response_time'],
+            'min_response_time': latest_result['statistics']['min_response_time'],
+            'max_response_time': latest_result['statistics']['max_response_time'],
+            'requests_per_second': latest_result['statistics']['requests_per_second'],
+            'start_time': latest_result['start_time'],
+            'end_time': latest_result.get('end_time'),
+            'request_count': len(latest_result['requests']),
+            'last_5_requests': [
+                {
+                    'request_number': i + len(latest_result['requests']) - 4,
+                    'success': req.get('success', False),
+                    'response_time': req.get('response_time', 0),
+                    'status_code': req.get('status_code'),
+                    'error': req.get('error'),
+                    'timestamp': req.get('timestamp', '')
+                }
+                for i, req in enumerate(latest_result['requests'][-5:])
+            ] if len(latest_result['requests']) > 0 else []
+        }
     
     return jsonify(result)
 

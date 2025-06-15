@@ -1,44 +1,428 @@
 [
   {
     "id": "11481ef0-8aa1-48b3-ac5d-b3d8162efbbf",
-    "name": "rental/search/keyword",
+    "name": "search/keyword",
     "url": "https://nex-alpha.ionexenergy.com/api/v1/rental/search/keyword",
     "type": "REST",
     "method": "POST",
     "request_body": "{\r\n  \"location\": {\r\n    \"lat\": 25.015207286647275,\r\n    \"lon\": 121.58853342033387\r\n  },\r\n  \"keyword\": \"南港\",\r\n  \"r\": 500,\r\n  \"stationTypes\": [\r\n    \"ENERGY\",\r\n    \"RENTAL\"\r\n  ],\r\n  \"from\": 0,\r\n  \"size\": 200,\r\n  \"lang\": \"en\"\r\n}",
     "status": "healthy",
-    "response_time": 0.7121741771697998,
-    "last_check": "2025-06-14T22:43:07.340534",
+    "response_time": 0.518406867980957,
+    "last_check": "2025-06-15T08:21:09.496131",
     "error_count": 0,
     "last_error": null,
-    "last_response": "[\n  {\n    \"address\": \" 臺北市南港區三重路19之13號15樓\",\n    \"displayName\": \"暹羅的三碗豬腳\",\n    \"location\": {\n      \"lat\": 25.058453,\n      \"lon\": 121.613735\n    },\n    \"online\": false,\n    \"pointId\": \"es-TH_AIONEX-10-SLOTS\",\n    \"stationType\": \"ENERGY\",\n    \"tel\": \"0277220677\",\n    \"type\": [\n      \"IONEX_PLUS_10_SLOTS\"\n    ],\n    \"pointType\": \"STATION\",\n    \"visible\": true,\n    \"photos\": [\n      \"https://s3-us-west-2.amazonaws.com/ionexenergy-nex-cloud-alpha/es-ff94d674-c55e-4898-8d83-93f55d36245f/photos/tH2psjxfexCzJECkmpXMxE\"\n    ],\n    \"timezone\": 480,\n    \"serviceHours\": {\n      \"w1\": [\n        [\n          0,\n          510\n        ]\n      ],\n      \"w2\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w3\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w4\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w5\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w6\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w7\": [\n        [\n          0,\n          1439\n        ]\n      ]\n    },\n    \"totalSlots\": 0,\n    \"availableSlots\": 0,\n    \"totalSpare\": 0,\n    \"availableSpare\": 0,\n    \"totalMonth\": 0,\n    \"availableMonth\": 0,\n    \"available6p\": 0,\n    \"available7pPair\": 0,\n    \"available7p\": {\n      \"0\": 0,\n      \"20\": 0,\n      \"40\": 0,\n      \"60\": 0,\n      \"80\": 0\n    },\n    \"isInChargingMode\": false,\n    \"mobilePhone\": \"0912345678\",\n    \"placeDescription\": \"泰國分部\",\n    \"status\": \"AUTO\"\n  },\n  {\n    \"pointId\": \"41b53bfd-896c-4a52-bb2e-a37ae3a6550b\",\n    \"stationType\": \"RENTAL\",\n    \"tel\": \"02-22226666\",\n    \"location\": {\n      \"lat\": 25.056872,\n      \"lon\": 121.613928\n    },\n    \"online\": true,\n    \"address\": \"台灣 115 台北市 南港區三重路19-5號\",\n    \"displayName\": \"Ionex機車租賃(南港站)\",\n    \"description\": \"測試\"\n  },\n  {\n    \"pointId\": \"bf01079a-29c0-464d-b6db-f84fdfdbf17c\",\n    \"stationType\": \"RENTAL\",\n    \"tel\": \"02-22226666\",\n    \"location\": {\n      \"lat\": 25.056872,\n      \"lon\": 121.613928\n    },\n    \"online\": true,\n    \"address\": \"台灣 115 台北市 南港區 三重路19-5號\",\n    \"displayName\": \"Rental Store A (南港軟體園區)\",\n    \"description\": \"測試\"\n  }\n]"
+    "last_response": "[\n  {\n    \"address\": \" 臺北市南港區三重路19之13號15樓\",\n    \"displayName\": \"暹羅的三碗豬腳\",\n    \"location\": {\n      \"lat\": 25.058453,\n      \"lon\": 121.613735\n    },\n    \"online\": false,\n    \"pointId\": \"es-TH_AIONEX-10-SLOTS\",\n    \"stationType\": \"ENERGY\",\n    \"tel\": \"0277220677\",\n    \"type\": [\n      \"IONEX_PLUS_10_SLOTS\"\n    ],\n    \"pointType\": \"STATION\",\n    \"visible\": true,\n    \"photos\": [\n      \"https://s3-us-west-2.amazonaws.com/ionexenergy-nex-cloud-alpha/es-ff94d674-c55e-4898-8d83-93f55d36245f/photos/tH2psjxfexCzJECkmpXMxE\"\n    ],\n    \"timezone\": 480,\n    \"serviceHours\": {\n      \"w1\": [\n        [\n          0,\n          510\n        ]\n      ],\n      \"w2\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w3\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w4\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w5\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w6\": [\n        [\n          0,\n          1439\n        ]\n      ],\n      \"w7\": [\n        [\n          0,\n          1439\n        ]\n      ]\n    },\n    \"totalSlots\": 0,\n    \"availableSlots\": 0,\n    \"totalSpare\": 0,\n    \"availableSpare\": 0,\n    \"totalMonth\": 0,\n    \"availableMonth\": 0,\n    \"available6p\": 0,\n    \"available7pPair\": 0,\n    \"available7p\": {\n      \"0\": 0,\n      \"20\": 0,\n      \"40\": 0,\n      \"60\": 0,\n      \"80\": 0\n    },\n    \"isInChargingMode\": false,\n    \"mobilePhone\": \"0912345678\",\n    \"placeDescription\": \"泰國分部\",\n    \"status\": \"AUTO\"\n  },\n  {\n    \"pointId\": \"41b53bfd-896c-4a52-bb2e-a37ae3a6550b\",\n    \"stationType\": \"RENTAL\",\n    \"tel\": \"02-22226666\",\n    \"location\": {\n      \"lat\": 25.056872,\n      \"lon\": 121.613928\n    },\n    \"online\": true,\n    \"address\": \"台灣 115 台北市 南港區三重路19-5號\",\n    \"displayName\": \"Ionex機車租賃(南港站)\",\n    \"description\": \"測試\"\n  },\n  {\n    \"pointId\": \"bf01079a-29c0-464d-b6db-f84fdfdbf17c\",\n    \"stationType\": \"RENTAL\",\n    \"tel\": \"02-22226666\",\n    \"location\": {\n      \"lat\": 25.056872,\n      \"lon\": 121.613928\n    },\n    \"online\": true,\n    \"address\": \"台灣 115 台北市 南港區 三重路19-5號\",\n    \"displayName\": \"Rental Store A (南港軟體園區)\",\n    \"description\": \"測試\"\n  }\n]",
+    "stress_test": {
+      "results": [
+        {
+          "api_id": "11481ef0-8aa1-48b3-ac5d-b3d8162efbbf",
+          "api_name": "rental/search/keyword",
+          "api_url": "https://nex-alpha.ionexenergy.com/api/v1/rental/search/keyword",
+          "start_time": "2025-06-15T08:07:41.143658",
+          "config": {
+            "concurrent_requests": 1,
+            "duration_seconds": 10,
+            "interval_seconds": 1.0
+          },
+          "requests": [
+            {
+              "timestamp": "2025-06-15T08:07:41.144163",
+              "start_time": 1749946061.1441631,
+              "response_time": 0.5474569797515869,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946061.691822
+            },
+            {
+              "timestamp": "2025-06-15T08:07:42.692914",
+              "start_time": 1749946062.692908,
+              "response_time": 0.17875194549560547,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946062.87181
+            },
+            {
+              "timestamp": "2025-06-15T08:07:43.873637",
+              "start_time": 1749946063.87363,
+              "response_time": 0.18129706382751465,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946064.05508
+            },
+            {
+              "timestamp": "2025-06-15T08:07:45.056949",
+              "start_time": 1749946065.056942,
+              "response_time": 0.1832129955291748,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946065.240309
+            },
+            {
+              "timestamp": "2025-06-15T08:07:46.242338",
+              "start_time": 1749946066.242332,
+              "response_time": 0.18373799324035645,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946066.42634
+            },
+            {
+              "timestamp": "2025-06-15T08:07:47.428002",
+              "start_time": 1749946067.427996,
+              "response_time": 0.18235993385314941,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946067.6104681
+            },
+            {
+              "timestamp": "2025-06-15T08:07:48.612173",
+              "start_time": 1749946068.6121678,
+              "response_time": 0.1739041805267334,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946068.7862039
+            },
+            {
+              "timestamp": "2025-06-15T08:07:49.788028",
+              "start_time": 1749946069.788023,
+              "response_time": 0.18327808380126953,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946069.971379
+            },
+            {
+              "timestamp": "2025-06-15T08:07:50.972990",
+              "start_time": 1749946070.972987,
+              "response_time": 0.18005704879760742,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946071.1531699
+            }
+          ],
+          "statistics": {
+            "total_requests": 9,
+            "successful_requests": 9,
+            "failed_requests": 0,
+            "success_rate": 100.0,
+            "avg_response_time": 0.22156180275811088,
+            "min_response_time": 0.1739041805267334,
+            "max_response_time": 0.5474569797515869,
+            "median_response_time": 0.18235993385314941,
+            "requests_per_second": 0.8990190813722629,
+            "errors": {}
+          },
+          "end_time": "2025-06-15T08:07:51.154540",
+          "total_duration": 10.010910987854004
+        },
+        {
+          "api_id": "11481ef0-8aa1-48b3-ac5d-b3d8162efbbf",
+          "api_name": "rental/search/keyword",
+          "api_url": "https://nex-alpha.ionexenergy.com/api/v1/rental/search/keyword",
+          "start_time": "2025-06-15T08:08:27.035133",
+          "config": {
+            "concurrent_requests": 1,
+            "duration_seconds": 10,
+            "interval_seconds": 1.0
+          },
+          "requests": [
+            {
+              "timestamp": "2025-06-15T08:08:27.035311",
+              "start_time": 1749946107.03531,
+              "response_time": 0.5007729530334473,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946107.536181
+            },
+            {
+              "timestamp": "2025-06-15T08:08:28.537846",
+              "start_time": 1749946108.537843,
+              "response_time": 0.18123698234558105,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946108.71915
+            },
+            {
+              "timestamp": "2025-06-15T08:08:29.720873",
+              "start_time": 1749946109.720869,
+              "response_time": 0.17250585556030273,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946109.8934422
+            },
+            {
+              "timestamp": "2025-06-15T08:08:30.895071",
+              "start_time": 1749946110.895066,
+              "response_time": 0.18028593063354492,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946111.075495
+            },
+            {
+              "timestamp": "2025-06-15T08:08:32.077143",
+              "start_time": 1749946112.077139,
+              "response_time": 0.18112730979919434,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946112.2583628
+            },
+            {
+              "timestamp": "2025-06-15T08:08:33.259526",
+              "start_time": 1749946113.259521,
+              "response_time": 0.1721642017364502,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946113.431795
+            },
+            {
+              "timestamp": "2025-06-15T08:08:34.433719",
+              "start_time": 1749946114.4337149,
+              "response_time": 0.27833008766174316,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946114.71217
+            },
+            {
+              "timestamp": "2025-06-15T08:08:35.713985",
+              "start_time": 1749946115.7139788,
+              "response_time": 0.18035411834716797,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946115.894453
+            },
+            {
+              "timestamp": "2025-06-15T08:08:36.896032",
+              "start_time": 1749946116.8960278,
+              "response_time": 0.1870720386505127,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946117.083204
+            }
+          ],
+          "statistics": {
+            "total_requests": 9,
+            "successful_requests": 9,
+            "failed_requests": 0,
+            "success_rate": 100.0,
+            "avg_response_time": 0.22598327530754936,
+            "min_response_time": 0.1721642017364502,
+            "max_response_time": 0.5007729530334473,
+            "median_response_time": 0.18112730979919434,
+            "requests_per_second": 0.8955889568831721,
+            "errors": {}
+          },
+          "end_time": "2025-06-15T08:08:37.084368",
+          "total_duration": 10.049252986907959
+        },
+        {
+          "api_id": "11481ef0-8aa1-48b3-ac5d-b3d8162efbbf",
+          "api_name": "search/keyword",
+          "api_url": "https://nex-alpha.ionexenergy.com/api/v1/rental/search/keyword",
+          "start_time": "2025-06-15T08:20:24.166651",
+          "config": {
+            "concurrent_requests": 1,
+            "duration_seconds": 10,
+            "interval_seconds": 1.0
+          },
+          "requests": [
+            {
+              "timestamp": "2025-06-15T08:20:24.167184",
+              "start_time": 1749946824.1671832,
+              "response_time": 0.5062227249145508,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946824.673517
+            },
+            {
+              "timestamp": "2025-06-15T08:20:25.674926",
+              "start_time": 1749946825.6749241,
+              "response_time": 0.17988300323486328,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946825.854887
+            },
+            {
+              "timestamp": "2025-06-15T08:20:26.856518",
+              "start_time": 1749946826.856514,
+              "response_time": 0.177778959274292,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946827.0343628
+            },
+            {
+              "timestamp": "2025-06-15T08:20:28.035742",
+              "start_time": 1749946828.03574,
+              "response_time": 0.166215181350708,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946828.2020102
+            },
+            {
+              "timestamp": "2025-06-15T08:20:29.203397",
+              "start_time": 1749946829.203394,
+              "response_time": 0.17223620414733887,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946829.3757062
+            },
+            {
+              "timestamp": "2025-06-15T08:20:30.377221",
+              "start_time": 1749946830.377217,
+              "response_time": 0.17584896087646484,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946830.553162
+            },
+            {
+              "timestamp": "2025-06-15T08:20:31.554672",
+              "start_time": 1749946831.554668,
+              "response_time": 0.1753091812133789,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946831.7301812
+            },
+            {
+              "timestamp": "2025-06-15T08:20:32.731810",
+              "start_time": 1749946832.731808,
+              "response_time": 0.16774296760559082,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946832.8995998
+            },
+            {
+              "timestamp": "2025-06-15T08:20:33.901164",
+              "start_time": 1749946833.90116,
+              "response_time": 0.1711101531982422,
+              "status_code": 200,
+              "success": true,
+              "response_size": 1451,
+              "end_time": 1749946834.072373
+            }
+          ],
+          "statistics": {
+            "total_requests": 9,
+            "successful_requests": 9,
+            "failed_requests": 0,
+            "success_rate": 100.0,
+            "avg_response_time": 0.2102608150906033,
+            "min_response_time": 0.166215181350708,
+            "max_response_time": 0.5062227249145508,
+            "median_response_time": 0.1753091812133789,
+            "requests_per_second": 0.908445832975859,
+            "errors": {}
+          },
+          "end_time": "2025-06-15T08:20:34.073662",
+          "total_duration": 9.907029867172241
+        }
+      ],
+      "concurrent_requests": 1,
+      "duration_seconds": 10,
+      "interval_seconds": 1.0,
+      "last_test": "2025-06-15T08:20:34.074969"
+    }
   },
   {
     "id": "1ab2d089-02db-48b2-89cb-699036aa1e66",
-    "name": "rental/search/boundingBox",
+    "name": "search/Box",
     "url": "https://nex-alpha.ionexenergy.com/api/v1/rental/search/boundingBox",
     "type": "REST",
     "method": "POST",
     "request_body": "{\r\n  \"topRight\": {\r\n    \"lat\": 25.098480744152837,\r\n    \"lon\": 121.63874437309272\r\n  },\r\n  \"bottomLeft\": {\r\n    \"lat\": 25.015207286647275,\r\n    \"lon\": 121.58853342033387\r\n  },\r\n  \"location\": {\r\n    \"lat\": 25.015207286647275,\r\n    \"lon\": 121.58853342033387\r\n  },\r\n  \"from\": 0,\r\n  \"size\": 200,\r\n  \"lang\": \"en\",\r\n  \"stationTypes\": [\r\n    \"ENERGY\",\r\n    \"RENTAL\"\r\n  ],\r\n  \"app\": \"com.noodoe.nex.user.dev\",\r\n  \"dn\": \"70C21539-18B2-4399-A1CC-C8718AE7966C\",\r\n  \"dm\": \"iPhone14,2\",\r\n  \"vn\": \"1.0.0\",\r\n  \"ts\": 1569221884613,\r\n  \"tz\": 480,\r\n  \"cn\": \"TW\"\r\n}",
     "status": "healthy",
-    "response_time": 0.5476217269897461,
-    "last_check": "2025-06-14T22:43:07.893954",
+    "response_time": 0.4929637908935547,
+    "last_check": "2025-06-15T08:21:09.994902",
     "error_count": 0,
     "last_error": null,
-    "last_response": "[{\"address\":\"No19-5, Sanchong Road, Nangang District, Taipei City 115601\",\"displayName\":\"Nangang energy station\",\"location\":{\"lat\":25.05719394693404,\"lon\":121.61375355514245},\"online\":false,\"pointId\":\"es-2a34b19f-a8bd-4450-9080-7b1cf47d86a5\",\"stationType\":\"ENERGY\",\"tel\":\"0277557730\",\"_id\":\"601a19a2b44e9a0007253839\",\"serviceHours\":{\"w1\":[[0,1439]],\"w2\":[[0,1439]],\"w3\":[[0,1439]],\"w4\":[[0,1439]],\"w5\":[[0,1439]],\"w6\":[[0,1439]],\"w7\":[[0,1439]]},\"type\":[\"IONEX_PLUS_5_SLOTS\"],\"visible\":true,\"photos\":[\"https://s3-us-west-2.amazonaws.com/ionexenergy-nex-cloud-alpha/es-2a34b19f-a8bd-4450-9080-7b1cf47d86a5/photos/aVJBh5RbVUAk8RrSZt2Vd3\"],\"pointType\":\"STATION\",\"timezone\":480,\"organizations\":[\"KYMCO_TW\"],\"totalSlots\":0,\"availableSlots\":0,\"totalSpare\":0,\"availableSpare\":0,\"totalMonth\":0,\"availableMonth\":0,\"available6p\":0,\"available7pPair\":0,\"available7p\":{\"0\":0,\"20\":0,\"40\":0,\"60\":0,\"80\":0},\"isInChargingMode\":false,\"mobilePhone\":\"0977557730\",\"status\":\"AUTO\"},{\"address\":\"No19-5, Sanchong Road, Nangang District, Taipei City 115601\",\"displayName\":\"IONEX Energy 測試名字好長會不會跑版啊\",\"location\":{\"lat\":25.05935291988206,\"lon\":121.61539564870985},\"online\":false,\"pointId\":\"es-6e0c9883-2cf4-4068-bbe4-c2072a314e9a\",\"stationType\":\"ENERGY\",\"tel\":\"0277557730\",\"_id\":\"619f6138e8dac6d140157029\",\"serviceHours\":{\"w1\":[[0,1439]],\"w2\":[[0,1439]],\"w3\":[[0,1439]],\"w4\":[[0,1439]],\"w5\":[[0,1439]],\"w6\":[[0,1439]],\"w7\":[[0,1439]]},\"type\":[\"IONEX_PLUS_10_SLOTS\"],\"visible\":true,\"photos\":[\"https://s3-us-west-2.amazonaws.com/ionexenergy-nex-cloud-alpha/es-6e0c9883-2cf4-4068-bbe4-c2072a314e9a/photos/qUqxdoxpkKouqXz4vRgk6n\"],\"pointType\":\"STATION\",\"timezone\":480,\"organizations\":[\"KYMCO_TW\"],\"totalSlots\":0,\"availableSlots\":0,\"totalSpare\":0,\"availableSpare\":0,\"totalMonth\":0,\"availableMonth\":0,\"available6p\":0,\"available7pPair\":0,\"available7p\":{\"0\":0,\"20\":0,\"40\":0,\"60\":0,\"80\":0},\"isInChargingMode\":false,\"mobilePhone\":\"0987654321\",\"status\":\"AUTO\"},{\"address\":\" 臺北市南港區三重路19之13號15樓\",\"displayName\":\"暹羅的三碗豬腳\",\"location\":{\"lat\":25"
+    "last_response": "[{\"address\":\"No19-5, Sanchong Road, Nangang District, Taipei City 115601\",\"displayName\":\"Nangang energy station\",\"location\":{\"lat\":25.05719394693404,\"lon\":121.61375355514245},\"online\":false,\"pointId\":\"es-2a34b19f-a8bd-4450-9080-7b1cf47d86a5\",\"stationType\":\"ENERGY\",\"tel\":\"0277557730\",\"_id\":\"601a19a2b44e9a0007253839\",\"serviceHours\":{\"w1\":[[0,1439]],\"w2\":[[0,1439]],\"w3\":[[0,1439]],\"w4\":[[0,1439]],\"w5\":[[0,1439]],\"w6\":[[0,1439]],\"w7\":[[0,1439]]},\"type\":[\"IONEX_PLUS_5_SLOTS\"],\"visible\":true,\"photos\":[\"https://s3-us-west-2.amazonaws.com/ionexenergy-nex-cloud-alpha/es-2a34b19f-a8bd-4450-9080-7b1cf47d86a5/photos/aVJBh5RbVUAk8RrSZt2Vd3\"],\"pointType\":\"STATION\",\"timezone\":480,\"organizations\":[\"KYMCO_TW\"],\"totalSlots\":0,\"availableSlots\":0,\"totalSpare\":0,\"availableSpare\":0,\"totalMonth\":0,\"availableMonth\":0,\"available6p\":0,\"available7pPair\":0,\"available7p\":{\"0\":0,\"20\":0,\"40\":0,\"60\":0,\"80\":0},\"isInChargingMode\":false,\"mobilePhone\":\"0977557730\",\"status\":\"AUTO\"},{\"address\":\"No19-5, Sanchong Road, Nangang District, Taipei City 115601\",\"displayName\":\"IONEX Energy 測試名字好長會不會跑版啊\",\"location\":{\"lat\":25.05935291988206,\"lon\":121.61539564870985},\"online\":false,\"pointId\":\"es-6e0c9883-2cf4-4068-bbe4-c2072a314e9a\",\"stationType\":\"ENERGY\",\"tel\":\"0277557730\",\"_id\":\"619f6138e8dac6d140157029\",\"serviceHours\":{\"w1\":[[0,1439]],\"w2\":[[0,1439]],\"w3\":[[0,1439]],\"w4\":[[0,1439]],\"w5\":[[0,1439]],\"w6\":[[0,1439]],\"w7\":[[0,1439]]},\"type\":[\"IONEX_PLUS_10_SLOTS\"],\"visible\":true,\"photos\":[\"https://s3-us-west-2.amazonaws.com/ionexenergy-nex-cloud-alpha/es-6e0c9883-2cf4-4068-bbe4-c2072a314e9a/photos/qUqxdoxpkKouqXz4vRgk6n\"],\"pointType\":\"STATION\",\"timezone\":480,\"organizations\":[\"KYMCO_TW\"],\"totalSlots\":0,\"availableSlots\":0,\"totalSpare\":0,\"availableSpare\":0,\"totalMonth\":0,\"availableMonth\":0,\"available6p\":0,\"available7pPair\":0,\"available7p\":{\"0\":0,\"20\":0,\"40\":0,\"60\":0,\"80\":0},\"isInChargingMode\":false,\"mobilePhone\":\"0987654321\",\"status\":\"AUTO\"},{\"address\":\" 臺北市南港區三重路19之13號15樓\",\"displayName\":\"暹羅的三碗豬腳\",\"location\":{\"lat\":25",
+    "stress_test": {
+      "results": [],
+      "concurrent_requests": 1,
+      "duration_seconds": 10,
+      "interval_seconds": 1.0
+    }
+  },
+  {
+    "id": "demo-jsonplaceholder-posts",
+    "name": "JSONPlaceholder - Posts",
+    "url": "https://jsonplaceholder.typicode.com/posts/1",
+    "type": "REST",
+    "method": "GET",
+    "request_body": null,
+    "status": "healthy",
+    "response_time": 0.05483889579772949,
+    "last_check": "2025-06-15T08:21:10.054583",
+    "error_count": 0,
+    "last_error": null,
+    "last_response": "{\n  \"userId\": 1,\n  \"id\": 1,\n  \"title\": \"sunt aut facere repellat provident occaecati excepturi optio reprehenderit\",\n  \"body\": \"quia et suscipit\\nsuscipit recusandae consequuntur expedita et cum\\nreprehenderit molestiae ut ut quas totam\\nnostrum rerum est autem sunt rem eveniet architecto\"\n}",
+    "stress_test": {
+      "results": [],
+      "concurrent_requests": 5,
+      "duration_seconds": 20,
+      "interval_seconds": 1.0
+    }
+  },
+  {
+    "id": "demo-httpbin-post",
+    "name": "HTTPBin - Test POST",
+    "url": "https://httpbin.org/post",
+    "type": "REST",
+    "method": "POST",
+    "request_body": "{\n  \"demo\": true,\n  \"message\": \"This is a demo API for testing purposes\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"user_agent\": \"API Monitor Demo\",\n  \"test_data\": {\n    \"number\": 42,\n    \"array\": [1, 2, 3, 4, 5],\n    \"boolean\": true\n  }\n}",
+    "status": "healthy",
+    "response_time": 1.170382022857666,
+    "last_check": "2025-06-15T08:21:11.230860",
+    "error_count": 0,
+    "last_error": null,
+    "last_response": "{\n  \"args\": {},\n  \"data\": \"{\\\"demo\\\": true, \\\"message\\\": \\\"This is a demo API for testing purposes\\\", \\\"timestamp\\\": \\\"{{timestamp}}\\\", \\\"user_agent\\\": \\\"API Monitor Demo\\\", \\\"test_data\\\": {\\\"number\\\": 42, \\\"array\\\": [1, 2, 3, 4, 5], \\\"boolean\\\": true}}\",\n  \"files\": {},\n  \"form\": {},\n  \"headers\": {\n    \"Accept\": \"*/*\",\n    \"Accept-Encoding\": \"gzip, deflate\",\n    \"Content-Length\": \"204\",\n    \"Content-Type\": \"application/json\",\n    \"Host\": \"httpbin.org\",\n    \"User-Agent\": \"API-Monitor/1.0\",\n    \"X-Amzn-Trace-Id\": \"Root=1-684e11f9-001a998f576b393e514b2005\"\n  },\n  \"json\": {\n    \"demo\": true,\n    \"message\": \"This is a demo API for testing purposes\",\n    \"test_data\": {\n      \"array\": [\n        1,\n        2,\n        3,\n        4,\n        5\n      ],\n      \"boolean\": true,\n      \"number\": 42\n    },\n    \"timestamp\": \"{{timestamp}}\",\n    \"user_agent\": \"API Monitor Demo\"\n  },\n  \"origin\": \"113.196.34.128\",\n  \"url\": \"https://httpbin.org/post\"\n}",
+    "stress_test": {
+      "results": [],
+      "concurrent_requests": 3,
+      "duration_seconds": 20,
+      "interval_seconds": 1.0
+    }
   },
   {
     "id": "acd640cd-fe4e-4b73-9a30-3217e0a38a0c",
-    "name": "rental/search/cluster",
+    "name": "search/cluster",
     "url": "https://nex-alpha.ionexenergy.com/api/v1/rental/search/cluster",
     "type": "REST",
     "method": "POST",
     "request_body": "{\r\n  \"bottomLeft\": {\r\n    \"lat\": 25.015207286647275,\r\n    \"lon\": 121.58853342033387\r\n  },\r\n  \"topRight\": {\r\n    \"lat\": 25.098480744152837,\r\n    \"lon\": 121.63874437309272\r\n  },\r\n  \"stationTypes\": [\r\n    \"ENERGY\",\r\n    \"RENTAL\"\r\n  ]\r\n}",
     "status": "healthy",
-    "response_time": 0.5215039253234863,
-    "last_check": "2025-06-14T22:43:08.418852",
+    "response_time": 0.4856598377227783,
+    "last_check": "2025-06-15T08:21:11.722085",
     "error_count": 0,
     "last_error": null,
-    "last_response": "[\n  {\n    \"types\": [\n      \"IONEX_PLUS_5_SLOTS\",\n      \"IONEX_PLUS_10_SLOTS\"\n    ],\n    \"count\": 4,\n    \"location\": {\n      \"lat\": 25.057977016704022,\n      \"lon\": 121.61409755096308\n    },\n    \"id\": \"684c765c3af4e0e6ce83c26f\"\n  },\n  {\n    \"types\": [\n      \"RENTAL\"\n    ],\n    \"count\": 1,\n    \"location\": {\n      \"lat\": 25.056872,\n      \"lon\": 121.613928\n    },\n    \"id\": \"684c765c3af4e0e6ce83c2ab\"\n  }\n]"
+    "last_response": "[\n  {\n    \"types\": [\n      \"IONEX_PLUS_10_SLOTS\",\n      \"IONEX_PLUS_5_SLOTS\"\n    ],\n    \"count\": 4,\n    \"location\": {\n      \"lat\": 25.057977016704022,\n      \"lon\": 121.61409755096308\n    },\n    \"id\": \"684dc7dc3af4e0e6cec4abe9\"\n  },\n  {\n    \"types\": [\n      \"RENTAL\"\n    ],\n    \"count\": 1,\n    \"location\": {\n      \"lat\": 25.056872,\n      \"lon\": 121.613928\n    },\n    \"id\": \"684dc7dc3af4e0e6cec4ac3c\"\n  }\n]",
+    "stress_test": {
+      "results": [],
+      "concurrent_requests": 1,
+      "duration_seconds": 10,
+      "interval_seconds": 1.0
+    }
   }
 ]

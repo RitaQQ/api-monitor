@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API 管理後台</title>
+    <title>編輯 API - {{ api.name }}</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,7 +16,7 @@
             margin: 0 auto;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             padding: 30px;
             border-radius: 10px;
@@ -53,7 +53,7 @@
         }
         .form-group input:focus, .form-group select:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: #28a745;
         }
         .btn {
             padding: 12px 24px;
@@ -69,8 +69,8 @@
             background-color: #007bff;
             color: white;
         }
-        .btn-danger {
-            background-color: #dc3545;
+        .btn-success {
+            background-color: #28a745;
             color: white;
         }
         .btn-secondary {
@@ -79,27 +79,6 @@
         }
         .btn:hover {
             opacity: 0.9;
-        }
-        .api-list {
-            margin-top: 30px;
-        }
-        .api-item {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .api-details h4 {
-            margin: 0 0 5px 0;
-            color: #333;
-        }
-        .api-details p {
-            margin: 0;
-            color: #666;
-            font-size: 0.9em;
         }
         .flash-messages {
             margin-bottom: 20px;
@@ -122,24 +101,20 @@
         .nav-links {
             margin-bottom: 20px;
         }
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            font-weight: bold;
-            margin-left: 10px;
+        .current-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
         }
-        .status-healthy {
-            background: #d4edda;
-            color: #155724;
+        .current-info h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
         }
-        .status-unhealthy {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .status-unknown {
-            background: #e2e3e5;
-            color: #383d41;
+        .current-info p {
+            margin: 5px 0;
+            font-size: 0.9em;
         }
         .privacy-toggle {
             background-color: #6c757d;
@@ -159,12 +134,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>⚙️ API 管理後台</h1>
-            <p>新增、刪除和管理監控的 API</p>
+            <h1>✏️ 編輯 API</h1>
+            <p>修改 API 監控設定和壓力測試參數</p>
         </div>
         
         <div class="nav-links">
-            <a href="/" class="btn btn-secondary">← 返回監控頁面</a>
+            <a href="/admin" class="btn btn-secondary">← 返回管理後台</a>
+            <a href="/" class="btn btn-primary">監控頁面</a>
             <button id="privacy-toggle" class="btn privacy-toggle" onclick="togglePrivacy()">
                 🙈 隱藏 URL
             </button>
@@ -182,42 +158,61 @@
             {% endwith %}
         </div>
         
+        <!-- 當前 API 資訊 -->
+        <div class="current-info">
+            <h4>📋 當前 API 資訊</h4>
+            <p><strong>名稱:</strong> {{ api.name }}</p>
+            <p><strong>URL:</strong> <span class="api-url" data-url="{{ api.url }}">{{ api.url }}</span></p>
+            <p><strong>方法:</strong> {{ api.method or 'GET' }}</p>
+            <p><strong>類型:</strong> {{ api.type }}</p>
+            <p><strong>狀態:</strong> 
+                <span style="color: {{ '#28a745' if api.status == 'healthy' else ('#dc3545' if api.status == 'unhealthy' else '#6c757d') }};">
+                    {{ '✅ 正常' if api.status == 'healthy' else ('❌ 異常' if api.status == 'unhealthy' else '❓ 未知') }}
+                </span>
+            </p>
+            {% if api.last_check %}
+            <p><strong>最後檢查:</strong> {{ api.last_check[:19].replace('T', ' ') }}</p>
+            {% endif %}
+        </div>
+        
         <div class="card">
-            <h2>🆕 新增 API</h2>
-            <form method="POST" action="/admin/add">
+            <h2>🔧 編輯 API 設定</h2>
+            <form method="POST" action="/admin/edit/{{ api.id }}">
                 <div class="form-group">
                     <label for="name">API 名稱</label>
                     <input type="text" id="name" name="name" required 
+                           value="{{ api.name }}"
                            placeholder="例如: 用戶服務 API">
                 </div>
                 <div class="form-group">
                     <label for="url">API URL</label>
                     <input type="url" id="url" name="url" required 
+                           value="{{ api.url }}"
                            placeholder="https://api.example.com/health">
                 </div>
                 <div class="form-group">
                     <label for="method">HTTP 方法</label>
                     <select id="method" name="method">
-                        <option value="GET">GET</option>
-                        <option value="POST">POST</option>
-                        <option value="PUT">PUT</option>
-                        <option value="DELETE">DELETE</option>
+                        <option value="GET" {{ 'selected' if api.method == 'GET' else '' }}>GET</option>
+                        <option value="POST" {{ 'selected' if api.method == 'POST' else '' }}>POST</option>
+                        <option value="PUT" {{ 'selected' if api.method == 'PUT' else '' }}>PUT</option>
+                        <option value="DELETE" {{ 'selected' if api.method == 'DELETE' else '' }}>DELETE</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="type">API 類型</label>
                     <select id="type" name="type">
-                        <option value="REST">REST API</option>
-                        <option value="GraphQL">GraphQL</option>
-                        <option value="WebSocket">WebSocket</option>
-                        <option value="Other">其他</option>
+                        <option value="REST" {{ 'selected' if api.type == 'REST' else '' }}>REST API</option>
+                        <option value="GraphQL" {{ 'selected' if api.type == 'GraphQL' else '' }}>GraphQL</option>
+                        <option value="WebSocket" {{ 'selected' if api.type == 'WebSocket' else '' }}>WebSocket</option>
+                        <option value="Other" {{ 'selected' if api.type == 'Other' else '' }}>其他</option>
                     </select>
                 </div>
-                <div class="form-group" id="request-body-group" style="display: none;">
+                <div class="form-group" id="request-body-group" style="display: {{ 'block' if api.method in ['POST', 'PUT', 'PATCH'] else 'none' }};">
                     <label for="request_body">Request Body (JSON 格式)</label>
                     <textarea id="request_body" name="request_body" rows="8" 
                               placeholder='例如: {"key": "value", "timestamp": "{{timestamp}}"}' 
-                              style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.9em; resize: vertical;"></textarea>
+                              style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.9em; resize: vertical;">{{ api.request_body or '' }}</textarea>
                     <small style="color: #666; font-size: 0.85em;">
                         💡 提示: 使用 {{timestamp}} 作為動態時間戳佔位符
                     </small>
@@ -230,31 +225,37 @@
                         <div class="form-group">
                             <label for="concurrent_requests">併發請求數</label>
                             <input type="number" id="concurrent_requests" name="concurrent_requests" 
-                                   value="1" min="1" max="100" 
+                                   value="{{ api.stress_test.concurrent_requests if api.stress_test else 1 }}" 
+                                   min="1" max="100" 
                                    style="text-align: center;">
                             <small style="color: #666; font-size: 0.8em;">1-100 個</small>
                         </div>
                         <div class="form-group">
                             <label for="duration_seconds">持續時間 (秒)</label>
                             <input type="number" id="duration_seconds" name="duration_seconds" 
-                                   value="10" min="5" max="300"
+                                   value="{{ api.stress_test.duration_seconds if api.stress_test else 10 }}" 
+                                   min="5" max="300"
                                    style="text-align: center;">
                             <small style="color: #666; font-size: 0.8em;">5-300 秒</small>
                         </div>
                         <div class="form-group">
                             <label for="interval_seconds">請求間隔 (秒)</label>
                             <input type="number" id="interval_seconds" name="interval_seconds" 
-                                   value="1.0" min="0.1" max="10" step="0.1"
+                                   value="{{ api.stress_test.interval_seconds if api.stress_test else 1.0 }}" 
+                                   min="0.1" max="10" step="0.1"
                                    style="text-align: center;">
                             <small style="color: #666; font-size: 0.8em;">0.1-10 秒</small>
                         </div>
                     </div>
                     <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 0.85em; color: #666;">
-                        💡 壓力測試將在 API 監控頁面手動執行，可測試 API 的負載承受能力
+                        💡 更新後將重置 API 監控狀態，需要重新檢查以獲得最新狀態
                     </div>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">✅ 新增 API</button>
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn btn-success">✅ 儲存變更</button>
+                    <a href="/admin" class="btn btn-secondary">取消</a>
+                </div>
                 
                 <script>
                 // 根據選擇的 HTTP 方法顯示/隱藏 Request Body 欄位
@@ -266,91 +267,23 @@
                         requestBodyGroup.style.display = 'block';
                     } else {
                         requestBodyGroup.style.display = 'none';
-                        document.getElementById('request_body').value = '';
-                    }
-                });
-                
-                // 頁面載入時檢查初始狀態
-                document.addEventListener('DOMContentLoaded', function() {
-                    const method = document.getElementById('method').value;
-                    const requestBodyGroup = document.getElementById('request-body-group');
-                    
-                    if (['POST', 'PUT', 'PATCH'].includes(method)) {
-                        requestBodyGroup.style.display = 'block';
                     }
                 });
                 </script>
             </form>
         </div>
         
+        <!-- API 歷史資訊 -->
+        {% if api.stress_test and api.stress_test.results %}
         <div class="card">
-            <h2>📋 目前監控的 API</h2>
-            <div class="api-list">
-                {% for api in apis %}
-                <div class="api-item">
-                    <div class="api-details">
-                        <h4>
-                            {{ api.name }}
-                            <span class="status-badge status-{{ api.status }}">
-                                {{ '✅ 正常' if api.status == 'healthy' else ('❌ 異常' if api.status == 'unhealthy' else '❓ 未知') }}
-                            </span>
-                        </h4>
-                        <p><strong>URL:</strong> <span class="api-url" data-url="{{ api.url }}">{{ api.url }}</span></p>
-                        <p><strong>方法:</strong> {{ api.method or 'GET' }} | <strong>類型:</strong> {{ api.type }}</p>
-                        {% if api.request_body %}
-                        <details style="margin: 10px 0;">
-                            <summary style="cursor: pointer; color: #007bff; font-weight: bold;">📄 Request Body</summary>
-                            <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; overflow-x: auto; white-space: pre-wrap;">{{ api.request_body }}</pre>
-                        </details>
-                        {% endif %}
-                        {% if api.last_response %}
-                        <details style="margin: 10px 0;">
-                            <summary style="cursor: pointer; color: #28a745; font-weight: bold;">📥 最新回應</summary>
-                            <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; overflow-x: auto; white-space: pre-wrap; max-height: 300px; border: 1px solid #dee2e6;">{{ api.last_response }}</pre>
-                        </details>
-                        {% endif %}
-                        {% if api.last_check %}
-                        <p><strong>最後檢查:</strong> {{ api.last_check[:19].replace('T', ' ') }}</p>
-                        {% endif %}
-                        {% if api.error_count > 0 %}
-                        <p><strong>錯誤次數:</strong> {{ api.error_count }}</p>
-                        {% endif %}
-                        {% if api.stress_test %}
-                        <details style="margin: 10px 0;">
-                            <summary style="cursor: pointer; color: #6f42c1; font-weight: bold;">🔥 壓力測試配置</summary>
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 5px;">
-                                <p><strong>併發請求:</strong> {{ api.stress_test.concurrent_requests }} 個</p>
-                                <p><strong>持續時間:</strong> {{ api.stress_test.duration_seconds }} 秒</p>
-                                <p><strong>請求間隔:</strong> {{ api.stress_test.interval_seconds }} 秒</p>
-                                {% if api.stress_test.last_test %}
-                                <p><strong>最後測試:</strong> {{ api.stress_test.last_test[:19].replace('T', ' ') }}</p>
-                                {% endif %}
-                                {% if api.stress_test.results %}
-                                <p><strong>測試記錄:</strong> {{ api.stress_test.results|length }} 次</p>
-                                {% endif %}
-                            </div>
-                        </details>
-                        {% endif %}
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <a href="/admin/edit/{{ api.id }}" class="btn btn-primary">✏️ 編輯</a>
-                        <form method="POST" action="/admin/delete/{{ api.id }}" 
-                              style="display: inline-block;"
-                              onsubmit="return confirm('確定要刪除這個 API 嗎？')">
-                            <button type="submit" class="btn btn-danger">🗑️ 刪除</button>
-                        </form>
-                    </div>
-                </div>
-                {% else %}
-                <div class="api-item">
-                    <div style="text-align: center; color: #666; width: 100%;">
-                        <p>🔍 尚未添加任何 API</p>
-                        <p>使用上方表單新增您要監控的 API</p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+            <h3>📊 壓力測試歷史</h3>
+            <p>此 API 已進行過 {{ api.stress_test.results|length }} 次壓力測試</p>
+            {% if api.stress_test.last_test %}
+            <p><strong>最後測試:</strong> {{ api.stress_test.last_test[:19].replace('T', ' ') }}</p>
+            {% endif %}
+            <a href="/stress-test-results/{{ api.id }}" class="btn btn-primary">📈 查看詳細結果</a>
         </div>
+        {% endif %}
     </div>
 
     <script>

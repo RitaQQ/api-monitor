@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>載入中... - API 監控系統</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .loading-container {
+            text-align: center;
+            color: white;
+            max-width: 500px;
+            padding: 40px;
+        }
+        
+        .loading-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .loading-subtitle {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        /* 酷炫的loading動畫 */
+        .loading-animation {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 40px;
+        }
+        
+        .loading-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-circle:nth-child(2) {
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            border-top: 4px solid #28a745;
+            animation: spin 1.5s linear infinite reverse;
+        }
+        
+        .loading-circle:nth-child(3) {
+            width: 60%;
+            height: 60%;
+            top: 20%;
+            left: 20%;
+            border-top: 4px solid #ffc107;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* API圖標動畫 */
+        .api-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+        }
+        
+        /* 浮動的數據點 */
+        .floating-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .dot:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .dot:nth-child(2) { left: 20%; animation-delay: 1s; }
+        .dot:nth-child(3) { left: 30%; animation-delay: 2s; }
+        .dot:nth-child(4) { left: 40%; animation-delay: 3s; }
+        .dot:nth-child(5) { left: 50%; animation-delay: 4s; }
+        .dot:nth-child(6) { left: 60%; animation-delay: 5s; }
+        .dot:nth-child(7) { left: 70%; animation-delay: 1.5s; }
+        .dot:nth-child(8) { left: 80%; animation-delay: 2.5s; }
+        .dot:nth-child(9) { left: 90%; animation-delay: 3.5s; }
+        
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(90vh) scale(1);
+            }
+            90% {
+                opacity: 1;
+                transform: translateY(-10vh) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20vh) scale(0);
+            }
+        }
+        
+        /* 進度條 */
+        .progress-container {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin: 0 auto 20px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
+            border-radius: 2px;
+            animation: progress 3s ease-in-out infinite;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+        
+        /* 狀態文字動畫 */
+        .status-text {
+            font-size: 1em;
+            opacity: 0.8;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .loading-title {
+                font-size: 2em;
+            }
+            .loading-animation {
+                width: 150px;
+                height: 150px;
+            }
+            .api-icon {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 浮動點動畫背景 -->
+    <div class="floating-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+    
+    <div class="loading-container">
+        <h1 class="loading-title">🚀 API 監控中</h1>
+        <p class="loading-subtitle">正在處理您的請求，請稍候...</p>
+        
+        <!-- 主要loading動畫 -->
+        <div class="loading-animation">
+            <div class="loading-circle"></div>
+            <div class="loading-circle"></div>
+            <div class="loading-circle"></div>
+            <div class="api-icon">⚡</div>
+        </div>
+        
+        <!-- 進度條 -->
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+        
+        <!-- 動態狀態文字 -->
+        <p class="status-text" id="status-text">正在連接 API...</p>
+    </div>
+    
+    <script>
+        // 動態狀態文字
+        const statusTexts = [
+            '正在連接 API...',
+            '發送請求中...',
+            '等待回應...',
+            '處理數據中...',
+            '驗證結果...',
+            '準備顯示結果...'
+        ];
+        
+        let currentIndex = 0;
+        const statusElement = document.getElementById('status-text');
+        
+        function updateStatus() {
+            statusElement.textContent = statusTexts[currentIndex];
+            currentIndex = (currentIndex + 1) % statusTexts.length;
+        }
+        
+        // 每2秒更新一次狀態文字
+        setInterval(updateStatus, 2000);
+        
+        // 自動重定向功能（如果有指定的重定向URL）
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect');
+        const delay = urlParams.get('delay') || 3000; // 默認3秒
+        
+        if (redirectUrl) {
+            setTimeout(() => {
+                window.location.href = decodeURIComponent(redirectUrl);
+            }, parseInt(delay));
+        }
+        
+        // 添加一些視覺效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 隨機改變API圖標
+            const icons = ['⚡', '🔧', '📊', '🌐', '⚙️', '🔍', '📡'];
+            const apiIcon = document.querySelector('.api-icon');
+            
+            setInterval(() => {
+                const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+                apiIcon.textContent = randomIcon;
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

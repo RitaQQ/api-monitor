@@ -152,6 +152,19 @@
             color: #666;
             padding: 40px;
         }
+        .privacy-toggle {
+            background-color: #6c757d;
+            color: white;
+            font-size: 0.85em;
+            padding: 8px 16px;
+        }
+        .privacy-toggle.active {
+            background-color: #28a745;
+        }
+        .url-hidden {
+            color: #6c757d;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -159,7 +172,7 @@
         <div class="header">
             <h1>🔥 壓力測試結果</h1>
             <p>{{ api.name }}</p>
-            <p style="font-size: 0.9em; opacity: 0.8;">{{ api.url }}</p>
+            <p style="font-size: 0.9em; opacity: 0.8;" class="api-url" data-url="{{ api.url }}">{{ api.url }}</p>
         </div>
         
         <div class="nav-links">
@@ -169,6 +182,9 @@
                onclick="return confirm('確定要開始新的壓力測試嗎？')">
                 🔥 開始新測試
             </a>
+            <button id="privacy-toggle" class="btn privacy-toggle" onclick="togglePrivacy()">
+                🙈 隱藏 URL
+            </button>
         </div>
         
         {% if api.stress_test and api.stress_test.results %}
@@ -230,13 +246,101 @@
             {% endif %}
         </div>
         
-        <!-- 圖表區域 (未來可擴展) -->
+        <!-- 詳細請求記錄 -->
         <div class="card">
-            <h3>📈 性能趨勢圖表</h3>
-            <div class="chart-container">
-                📊 圖表功能開發中...<br>
-                <small>未來將顯示回應時間趨勢、成功率變化等視覺化圖表</small>
+            <h3>📋 詳細請求記錄</h3>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                <p><strong>測試時間:</strong> {{ latest.start_time[:19].replace('T', ' ') }} - {{ latest.end_time[:19].replace('T', ' ') if latest.end_time else '進行中' }}</p>
+                <p><strong>總請求數:</strong> {{ latest.requests|length }} 個</p>
+                <p><strong>平均回應時間:</strong> {{ "%.3f"|format(latest.statistics.avg_response_time) }} 秒</p>
             </div>
+            
+            {% if latest.requests|length > 0 %}
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: #e9ecef; position: sticky; top: 0;">
+                        <tr>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">#</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">時間戳</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">狀態</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">回應時間</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">狀態碼</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">回應大小</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">錯誤</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in latest.requests %}
+                        <tr style="border-bottom: 1px solid #f1f3f4;">
+                            <td style="padding: 8px; font-weight: bold;">{{ loop.index }}</td>
+                            <td style="padding: 8px; font-size: 0.85em;">
+                                {{ request.timestamp[11:19] if request.timestamp else '-' }}
+                            </td>
+                            <td style="padding: 8px;">
+                                {% if request.success %}
+                                    <span style="color: #28a745; font-weight: bold;">✅ 成功</span>
+                                {% else %}
+                                    <span style="color: #dc3545; font-weight: bold;">❌ 失敗</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 8px; font-family: monospace;">
+                                <span style="color: {{ '#28a745' if request.response_time < 1 else ('#ffc107' if request.response_time < 3 else '#dc3545') }};">
+                                    {{ "%.3f"|format(request.response_time) }}s
+                                </span>
+                            </td>
+                            <td style="padding: 8px; font-family: monospace;">
+                                {% if request.status_code %}
+                                    <span style="color: {{ '#28a745' if request.status_code < 300 else ('#ffc107' if request.status_code < 400 else '#dc3545') }};">
+                                        {{ request.status_code }}
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td style="padding: 8px; font-size: 0.85em;">
+                                {% if request.response_size %}
+                                    {{ "%.1f"|format(request.response_size / 1024) }} KB
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td style="padding: 8px; font-size: 0.85em; color: #dc3545;">
+                                {{ request.error if request.error else '-' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 回應時間統計圖表 -->
+            <div style="margin-top: 20px;">
+                <h4>📈 回應時間分布</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px;">
+                    {% set response_times = latest.requests | map(attribute='response_time') | list %}
+                    {% set fast_requests = response_times | select('lt', 1) | list | length %}
+                    {% set medium_requests = response_times | select('ge', 1) | select('lt', 3) | list | length %}
+                    {% set slow_requests = response_times | select('ge', 3) | list | length %}
+                    
+                    <div style="background: #d4edda; padding: 10px; border-radius: 5px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #155724;">{{ fast_requests }}</div>
+                        <div style="font-size: 0.9em; color: #155724;">快速 (&lt;1s)</div>
+                    </div>
+                    <div style="background: #fff3cd; padding: 10px; border-radius: 5px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #856404;">{{ medium_requests }}</div>
+                        <div style="font-size: 0.9em; color: #856404;">一般 (1-3s)</div>
+                    </div>
+                    <div style="background: #f8d7da; padding: 10px; border-radius: 5px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #721c24;">{{ slow_requests }}</div>
+                        <div style="font-size: 0.9em; color: #721c24;">慢速 (&gt;3s)</div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align: center; color: #666; padding: 20px;">
+                📝 尚無詳細請求記錄
+            </div>
+            {% endif %}
         </div>
         
         <!-- 歷史測試結果 -->
@@ -307,7 +411,7 @@
             <h3>ℹ️ API 基本資訊</h3>
             <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
                 <p><strong>名稱:</strong> {{ api.name }}</p>
-                <p><strong>URL:</strong> {{ api.url }}</p>
+                <p><strong>URL:</strong> <span class="api-url" data-url="{{ api.url }}">{{ api.url }}</span></p>
                 <p><strong>方法:</strong> {{ api.method or 'GET' }}</p>
                 <p><strong>類型:</strong> {{ api.type }}</p>
                 {% if api.request_body %}
@@ -327,5 +431,42 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // 隱私切換功能
+        let privacyMode = localStorage.getItem('privacy-mode') === 'true';
+        
+        function togglePrivacy() {
+            privacyMode = !privacyMode;
+            localStorage.setItem('privacy-mode', privacyMode);
+            updatePrivacyDisplay();
+        }
+        
+        function updatePrivacyDisplay() {
+            const button = document.getElementById('privacy-toggle');
+            const apiUrls = document.querySelectorAll('.api-url');
+            
+            if (privacyMode) {
+                button.textContent = '👁️ 顯示 URL';
+                button.classList.add('active');
+                apiUrls.forEach(element => {
+                    element.textContent = '*** API URL 已隱藏 (Demo 模式) ***';
+                    element.classList.add('url-hidden');
+                });
+            } else {
+                button.textContent = '🙈 隱藏 URL';
+                button.classList.remove('active');
+                apiUrls.forEach(element => {
+                    element.textContent = element.getAttribute('data-url');
+                    element.classList.remove('url-hidden');
+                });
+            }
+        }
+        
+        // 頁面載入時設置初始狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePrivacyDisplay();
+        });
+    </script>
 </body>
 </html>
