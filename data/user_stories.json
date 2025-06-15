@@ -1,0 +1,66 @@
+{
+  "user_stories": [
+    {
+      "id": "011f36ad-da2c-431d-986c-a3330d7815c3",
+      "project_names": [],
+      "title": "搜尋地圖上的可用機車",
+      "user_role": "使用者",
+      "feature_description": "我希望在搜尋機車時，能夠在地圖上看到可用車輛",
+      "purpose": "以便快速租借",
+      "acceptance_criteria": [
+        "能夠在地圖上顯示可用機車位置",
+        "機車圖示顯示電量狀態",
+        "點擊機車可查看詳細資訊",
+        "支援依距離篩選機車"
+      ],
+      "test_result": "Pass",
+      "test_notes": "所有功能正常運作，地圖載入速度良好",
+      "created_at": "2025-06-15T13:33:27.034990",
+      "updated_at": "2025-06-15T14:17:21.664323",
+      "created_by": "系統初始化"
+    },
+    {
+      "id": "8efb440a-7c58-4cca-a079-88aff5cefc11",
+      "project_names": [],
+      "title": "API 異常通知管理",
+      "user_role": "管理者",
+      "feature_description": "我希望能夠收到 API 異常通知",
+      "purpose": "以便即時修復錯誤",
+      "acceptance_criteria": [
+        "API 回應時間超過 5 秒時發送通知",
+        "API 回傳錯誤狀態碼時發送通知",
+        "通知包含錯誤詳細資訊",
+        "支援多種通知方式（Email、簡訊、Slack）"
+      ],
+      "test_result": "Fail",
+      "test_notes": "Email 通知功能尚未實作完成",
+      "created_at": "2025-06-15T13:33:27.035004",
+      "updated_at": "2025-06-15T14:17:18.943608",
+      "created_by": "系統初始化"
+    },
+    {
+      "id": "90e91089-59a3-47e7-afab-8adf44a2cc53",
+      "project_names": [
+        "換電地圖"
+      ],
+      "title": "可以儲存常用的換電站",
+      "user_role": "使用者,訪客",
+      "feature_description": "在外面騎乘機車時,可以隨時查看常用的換電站",
+      "purpose": "快速查看有多少可換電池數",
+      "acceptance_criteria": [
+        "1.電池數量跟現場數量一致",
+        "2.可以新增常用換電站",
+        "3.可以刪除常用換電站",
+        "4.點擊常用換電站可以查看明細或導航"
+      ],
+      "test_result": "Pending",
+      "test_notes": "",
+      "created_at": "2025-06-15T14:22:35.383835",
+      "updated_at": "2025-06-15T14:22:35.383845",
+      "created_by": "rita"
+    }
+  ],
+  "created_at": "2025-06-15T13:33:27.035008",
+  "version": "1.0",
+  "updated_at": "2025-06-15T14:22:35.383913"
+}

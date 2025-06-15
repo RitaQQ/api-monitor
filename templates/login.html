@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入 - API 監控系統</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .login-header {
+            margin-bottom: 30px;
+        }
+        
+        .login-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .login-title {
+            font-size: 2em;
+            color: #333;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+        
+        .login-subtitle {
+            color: #666;
+            font-size: 1em;
+            margin: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        .flash-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        
+        .flash-error {
+            background-color: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .flash-success {
+            background-color: #efe;
+            color: #363;
+            border: 1px solid #cfc;
+        }
+        
+        .default-account {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.85em;
+            color: #555;
+        }
+        
+        .default-account h4 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 1em;
+        }
+        
+        .credential-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px 0;
+        }
+        
+        .credential-label {
+            font-weight: 600;
+        }
+        
+        .credential-value {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #333;
+        }
+        
+        /* 背景動畫 */
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        .floating-element:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .floating-element:nth-child(2) { left: 20%; animation-delay: 2s; }
+        .floating-element:nth-child(3) { left: 30%; animation-delay: 4s; }
+        .floating-element:nth-child(4) { left: 40%; animation-delay: 6s; }
+        .floating-element:nth-child(5) { left: 50%; animation-delay: 8s; }
+        .floating-element:nth-child(6) { left: 60%; animation-delay: 10s; }
+        .floating-element:nth-child(7) { left: 70%; animation-delay: 12s; }
+        .floating-element:nth-child(8) { left: 80%; animation-delay: 14s; }
+        
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.1;
+            }
+            90% {
+                opacity: 0.1;
+            }
+            50% {
+                transform: translateY(-20vh) rotate(180deg);
+                opacity: 0.1;
+            }
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .login-title {
+                font-size: 1.8em;
+            }
+            
+            .login-icon {
+                font-size: 3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 浮動背景元素 -->
+    <div class="floating-elements">
+        <div class="floating-element">🔐</div>
+        <div class="floating-element">🖥️</div>
+        <div class="floating-element">📊</div>
+        <div class="floating-element">⚡</div>
+        <div class="floating-element">🔧</div>
+        <div class="floating-element">🌐</div>
+        <div class="floating-element">📡</div>
+        <div class="floating-element">🔍</div>
+    </div>
+    
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-icon">🔐</div>
+            <h1 class="login-title">API 監控系統</h1>
+            <p class="login-subtitle">請登入以繼續使用</p>
+        </div>
+        
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <form method="POST" action="/login">
+            <div class="form-group">
+                <label for="username">用戶名</label>
+                <input type="text" id="username" name="username" required 
+                       placeholder="請輸入您的用戶名" autocomplete="username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密碼</label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="請輸入您的密碼" autocomplete="current-password">
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                🚀 登入系統
+            </button>
+        </form>
+        
+        <div class="default-account">
+            <h4>🔧 預設管理員帳號</h4>
+            <div class="credential-item">
+                <span class="credential-label">用戶名:</span>
+                <span class="credential-value">admin</span>
+            </div>
+            <div class="credential-item">
+                <span class="credential-label">密碼:</span>
+                <span class="credential-value">admin123</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        console.log('Login page JavaScript loaded');
+        
+        // 表單提交處理
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            console.log('Form found:', form);
+            console.log('Button found:', loginBtn);
+            
+            // 表單提交事件
+            form.addEventListener('submit', function(e) {
+                console.log('Form submit event triggered');
+                console.log('Username:', document.getElementById('username').value);
+                console.log('Password length:', document.getElementById('password').value.length);
+                
+                // 更新按鈕狀態
+                loginBtn.innerHTML = '🔄 登入中...';
+                loginBtn.disabled = true;
+                
+                // 不阻止表單提交，讓它正常進行
+                // 如果5秒內沒有響應，恢復按鈕（以防萬一）
+                setTimeout(() => {
+                    if (loginBtn.disabled) {
+                        loginBtn.innerHTML = '🚀 登入系統';
+                        loginBtn.disabled = false;
+                        console.log('Button state restored due to timeout');
+                    }
+                }, 5000);
+            });
+            
+            // Enter 鍵提交表單
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const activeElement = document.activeElement;
+                    if (activeElement.tagName === 'INPUT') {
+                        console.log('Enter key pressed, submitting form');
+                        form.submit();
+                    }
+                }
+            });
+            
+            // 自動填入預設帳號功能（開發用）
+            document.querySelector('.default-account').addEventListener('click', function() {
+                if (confirm('是否要自動填入預設管理員帳號？')) {
+                    document.getElementById('username').value = 'admin';
+                    document.getElementById('password').value = 'admin123';
+                    document.getElementById('username').focus();
+                    console.log('Auto-filled credentials');
+                }
+            });
+            
+            // 測試按鈕
+            loginBtn.addEventListener('click', function(e) {
+                console.log('Login button clicked');
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                console.log('Form data - Username:', username, 'Password length:', password.length);
+                
+                if (!username || !password) {
+                    alert('請填寫用戶名和密碼');
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試案例管理 - API Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .editable-table {
+            font-size: 14px;
+        }
+        .editable-cell {
+            min-height: 40px;
+            border: 1px solid transparent;
+            cursor: text;
+        }
+        .editable-cell:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .editable-cell:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        .acceptance-criteria {
+            max-width: 300px;
+        }
+        .acceptance-criteria ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .product-tags {
+            max-width: 200px;
+        }
+        .tag-badge {
+            display: inline-block;
+            margin: 2px;
+            padding: 2px 8px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        .tag-input {
+            border: none;
+            background: transparent;
+            width: 100%;
+        }
+        .toolbar {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .table-container {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .filter-input {
+            width: 120px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center py-3">
+                    <h2><i class="fas fa-clipboard-list"></i> 測試案例管理</h2>
+                    <div>
+                        <a href="/" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left"></i> 返回首頁
+                        </a>
+                        <a href="/test-projects" class="btn btn-primary">
+                            <i class="fas fa-project-diagram"></i> 測試專案
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 工具列 -->
+                <div class="toolbar">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success" id="addTestCase">
+                                    <i class="fas fa-plus"></i> 新增測項
+                                </button>
+                                <button class="btn btn-danger" id="deleteSelected" disabled>
+                                    <i class="fas fa-trash"></i> 刪除選取
+                                </button>
+                                <button class="btn btn-info" id="manageTags">
+                                    <i class="fas fa-tags"></i> 管理產品標籤
+                                </button>
+                                <button class="btn btn-warning" id="exportData">
+                                    <i class="fas fa-download"></i> 匯出資料
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="globalSearch" placeholder="搜尋測試案例...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 儲存狀態指示器 -->
+                <div class="save-indicator">
+                    <div class="alert alert-success d-none" id="saveSuccess">
+                        <i class="fas fa-check"></i> 已自動儲存
+                    </div>
+                    <div class="alert alert-danger d-none" id="saveError">
+                        <i class="fas fa-exclamation-triangle"></i> 儲存失敗
+                    </div>
+                </div>
+
+                <!-- 測試案例表格 -->
+                <div class="table-container">
+                    <table class="table table-bordered table-hover editable-table" id="testCaseTable">
+                        <thead class="table-dark sticky-header">
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAll">
+                                </th>
+                                <th style="width: 80px;">ID</th>
+                                <th style="width: 200px;">
+                                    標題
+                                    <br><input type="text" class="filter-input form-control form-control-sm mt-1" placeholder="篩選...">
+                                </th>
+                                <th style="width: 150px;">
+                                    使用者角色
+                                    <br><input type="text" class="filter-input form-control form-control-sm mt-1" placeholder="篩選...">
+                                </th>
+                                <th style="width: 250px;">
+                                    功能描述
+                                    <br><input type="text" class="filter-input form-control form-control-sm mt-1" placeholder="篩選...">
+                                </th>
+                                <th class="acceptance-criteria">
+                                    驗收條件
+                                    <br><input type="text" class="filter-input form-control form-control-sm mt-1" placeholder="篩選...">
+                                </th>
+                                <th style="width: 200px;">
+                                    測試備註
+                                    <br><input type="text" class="filter-input form-control form-control-sm mt-1" placeholder="篩選...">
+                                </th>
+                                <th class="product-tags">
+                                    產品標籤
+                                    <br><select class="filter-input form-control form-control-sm mt-1">
+                                        <option value="">全部</option>
+                                    </select>
+                                </th>
+                                <th style="width: 60px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testCaseTableBody">
+                            <!-- 動態載入內容 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 產品標籤管理 Modal -->
+    <div class="modal fade" id="tagsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">管理產品標籤</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newTagName" placeholder="標籤名稱">
+                            <input type="text" class="form-control" id="newTagDescription" placeholder="標籤描述（選填）">
+                            <button class="btn btn-primary" id="addTag">新增</button>
+                        </div>
+                    </div>
+                    <div id="tagsList">
+                        <!-- 動態載入標籤列表 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 驗收條件編輯 Modal -->
+    <div class="modal fade" id="criteriaModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">編輯驗收條件</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="criteriaEditor">
+                        <!-- 動態載入驗收條件編輯器 -->
+                    </div>
+                    <button class="btn btn-success mt-2" id="addCriteria">
+                        <i class="fas fa-plus"></i> 新增條件
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveCriteria">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class TestCaseManager {
+            constructor() {
+                this.testCases = [];
+                this.productTags = [];
+                this.selectedRows = new Set();
+                this.currentEditingCriteria = null;
+                this.saveTimeout = null;
+                
+                this.init();
+            }
+            
+            async init() {
+                await this.loadData();
+                this.bindEvents();
+                this.renderTable();
+                this.renderTagFilter();
+            }
+            
+            async loadData() {
+                try {
+                    const [testCasesResponse, tagsResponse] = await Promise.all([
+                        fetch('/api/test-cases'),
+                        fetch('/api/product-tags')
+                    ]);
+                    
+                    this.testCases = await testCasesResponse.json();
+                    this.productTags = await tagsResponse.json();
+                } catch (error) {
+                    console.error('載入資料失敗:', error);
+                    this.showError('載入資料失敗');
+                }
+            }
+            
+            bindEvents() {
+                // 新增測項
+                document.getElementById('addTestCase').addEventListener('click', () => {
+                    this.addNewTestCase();
+                });
+                
+                // 刪除選取
+                document.getElementById('deleteSelected').addEventListener('click', () => {
+                    this.deleteSelected();
+                });
+                
+                // 管理標籤
+                document.getElementById('manageTags').addEventListener('click', () => {
+                    this.showTagsModal();
+                });
+                
+                // 全選
+                document.getElementById('selectAll').addEventListener('change', (e) => {
+                    this.toggleSelectAll(e.target.checked);
+                });
+                
+                // 搜尋
+                document.getElementById('globalSearch').addEventListener('input', (e) => {
+                    this.filterTable();
+                });
+                
+                // 清除搜尋
+                document.getElementById('clearSearch').addEventListener('click', () => {
+                    document.getElementById('globalSearch').value = '';
+                    this.filterTable();
+                });
+                
+                // 欄位篩選
+                document.querySelectorAll('.filter-input').forEach(input => {
+                    input.addEventListener('input', () => {
+                        this.filterTable();
+                    });
+                });
+                
+                // 標籤相關事件
+                document.getElementById('addTag').addEventListener('click', () => {
+                    this.addProductTag();
+                });
+                
+                // 驗收條件相關事件
+                document.getElementById('addCriteria').addEventListener('click', () => {
+                    this.addCriteriaInput();
+                });
+                
+                document.getElementById('saveCriteria').addEventListener('click', () => {
+                    this.saveCriteria();
+                });
+            }
+            
+            renderTable() {
+                const tbody = document.getElementById('testCaseTableBody');
+                tbody.innerHTML = '';
+                
+                this.testCases.forEach(testCase => {
+                    const row = this.createTableRow(testCase);
+                    tbody.appendChild(row);
+                });
+            }
+            
+            createTableRow(testCase) {
+                const row = document.createElement('tr');
+                row.dataset.id = testCase.id;
+                
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="row-select" data-id="${testCase.id}">
+                    </td>
+                    <td class="text-muted small">${testCase.id.substring(0, 8)}...</td>
+                    <td class="editable-cell" data-field="title" contenteditable="true">${testCase.title || ''}</td>
+                    <td class="editable-cell" data-field="user_role" contenteditable="true">${testCase.user_role || ''}</td>
+                    <td class="editable-cell" data-field="feature_description" contenteditable="true">${testCase.feature_description || ''}</td>
+                    <td class="acceptance-criteria">
+                        <div class="criteria-display" data-id="${testCase.id}">
+                            ${this.renderCriteria(testCase.acceptance_criteria || [])}
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary edit-criteria" data-id="${testCase.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                    <td class="editable-cell" data-field="test_notes" contenteditable="true">${testCase.test_notes || ''}</td>
+                    <td class="product-tags">
+                        <div class="tags-display" data-id="${testCase.id}">
+                            ${this.renderTags(testCase.product_tags || [])}
+                        </div>
+                        <select class="form-select form-select-sm tag-selector mt-1" data-id="${testCase.id}" multiple>
+                            ${this.renderTagOptions(testCase.product_tags || [])}
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-danger delete-row" data-id="${testCase.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                // 綁定事件
+                this.bindRowEvents(row);
+                
+                return row;
+            }
+            
+            bindRowEvents(row) {
+                // 可編輯儲存格
+                row.querySelectorAll('.editable-cell').forEach(cell => {
+                    cell.addEventListener('blur', (e) => {
+                        this.saveCell(e.target);
+                    });
+                    
+                    cell.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            e.target.blur();
+                        }
+                    });
+                });
+                
+                // 選取框
+                row.querySelector('.row-select').addEventListener('change', (e) => {
+                    this.toggleRowSelection(e.target.dataset.id, e.target.checked);
+                });
+                
+                // 編輯驗收條件
+                row.querySelector('.edit-criteria').addEventListener('click', (e) => {
+                    this.editCriteria(e.target.dataset.id);
+                });
+                
+                // 刪除行
+                row.querySelector('.delete-row').addEventListener('click', (e) => {
+                    this.deleteTestCase(e.target.dataset.id);
+                });
+                
+                // 標籤選擇器
+                row.querySelector('.tag-selector').addEventListener('change', (e) => {
+                    this.updateTestCaseTags(e.target.dataset.id, Array.from(e.target.selectedOptions).map(opt => opt.value));
+                });
+            }
+            
+            renderCriteria(criteria) {
+                if (!criteria || criteria.length === 0) {
+                    return '<em class="text-muted">點擊編輯按鈕新增驗收條件</em>';
+                }
+                
+                return '<ul>' + criteria.map(criterion => `<li>${criterion}</li>`).join('') + '</ul>';
+            }
+            
+            renderTags(tagIds) {
+                if (!tagIds || tagIds.length === 0) {
+                    return '<em class="text-muted">無標籤</em>';
+                }
+                
+                return tagIds.map(tagId => {
+                    const tag = this.productTags.find(t => t.id === tagId);
+                    return `<span class="tag-badge">${tag ? tag.name : '未知標籤'}</span>`;
+                }).join('');
+            }
+            
+            renderTagOptions(selectedTags = []) {
+                return this.productTags.map(tag => {
+                    const selected = selectedTags.includes(tag.id) ? 'selected' : '';
+                    return `<option value="${tag.id}" ${selected}>${tag.name}</option>`;
+                }).join('');
+            }
+            
+            renderTagFilter() {
+                const select = document.querySelector('.product-tags select.filter-input');
+                select.innerHTML = '<option value="">全部</option>' + 
+                    this.productTags.map(tag => `<option value="${tag.id}">${tag.name}</option>`).join('');
+            }
+            
+            async saveCell(cell) {
+                const row = cell.closest('tr');
+                const testCaseId = row.dataset.id;
+                const field = cell.dataset.field;
+                const value = cell.textContent.trim();
+                
+                try {
+                    const response = await fetch(`/api/test-cases/${testCaseId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            [field]: value
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        this.showSuccess();
+                        // 更新本地資料
+                        const testCase = this.testCases.find(tc => tc.id === testCaseId);
+                        if (testCase) {
+                            testCase[field] = value;
+                        }
+                    } else {
+                        throw new Error('儲存失敗');
+                    }
+                } catch (error) {
+                    console.error('儲存失敗:', error);
+                    this.showError('儲存失敗');
+                }
+            }
+            
+            async addNewTestCase() {
+                const newTestCase = {
+                    title: '新測試案例',
+                    user_role: '作為一位用戶',
+                    feature_description: '我希望能...',
+                    acceptance_criteria: [],
+                    test_notes: '',
+                    product_tags: []
+                };
+                
+                try {
+                    const response = await fetch('/api/test-cases', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(newTestCase)
+                    });
+                    
+                    if (response.ok) {
+                        const createdTestCase = await response.json();
+                        this.testCases.push(createdTestCase);
+                        
+                        const row = this.createTableRow(createdTestCase);
+                        document.getElementById('testCaseTableBody').appendChild(row);
+                        
+                        this.showSuccess();
+                        
+                        // 自動聚焦到標題欄位
+                        row.querySelector('[data-field="title"]').focus();
+                    } else {
+                        throw new Error('新增失敗');
+                    }
+                } catch (error) {
+                    console.error('新增失敗:', error);
+                    this.showError('新增失敗');
+                }
+            }
+            
+            async deleteTestCase(testCaseId) {
+                if (!confirm('確定要刪除這個測試案例嗎？')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/test-cases/${testCaseId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        this.testCases = this.testCases.filter(tc => tc.id !== testCaseId);
+                        document.querySelector(`tr[data-id="${testCaseId}"]`).remove();
+                        this.showSuccess();
+                    } else {
+                        throw new Error('刪除失敗');
+                    }
+                } catch (error) {
+                    console.error('刪除失敗:', error);
+                    this.showError('刪除失敗');
+                }
+            }
+            
+            async deleteSelected() {
+                if (this.selectedRows.size === 0) {
+                    return;
+                }
+                
+                if (!confirm(`確定要刪除 ${this.selectedRows.size} 個測試案例嗎？`)) {
+                    return;
+                }
+                
+                try {
+                    const deletePromises = Array.from(this.selectedRows).map(id => 
+                        fetch(`/api/test-cases/${id}`, { method: 'DELETE' })
+                    );
+                    
+                    await Promise.all(deletePromises);
+                    
+                    // 更新UI
+                    this.selectedRows.forEach(id => {
+                        this.testCases = this.testCases.filter(tc => tc.id !== id);
+                        document.querySelector(`tr[data-id="${id}"]`).remove();
+                    });
+                    
+                    this.selectedRows.clear();
+                    this.updateDeleteButton();
+                    this.showSuccess();
+                } catch (error) {
+                    console.error('批量刪除失敗:', error);
+                    this.showError('批量刪除失敗');
+                }
+            }
+            
+            toggleRowSelection(id, selected) {
+                if (selected) {
+                    this.selectedRows.add(id);
+                } else {
+                    this.selectedRows.delete(id);
+                }
+                this.updateDeleteButton();
+            }
+            
+            toggleSelectAll(selected) {
+                document.querySelectorAll('.row-select').forEach(checkbox => {
+                    checkbox.checked = selected;
+                    this.toggleRowSelection(checkbox.dataset.id, selected);
+                });
+            }
+            
+            updateDeleteButton() {
+                const button = document.getElementById('deleteSelected');
+                button.disabled = this.selectedRows.size === 0;
+                button.textContent = this.selectedRows.size > 0 ? 
+                    `刪除選取 (${this.selectedRows.size})` : '刪除選取';
+            }
+            
+            editCriteria(testCaseId) {
+                const testCase = this.testCases.find(tc => tc.id === testCaseId);
+                if (!testCase) return;
+                
+                this.currentEditingCriteria = testCaseId;
+                
+                const editor = document.getElementById('criteriaEditor');
+                editor.innerHTML = '';
+                
+                const criteria = testCase.acceptance_criteria || [];
+                criteria.forEach((criterion, index) => {
+                    this.addCriteriaInput(criterion, index);
+                });
+                
+                if (criteria.length === 0) {
+                    this.addCriteriaInput();
+                }
+                
+                new bootstrap.Modal(document.getElementById('criteriaModal')).show();
+            }
+            
+            addCriteriaInput(value = '', index = null) {
+                const editor = document.getElementById('criteriaEditor');
+                const div = document.createElement('div');
+                div.className = 'input-group mb-2';
+                div.innerHTML = `
+                    <input type="text" class="form-control criteria-input" value="${value}" placeholder="輸入驗收條件...">
+                    <button class="btn btn-outline-danger remove-criteria" type="button">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                div.querySelector('.remove-criteria').addEventListener('click', () => {
+                    div.remove();
+                });
+                
+                editor.appendChild(div);
+            }
+            
+            async saveCriteria() {
+                if (!this.currentEditingCriteria) return;
+                
+                const inputs = document.querySelectorAll('.criteria-input');
+                const criteria = Array.from(inputs)
+                    .map(input => input.value.trim())
+                    .filter(value => value);
+                
+                try {
+                    const response = await fetch(`/api/test-cases/${this.currentEditingCriteria}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            acceptance_criteria: criteria
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // 更新本地資料
+                        const testCase = this.testCases.find(tc => tc.id === this.currentEditingCriteria);
+                        if (testCase) {
+                            testCase.acceptance_criteria = criteria;
+                        }
+                        
+                        // 更新顯示
+                        const display = document.querySelector(`.criteria-display[data-id="${this.currentEditingCriteria}"]`);
+                        display.innerHTML = this.renderCriteria(criteria);
+                        
+                        bootstrap.Modal.getInstance(document.getElementById('criteriaModal')).hide();
+                        this.showSuccess();
+                    } else {
+                        throw new Error('儲存失敗');
+                    }
+                } catch (error) {
+                    console.error('儲存驗收條件失敗:', error);
+                    this.showError('儲存驗收條件失敗');
+                }
+            }
+            
+            async updateTestCaseTags(testCaseId, tagIds) {
+                try {
+                    const response = await fetch(`/api/test-cases/${testCaseId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            product_tags: tagIds
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // 更新本地資料
+                        const testCase = this.testCases.find(tc => tc.id === testCaseId);
+                        if (testCase) {
+                            testCase.product_tags = tagIds;
+                        }
+                        
+                        // 更新顯示
+                        const display = document.querySelector(`.tags-display[data-id="${testCaseId}"]`);
+                        display.innerHTML = this.renderTags(tagIds);
+                        
+                        this.showSuccess();
+                    } else {
+                        throw new Error('更新標籤失敗');
+                    }
+                } catch (error) {
+                    console.error('更新標籤失敗:', error);
+                    this.showError('更新標籤失敗');
+                }
+            }
+            
+            showTagsModal() {
+                this.renderTagsList();
+                new bootstrap.Modal(document.getElementById('tagsModal')).show();
+            }
+            
+            renderTagsList() {
+                const container = document.getElementById('tagsList');
+                container.innerHTML = this.productTags.map(tag => `
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                        <div>
+                            <strong>${tag.name}</strong>
+                            ${tag.description ? `<small class="text-muted d-block">${tag.description}</small>` : ''}
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger delete-tag" data-id="${tag.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+                
+                // 綁定刪除事件
+                container.querySelectorAll('.delete-tag').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.deleteProductTag(e.target.dataset.id);
+                    });
+                });
+            }
+            
+            async addProductTag() {
+                const name = document.getElementById('newTagName').value.trim();
+                const description = document.getElementById('newTagDescription').value.trim();
+                
+                if (!name) {
+                    alert('請輸入標籤名稱');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/product-tags', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            description: description || null
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const newTag = await response.json();
+                        this.productTags.push(newTag);
+                        
+                        document.getElementById('newTagName').value = '';
+                        document.getElementById('newTagDescription').value = '';
+                        
+                        this.renderTagsList();
+                        this.renderTagFilter();
+                        this.updateTagSelectors();
+                        this.showSuccess();
+                    } else {
+                        throw new Error('新增標籤失敗');
+                    }
+                } catch (error) {
+                    console.error('新增標籤失敗:', error);
+                    this.showError('新增標籤失敗');
+                }
+            }
+            
+            async deleteProductTag(tagId) {
+                if (!confirm('確定要刪除這個標籤嗎？')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/product-tags/${tagId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        this.productTags = this.productTags.filter(tag => tag.id !== tagId);
+                        this.renderTagsList();
+                        this.renderTagFilter();
+                        this.updateTagSelectors();
+                        this.showSuccess();
+                    } else {
+                        throw new Error('刪除標籤失敗');
+                    }
+                } catch (error) {
+                    console.error('刪除標籤失敗:', error);
+                    this.showError('刪除標籤失敗');
+                }
+            }
+            
+            updateTagSelectors() {
+                document.querySelectorAll('.tag-selector').forEach(select => {
+                    const testCaseId = select.dataset.id;
+                    const testCase = this.testCases.find(tc => tc.id === testCaseId);
+                    select.innerHTML = this.renderTagOptions(testCase ? testCase.product_tags : []);
+                });
+            }
+            
+            filterTable() {
+                const globalSearch = document.getElementById('globalSearch').value.toLowerCase();
+                const filters = {};
+                
+                // 收集所有篩選器的值
+                document.querySelectorAll('.filter-input').forEach(input => {
+                    const th = input.closest('th');
+                    const columnIndex = Array.from(th.parentNode.children).indexOf(th);
+                    if (input.value) {
+                        filters[columnIndex] = input.value.toLowerCase();
+                    }
+                });
+                
+                // 篩選表格行
+                document.querySelectorAll('#testCaseTableBody tr').forEach(row => {
+                    let visible = true;
+                    
+                    // 全域搜尋
+                    if (globalSearch) {
+                        const text = row.textContent.toLowerCase();
+                        if (!text.includes(globalSearch)) {
+                            visible = false;
+                        }
+                    }
+                    
+                    // 欄位篩選
+                    if (visible) {
+                        for (const [columnIndex, filterValue] of Object.entries(filters)) {
+                            const cell = row.children[columnIndex];
+                            if (cell && !cell.textContent.toLowerCase().includes(filterValue)) {
+                                visible = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    row.style.display = visible ? '' : 'none';
+                });
+            }
+            
+            showSuccess() {
+                const element = document.getElementById('saveSuccess');
+                element.classList.remove('d-none');
+                
+                clearTimeout(this.saveTimeout);
+                this.saveTimeout = setTimeout(() => {
+                    element.classList.add('d-none');
+                }, 2000);
+            }
+            
+            showError(message) {
+                const element = document.getElementById('saveError');
+                element.textContent = message;
+                element.classList.remove('d-none');
+                
+                setTimeout(() => {
+                    element.classList.add('d-none');
+                }, 5000);
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new TestCaseManager();
+        });
+    </script>
+</body>
+</html>

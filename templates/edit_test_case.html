@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>編輯測試案例 - API 監控系統</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            display: flex;
+        }
+        
+        /* 側邊欄樣式 (與其他頁面一致) */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        
+        .sidebar-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .sidebar-subtitle {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin: 5px 0 0 0;
+        }
+        
+        .user-info {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-welcome {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .user-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 5px 0 0 0;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 1em;
+            cursor: pointer;
+            box-sizing: border-box;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .menu-item span {
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            padding-left: 35px;
+        }
+        
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-right: 4px solid #ffd700;
+            padding-right: 21px; /* 補償 border 寬度 */
+        }
+        
+        /* 主要內容區域 */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            width: calc(100% - 250px);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        
+        .story-id-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .help-text {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .user-story-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .role-highlight {
+            font-weight: bold;
+            color: #6f42c1;
+        }
+        
+        .form-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        .flash-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        
+        .flash-error {
+            background-color: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .flash-success {
+            background-color: #efe;
+            color: #363;
+            border: 1px solid #cfc;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 左側選單 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">🔍 API 監控</h2>
+            <p class="sidebar-subtitle">管理控制台</p>
+        </div>
+        
+        <div class="user-info">
+            <p class="user-welcome">歡迎回來</p>
+            <p class="user-name">{{ current_user.username if current_user else '用戶' }}</p>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="/" class="menu-item">
+                <span>📊</span> 監控儀表板
+            </a>
+            <a href="/test-cases" class="menu-item active">
+                <span>📋</span> 測試案例
+            </a>
+            {% if current_user and current_user.role == 'admin' %}
+            <a href="/admin" class="menu-item">
+                <span>⚙️</span> API 管理
+            </a>
+            <a href="/user-management" class="menu-item">
+                <span>👥</span> 用戶管理
+            </a>
+            {% endif %}
+            <a href="/logout" class="menu-item" onclick="return confirm('確定要登出嗎？')">
+                <span>🚪</span> 登出
+            </a>
+        </nav>
+    </div>
+    
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1>✏️ 編輯測試案例</h1>
+                <p>修改現有的 User Story 測試案例</p>
+                <div class="story-id-info">
+                    <strong>案例 ID:</strong> {{ story.id }}<br>
+                    <strong>建立時間:</strong> {{ story.created_at[:19].replace('T', ' ') }}<br>
+                    <strong>建立者:</strong> {{ story.created_by }}
+                </div>
+            </div>
+            
+            <!-- Flash 訊息 -->
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flash-message flash-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            
+            <div class="form-container">
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="project_name">所屬專案 <span class="required">*</span></label>
+                        <select id="project_name" name="project_name" required>
+                            <option value="">請選擇專案或輸入新專案名稱</option>
+                            {% for project in existing_projects %}
+                            <option value="{{ project }}" {% if story.project_name == project %}selected{% endif %}>{{ project }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" id="new_project_name" name="new_project_name" 
+                               placeholder="或輸入新的專案名稱" style="margin-top: 8px;">
+                        <div class="help-text">選擇現有專案或輸入新專案名稱進行分類</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="title">測試案例標題 <span class="required">*</span></label>
+                        <input type="text" id="title" name="title" required 
+                               value="{{ story.title }}"
+                               placeholder="例如：搜尋地圖上的可用機車">
+                        <div class="help-text">簡短描述這個測試案例的主要功能</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="user_role">使用者角色 <span class="required">*</span></label>
+                        <input type="text" id="user_role" name="user_role" required 
+                               value="{{ story.user_role }}"
+                               placeholder="例如：使用者、管理者、訪客">
+                        <div class="help-text">描述執行此功能的使用者角色</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feature_description">功能描述 <span class="required">*</span></label>
+                        <input type="text" id="feature_description" name="feature_description" required 
+                               value="{{ story.feature_description }}"
+                               placeholder="例如：我希望在搜尋機車時，能夠在地圖上看到可用車輛">
+                        <div class="help-text">描述使用者希望能夠做什麼</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="purpose">目的/價值 <span class="required">*</span></label>
+                        <input type="text" id="purpose" name="purpose" required 
+                               value="{{ story.purpose }}"
+                               placeholder="例如：以便快速租借">
+                        <div class="help-text">說明為什麼需要這個功能，能帶來什麼價值</div>
+                    </div>
+                    
+                    <!-- User Story 預覽 -->
+                    <div class="user-story-preview" id="storyPreview">
+                        <strong>User Story 預覽：</strong><br>
+                        作為一位<span class="role-highlight" id="previewRole">{{ story.user_role }}</span>，<span id="previewFeature">{{ story.feature_description }}</span>，<span id="previewPurpose">{{ story.purpose }}</span>。
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="acceptance_criteria">驗收條件</label>
+                        <textarea id="acceptance_criteria" name="acceptance_criteria" rows="6"
+                                  placeholder="每行一個驗收條件，例如：&#10;能夠在地圖上顯示可用機車位置&#10;機車圖示顯示電量狀態&#10;點擊機車可查看詳細資訊&#10;支援依距離篩選機車">{% if story.acceptance_criteria %}{{ '\n'.join(story.acceptance_criteria) }}{% endif %}</textarea>
+                        <div class="help-text">每行一個驗收條件，列出此功能需要滿足的具體要求</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="test_result">測試結果</label>
+                        <select id="test_result" name="test_result">
+                            <option value="Pending" {% if story.test_result == 'Pending' %}selected{% endif %}>待測試</option>
+                            <option value="Pass" {% if story.test_result == 'Pass' %}selected{% endif %}>通過</option>
+                            <option value="Fail" {% if story.test_result == 'Fail' %}selected{% endif %}>失敗</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="test_notes">測試備註</label>
+                        <textarea id="test_notes" name="test_notes" rows="4"
+                                  placeholder="記錄測試過程中的發現、問題或建議">{{ story.test_notes if story.test_notes else '' }}</textarea>
+                        <div class="help-text">可以記錄測試過程、發現的問題或改進建議</div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <a href="/test-cases" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">更新測試案例</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 即時更新 User Story 預覽
+        function updatePreview() {
+            const role = document.getElementById('user_role').value || '使用者角色';
+            const feature = document.getElementById('feature_description').value || '功能描述';
+            const purpose = document.getElementById('purpose').value || '目的/價值';
+            
+            document.getElementById('previewRole').textContent = role;
+            document.getElementById('previewFeature').textContent = feature;
+            document.getElementById('previewPurpose').textContent = purpose;
+        }
+        
+        // 綁定輸入事件
+        document.getElementById('user_role').addEventListener('input', updatePreview);
+        document.getElementById('feature_description').addEventListener('input', updatePreview);
+        document.getElementById('purpose').addEventListener('input', updatePreview);
+        
+        // 專案名稱處理
+        document.getElementById('new_project_name').addEventListener('input', function() {
+            const newProjectName = this.value.trim();
+            const projectSelect = document.getElementById('project_name');
+            
+            if (newProjectName) {
+                // 如果輸入了新專案名稱，清除下拉選單選擇
+                projectSelect.value = '';
+                // 動態設置隱藏欄位值
+                projectSelect.setAttribute('data-new-project', newProjectName);
+            } else {
+                projectSelect.removeAttribute('data-new-project');
+            }
+        });
+        
+        document.getElementById('project_name').addEventListener('change', function() {
+            if (this.value) {
+                // 如果選擇了現有專案，清除新專案輸入框
+                document.getElementById('new_project_name').value = '';
+            }
+        });
+        
+        // 表單驗證
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const projectSelect = document.getElementById('project_name');
+            const newProjectInput = document.getElementById('new_project_name');
+            const requiredFields = ['title', 'user_role', 'feature_description', 'purpose'];
+            let isValid = true;
+            
+            // 處理專案名稱
+            if (newProjectInput.value.trim()) {
+                // 如果輸入了新專案名稱，使用新專案名稱
+                projectSelect.value = newProjectInput.value.trim();
+            } else if (!projectSelect.value) {
+                // 如果既沒選擇也沒輸入，顯示錯誤
+                projectSelect.style.borderColor = '#dc3545';
+                isValid = false;
+            } else {
+                projectSelect.style.borderColor = '#e1e8ed';
+            }
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.style.borderColor = '#dc3545';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = '#e1e8ed';
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('請填寫所有必要欄位（包括專案名稱）');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,10 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from data_manager import DataManager
 from api_checker import APIChecker
 from stress_tester import StressTester
+from user_manager import UserManager
+from user_story_manager import UserStoryManager
+from test_case_app import create_test_case_routes, init_test_case_data
 from config import Config
 import os
 import threading
+import json
+from datetime import datetime
+from functools import wraps
 
 app = Flask(__name__)
 config = Config()
@@ -14,8 +20,71 @@ app.config.from_object(config)
 data_manager = DataManager(config.DATA_FILE)
 api_checker = APIChecker(data_manager)
 stress_tester = StressTester(data_manager)
+user_manager = UserManager()
+user_story_manager = UserStoryManager()
+
+# 初始化測試案例管理
+test_case_manager = init_test_case_data()
+create_test_case_routes(app, test_case_manager)
+
+# 認證裝飾器
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('請先登入', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('請先登入', 'error')
+            return redirect(url_for('login'))
+        
+        user = user_manager.get_user_by_id(session['user_id'])
+        if not user or user.get('role') != 'admin':
+            flash('需要管理員權限', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# 認證路由
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """用戶登入"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        if not username or not password:
+            flash('請填寫用戶名和密碼', 'error')
+            return render_template('login.html')
+        
+        user = user_manager.authenticate_user(username, password)
+        if user:
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['role'] = user['role']
+            flash(f'歡迎回來，{user["username"]}！', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('用戶名或密碼錯誤', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    """用戶登出"""
+    username = session.get('username', '用戶')
+    session.clear()
+    flash(f'{username} 已成功登出', 'success')
+    return redirect(url_for('login'))
 
 @app.route('/')
+@login_required
 def index():
     """主監控頁面"""
     apis = data_manager.load_apis()
@@ -28,15 +97,18 @@ def index():
         'unknown': len([api for api in apis if api.get('status') == 'unknown'])
     }
     
-    return render_template('index.html', apis=apis, stats=stats)
+    current_user = user_manager.get_user_by_id(session['user_id'])
+    return render_template('index.html', apis=apis, stats=stats, current_user=current_user)
 
 @app.route('/admin')
+@admin_required
 def admin():
     """管理後台頁面"""
     apis = data_manager.load_apis()
     return render_template('admin.html', apis=apis)
 
 @app.route('/admin/add', methods=['POST'])
+@admin_required
 def add_api():
     """新增 API"""
     name = request.form.get('name', '').strip()
@@ -102,6 +174,7 @@ def add_api():
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete/<api_id>', methods=['POST'])
+@admin_required
 def delete_api(api_id):
     """刪除 API"""
     try:
@@ -115,6 +188,7 @@ def delete_api(api_id):
     return redirect(url_for('admin'))
 
 @app.route('/admin/edit/<api_id>')
+@admin_required
 def edit_api(api_id):
     """編輯 API 頁面"""
     api = data_manager.get_api_by_id(api_id)
@@ -124,6 +198,7 @@ def edit_api(api_id):
     return render_template('edit_api.html', api=api)
 
 @app.route('/admin/edit/<api_id>', methods=['POST'])
+@admin_required
 def update_api(api_id):
     """更新 API"""
     name = request.form.get('name', '').strip()
@@ -196,12 +271,14 @@ def update_api(api_id):
         return redirect(url_for('edit_api', api_id=api_id))
 
 @app.route('/check-now')
+@login_required
 def check_now():
     """立即執行檢查"""
     # 先顯示loading頁面，然後重定向到結果頁面
     return redirect(url_for('loading') + '?redirect=' + url_for('check_now_process') + '&delay=2000')
 
 @app.route('/check-now-process')
+@login_required
 def check_now_process():
     """實際執行檢查的處理"""
     try:
@@ -235,6 +312,7 @@ def api_status():
     })
 
 @app.route('/stress-test/<api_id>')
+@login_required
 def start_stress_test(api_id):
     """啟動壓力測試"""
     try:
@@ -271,6 +349,7 @@ def start_stress_test(api_id):
     return redirect(url_for('index'))
 
 @app.route('/stress-test-live/<api_id>')
+@login_required
 def stress_test_live(api_id):
     """壓力測試實時監控頁面"""
     api = data_manager.get_api_by_id(api_id)
@@ -281,6 +360,7 @@ def stress_test_live(api_id):
     return render_template('stress_live.html', api=api)
 
 @app.route('/stress-test-results/<api_id>')
+@login_required
 def stress_test_results(api_id):
     """顯示壓力測試結果"""
     api = data_manager.get_api_by_id(api_id)
@@ -291,6 +371,7 @@ def stress_test_results(api_id):
     return render_template('stress_results.html', api=api)
 
 @app.route('/api/stress-test-status/<api_id>')
+@login_required
 def stress_test_status(api_id):
     """取得壓力測試狀態（AJAX 用）"""
     is_running = stress_tester.is_test_running(api_id)
@@ -338,11 +419,245 @@ def health_check():
         'message': 'API Monitor is running (simple version)'
     })
 
+@app.route('/favicon.ico')
+def favicon():
+    """Favicon 路由避免 404 錯誤"""
+    return '', 204
+
+@app.route('/debug-login')
+def debug_login():
+    """Debug 登入狀態"""
+    debug_info = {
+        'session': dict(session),
+        'user_count': len(user_manager.load_users()),
+        'admin_exists': bool(user_manager.get_user_by_username('admin')),
+        'current_time': datetime.now().isoformat()
+    }
+    return f"<pre>{json.dumps(debug_info, indent=2, ensure_ascii=False)}</pre>"
+
+# 用戶管理路由
+@app.route('/user-management')
+@admin_required
+def user_management():
+    """用戶管理頁面"""
+    users = user_manager.get_all_users()
+    stats = user_manager.get_user_stats()
+    current_user = user_manager.get_user_by_id(session['user_id'])
+    return render_template('user_management.html', users=users, stats=stats, current_user=current_user)
+
+@app.route('/user-management/add', methods=['POST'])
+@admin_required
+def add_user():
+    """新增用戶"""
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    email = request.form.get('email', '').strip()
+    role = request.form.get('role', 'user').strip()
+    
+    if not username or not password:
+        flash('用戶名和密碼不能為空', 'error')
+        return redirect(url_for('user_management'))
+    
+    success, message = user_manager.create_user(username, password, role, email)
+    if success:
+        flash(message, 'success')
+    else:
+        flash(message, 'error')
+    
+    return redirect(url_for('user_management'))
+
+@app.route('/user-management/delete/<user_id>', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    """刪除用戶"""
+    current_user_id = session['user_id']
+    success, message = user_manager.delete_user(user_id, current_user_id)
+    
+    if success:
+        flash(message, 'success')
+    else:
+        flash(message, 'error')
+    
+    return redirect(url_for('user_management'))
+
+# User Story 管理路由
+@app.route('/test-cases')
+@login_required
+def test_cases():
+    """測試案例管理頁面"""
+    user_stories = user_story_manager.load_user_stories()
+    stats = user_story_manager.get_statistics()
+    projects_overview = user_story_manager.get_projects_overview()
+    current_user = user_manager.get_user_by_id(session['user_id'])
+    return render_template('test_cases.html', 
+                         user_stories=user_stories, 
+                         stats=stats, 
+                         projects_overview=projects_overview,
+                         current_user=current_user)
+
+@app.route('/test-cases/add')
+@login_required
+def add_test_case_form():
+    """新增測試案例表單頁面"""
+    current_user = user_manager.get_user_by_id(session['user_id'])
+    existing_projects = user_story_manager.get_all_projects()
+    return render_template('add_test_case.html', current_user=current_user, existing_projects=existing_projects)
+
+@app.route('/test-cases/add', methods=['POST'])
+@login_required
+def add_test_case():
+    """新增測試案例"""
+    project_names_str = request.form.get('project_name', '').strip()
+    project_names = [name.strip() for name in project_names_str.split(',') if name.strip()]
+    title = request.form.get('title', '').strip()
+    user_role = request.form.get('user_role', '').strip()
+    feature_description = request.form.get('feature_description', '').strip()
+    purpose = request.form.get('purpose', '').strip()
+    test_result = request.form.get('test_result', 'Pending').strip()
+    test_notes = request.form.get('test_notes', '').strip()
+    
+    # 處理驗收條件（多行文字，每行一個條件）
+    acceptance_criteria_text = request.form.get('acceptance_criteria', '').strip()
+    acceptance_criteria = [line.strip() for line in acceptance_criteria_text.split('\n') if line.strip()]
+    
+    if not project_names or not title or not user_role or not feature_description or not purpose:
+        flash('請填寫所有必要欄位', 'error')
+        return redirect(url_for('add_test_case_form'))
+    
+    try:
+        current_user = user_manager.get_user_by_id(session['user_id'])
+        created_by = current_user.get('username', 'Unknown') if current_user else 'Unknown'
+        
+        user_story_manager.create_user_story(
+            project_names=project_names,
+            title=title,
+            user_role=user_role,
+            feature_description=feature_description,
+            purpose=purpose,
+            acceptance_criteria=acceptance_criteria,
+            test_result=test_result,
+            test_notes=test_notes,
+            created_by=created_by
+        )
+        
+        flash(f'成功新增測試案例: {title}', 'success')
+    except Exception as e:
+        flash(f'新增測試案例時發生錯誤: {str(e)}', 'error')
+    
+    return redirect(url_for('test_cases'))
+
+@app.route('/test-cases/edit/<story_id>')
+@login_required
+def edit_test_case_form(story_id):
+    """編輯測試案例表單頁面"""
+    story = user_story_manager.get_user_story_by_id(story_id)
+    if not story:
+        flash('找不到指定的測試案例', 'error')
+        return redirect(url_for('test_cases'))
+    
+    current_user = user_manager.get_user_by_id(session['user_id'])
+    existing_projects = user_story_manager.get_all_projects()
+    return render_template('edit_test_case.html', story=story, current_user=current_user, existing_projects=existing_projects)
+
+@app.route('/test-cases/edit/<story_id>', methods=['POST'])
+@login_required
+def edit_test_case(story_id):
+    """更新測試案例"""
+    project_names_str = request.form.get('project_name', '').strip()
+    project_names = [name.strip() for name in project_names_str.split(',') if name.strip()]
+    title = request.form.get('title', '').strip()
+    user_role = request.form.get('user_role', '').strip()
+    feature_description = request.form.get('feature_description', '').strip()
+    purpose = request.form.get('purpose', '').strip()
+    test_result = request.form.get('test_result', 'Pending').strip()
+    test_notes = request.form.get('test_notes', '').strip()
+    
+    # 處理驗收條件
+    acceptance_criteria_text = request.form.get('acceptance_criteria', '').strip()
+    acceptance_criteria = [line.strip() for line in acceptance_criteria_text.split('\n') if line.strip()]
+    
+    if not project_names or not title or not user_role or not feature_description or not purpose:
+        flash('請填寫所有必要欄位', 'error')
+        return redirect(url_for('edit_test_case_form', story_id=story_id))
+    
+    try:
+        success = user_story_manager.update_user_story(
+            story_id=story_id,
+            project_names=project_names,
+            title=title,
+            user_role=user_role,
+            feature_description=feature_description,
+            purpose=purpose,
+            acceptance_criteria=acceptance_criteria,
+            test_result=test_result,
+            test_notes=test_notes
+        )
+        
+        if success:
+            flash(f'成功更新測試案例: {title}', 'success')
+        else:
+            flash('找不到要更新的測試案例', 'error')
+    except Exception as e:
+        flash(f'更新測試案例時發生錯誤: {str(e)}', 'error')
+    
+    return redirect(url_for('test_cases'))
+
+@app.route('/test-cases/delete/<story_id>', methods=['POST'])
+@login_required
+def delete_user_story(story_id):
+    """刪除測試案例"""
+    try:
+        success = user_story_manager.delete_user_story(story_id)
+        if success:
+            flash('測試案例已成功刪除', 'success')
+        else:
+            flash('找不到要刪除的測試案例', 'error')
+    except Exception as e:
+        flash(f'刪除測試案例時發生錯誤: {str(e)}', 'error')
+    
+    return redirect(url_for('test_cases'))
+
+@app.route('/projects/delete/<project_name>', methods=['POST'])
+@login_required
+def delete_project(project_name):
+    """刪除專案"""
+    try:
+        # 檢查專案是否存在
+        all_projects = user_story_manager.get_all_projects()
+        if project_name not in all_projects:
+            flash('找不到指定的專案', 'error')
+            return redirect(url_for('test_cases'))
+        
+        # 獲取該專案的測試案例數量
+        test_cases_count = user_story_manager.get_project_test_cases_count(project_name)
+        
+        # 執行刪除
+        success = user_story_manager.delete_project(project_name)
+        
+        if success:
+            if test_cases_count > 0:
+                flash(f'成功刪除專案「{project_name}」，已從 {test_cases_count} 個測試案例中移除該專案關聯', 'success')
+            else:
+                flash(f'成功刪除專案「{project_name}」', 'success')
+        else:
+            flash('專案刪除失敗', 'error')
+    except Exception as e:
+        flash(f'刪除專案時發生錯誤: {str(e)}', 'error')
+    
+    return redirect(url_for('test_cases'))
+
 if __name__ == '__main__':
     print("🚀 啟動 API 監控系統（簡化版）...")
     print("請訪問: http://127.0.0.1:5001")
-    print("管理頁面: http://127.0.0.1:5001/admin")
+    print("登入頁面: http://127.0.0.1:5001/login")
+    print("管理頁面: http://127.0.0.1:5001/admin (需管理員權限)")
+    print("用戶管理: http://127.0.0.1:5001/user-management (需管理員權限)")
+    print("")
+    print("🔧 預設管理員帳號:")
+    print("   用戶名: admin")
+    print("   密碼: admin123")
+    print("")
     print("按 Ctrl+C 停止服務")
     
     # 啟動 Flask 應用程式
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=True, host='127.0.0.1', port=5000)
