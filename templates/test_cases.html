@@ -500,8 +500,8 @@
             <a href="/" class="menu-item">
                 <span>📊</span> 監控儀表板
             </a>
-            <a href="/test-cases" class="menu-item active">
-                <span>📋</span> 測試案例
+            <a href="/test-case-management" class="menu-item">
+                <span>📝</span> 測試案例管理
             </a>
             {% if current_user and current_user.role == 'admin' %}
             <a href="/admin" class="menu-item">
@@ -593,7 +593,7 @@
             <!-- 控制按鈕 -->
             <div class="controls">
                 <div>
-                    <a href="/test-cases/add" class="btn btn-primary">➕ 新增測試案例</a>
+                    <a href="/test-case-management" class="btn btn-primary">➕ 新增測試案例</a>
                 </div>
             </div>
             
@@ -653,8 +653,8 @@
                                     </div>
                                     
                                     <div class="story-actions">
-                                        <a href="/test-cases/edit/{{ story.id }}" class="btn btn-warning">✏️ 編輯</a>
-                                        <form method="POST" action="/test-cases/delete/{{ story.id }}" style="display: inline;">
+                                        <a href="/test-case-management" class="btn btn-warning">✏️ 編輯</a>
+                                        <form method="POST" action="/test-case-management" style="display: inline;">
                                             <button type="submit" class="btn btn-danger" 
                                                     onclick="return confirm('確定要刪除這個測試案例嗎？')">
                                                 🗑️ 刪除
@@ -683,7 +683,7 @@
                     <div class="no-stories">
                         <h3>🔍 尚未添加任何測試案例</h3>
                         <p>開始創建您的第一個 User Story 測試案例</p>
-                        <a href="/test-cases/add" class="btn btn-primary">➕ 新增測試案例</a>
+                        <a href="/test-case-management" class="btn btn-primary">➕ 新增測試案例</a>
                     </div>
                 </div>
             {% endif %}

@@ -1,395 +1,444 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API 管理後台</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-        }
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 1em;
-            box-sizing: border-box;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            text-decoration: none;
-            display: inline-block;
-            margin-right: 10px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .btn:hover {
-            opacity: 0.9;
-        }
-        .api-list {
-            margin-top: 30px;
-        }
-        .api-item {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .api-details h4 {
-            margin: 0 0 5px 0;
-            color: #333;
-        }
-        .api-details p {
-            margin: 0;
-            color: #666;
-            font-size: 0.9em;
-        }
-        .flash-messages {
-            margin-bottom: 20px;
-        }
-        .flash-message {
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        .flash-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .flash-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .nav-links {
-            margin-bottom: 20px;
-        }
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-        .status-healthy {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status-unhealthy {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .status-unknown {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        .privacy-toggle {
-            background-color: #6c757d;
-            color: white;
-            font-size: 0.85em;
-            padding: 8px 16px;
-        }
-        .privacy-toggle.active {
-            background-color: #28a745;
-        }
-        .url-hidden {
-            color: #6c757d;
-            font-style: italic;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>⚙️ API 管理後台</h1>
-            <p>新增、刪除和管理監控的 API</p>
-        </div>
-        
-        <div class="nav-links">
-            <a href="/" class="btn btn-secondary">← 返回監控頁面</a>
-            <a href="/user-management" class="btn btn-warning">👥 用戶管理</a>
-            <button id="privacy-toggle" class="btn privacy-toggle" onclick="togglePrivacy()">
-                🙈 隱藏 URL
-            </button>
-            <a href="/logout" class="btn btn-primary">🚪 登出</a>
-        </div>
-        
-        <div class="flash-messages">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash-message flash-{{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-        </div>
-        
-        <div class="card">
-            <h2>🆕 新增 API</h2>
-            <form method="POST" action="/admin/add">
+{% extends "base.html" %}
+
+{% block title %}API 管理後台 - API Monitor{% endblock %}
+{% block page_title %}API 管理後台{% endblock %}
+{% block page_subtitle %}新增、編輯和管理 API 監控服務{% endblock %}
+
+{% block extra_css %}
+.form-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.form-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+}
+
+.form-body {
+    padding: 30px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.api-list {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.list-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+}
+
+.list-title {
+    margin: 0;
+}
+
+.api-item {
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.api-item:hover {
+    background-color: #f8f9fa;
+}
+
+.api-item:last-child {
+    border-bottom: none;
+}
+
+.api-header {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.api-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.api-url {
+    color: #6c757d;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.api-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.detail-value {
+    color: #6c757d;
+}
+
+.api-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stress-test-config {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.stress-test-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.config-item {
+    text-align: center;
+}
+
+.config-value {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 1.1em;
+}
+
+.config-label {
+    font-size: 0.85em;
+    color: #6c757d;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    color: #dee2e6;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .api-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .api-actions {
+        margin-top: 15px;
+    }
+    
+    .config-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+{% endblock %}
+
+{% block content %}
+<!-- 新增 API 表單 -->
+<div class="form-card">
+    <div class="form-header">
+        <h2><i class="fas fa-plus-circle"></i> 新增 API 監控</h2>
+    </div>
+    <div class="form-body">
+        <form method="POST" action="{{ url_for('add_api') }}">
+            <div class="form-grid">
                 <div class="form-group">
-                    <label for="name">API 名稱</label>
-                    <input type="text" id="name" name="name" required 
-                           placeholder="例如: 用戶服務 API">
+                    <label for="name">API 名稱 *</label>
+                    <input type="text" id="name" name="name" class="form-control" 
+                           placeholder="例：用戶登入 API" required>
                 </div>
+                
                 <div class="form-group">
-                    <label for="url">API URL</label>
-                    <input type="url" id="url" name="url" required 
-                           placeholder="https://api.example.com/health">
+                    <label for="url">API URL *</label>
+                    <input type="url" id="url" name="url" class="form-control" 
+                           placeholder="https://api.example.com/login" required>
                 </div>
+                
+                <div class="form-group">
+                    <label for="type">API 類型</label>
+                    <select id="type" name="type" class="form-control">
+                        <option value="REST">REST API</option>
+                        <option value="GraphQL">GraphQL</option>
+                        <option value="SOAP">SOAP</option>
+                        <option value="WebSocket">WebSocket</option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label for="method">HTTP 方法</label>
-                    <select id="method" name="method">
+                    <select id="method" name="method" class="form-control">
                         <option value="GET">GET</option>
                         <option value="POST">POST</option>
                         <option value="PUT">PUT</option>
                         <option value="DELETE">DELETE</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="type">API 類型</label>
-                    <select id="type" name="type">
-                        <option value="REST">REST API</option>
-                        <option value="GraphQL">GraphQL</option>
-                        <option value="WebSocket">WebSocket</option>
-                        <option value="Other">其他</option>
-                    </select>
-                </div>
-                <div class="form-group" id="request-body-group" style="display: none;">
-                    <label for="request_body">Request Body (JSON 格式)</label>
-                    <textarea id="request_body" name="request_body" rows="8" 
-                              placeholder='例如: {"key": "value", "timestamp": "{{timestamp}}"}' 
-                              style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.9em; resize: vertical;"></textarea>
-                    <small style="color: #666; font-size: 0.85em;">
-                        💡 提示: 使用 {{timestamp}} 作為動態時間戳佔位符
-                    </small>
-                </div>
-                
-                <!-- 壓力測試配置 -->
-                <div style="border-top: 2px solid #eee; margin: 30px 0 20px 0; padding-top: 20px;">
-                    <h3 style="color: #6f42c1; margin-bottom: 15px;">🔥 壓力測試參數</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label for="concurrent_requests">併發請求數</label>
-                            <input type="number" id="concurrent_requests" name="concurrent_requests" 
-                                   value="1" min="1" max="100" 
-                                   style="text-align: center;">
-                            <small style="color: #666; font-size: 0.8em;">1-100 個</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="duration_seconds">持續時間 (秒)</label>
-                            <input type="number" id="duration_seconds" name="duration_seconds" 
-                                   value="10" min="5" max="300"
-                                   style="text-align: center;">
-                            <small style="color: #666; font-size: 0.8em;">5-300 秒</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="interval_seconds">請求間隔 (秒)</label>
-                            <input type="number" id="interval_seconds" name="interval_seconds" 
-                                   value="1.0" min="0.1" max="10" step="0.1"
-                                   style="text-align: center;">
-                            <small style="color: #666; font-size: 0.8em;">0.1-10 秒</small>
-                        </div>
-                    </div>
-                    <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 0.85em; color: #666;">
-                        💡 壓力測試將在 API 監控頁面手動執行，可測試 API 的負載承受能力
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">✅ 新增 API</button>
-                
-                <script>
-                // 根據選擇的 HTTP 方法顯示/隱藏 Request Body 欄位
-                document.getElementById('method').addEventListener('change', function() {
-                    const method = this.value;
-                    const requestBodyGroup = document.getElementById('request-body-group');
-                    
-                    if (['POST', 'PUT', 'PATCH'].includes(method)) {
-                        requestBodyGroup.style.display = 'block';
-                    } else {
-                        requestBodyGroup.style.display = 'none';
-                        document.getElementById('request_body').value = '';
-                    }
-                });
-                
-                // 頁面載入時檢查初始狀態
-                document.addEventListener('DOMContentLoaded', function() {
-                    const method = document.getElementById('method').value;
-                    const requestBodyGroup = document.getElementById('request-body-group');
-                    
-                    if (['POST', 'PUT', 'PATCH'].includes(method)) {
-                        requestBodyGroup.style.display = 'block';
-                    }
-                });
-                </script>
-            </form>
-        </div>
-        
-        <div class="card">
-            <h2>📋 目前監控的 API</h2>
-            <div class="api-list">
-                {% for api in apis %}
-                <div class="api-item">
-                    <div class="api-details">
-                        <h4>
-                            {{ api.name }}
-                            <span class="status-badge status-{{ api.status }}">
-                                {{ '✅ 正常' if api.status == 'healthy' else ('❌ 異常' if api.status == 'unhealthy' else '❓ 未知') }}
-                            </span>
-                        </h4>
-                        <p><strong>URL:</strong> <span class="api-url" data-url="{{ api.url }}">{{ api.url }}</span></p>
-                        <p><strong>方法:</strong> {{ api.method or 'GET' }} | <strong>類型:</strong> {{ api.type }}</p>
-                        {% if api.request_body %}
-                        <details style="margin: 10px 0;">
-                            <summary style="cursor: pointer; color: #007bff; font-weight: bold;">📄 Request Body</summary>
-                            <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; overflow-x: auto; white-space: pre-wrap;">{{ api.request_body }}</pre>
-                        </details>
-                        {% endif %}
-                        {% if api.last_response %}
-                        <details style="margin: 10px 0;">
-                            <summary style="cursor: pointer; color: #28a745; font-weight: bold;">📥 最新回應</summary>
-                            <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; overflow-x: auto; white-space: pre-wrap; max-height: 300px; border: 1px solid #dee2e6;">{{ api.last_response }}</pre>
-                        </details>
-                        {% endif %}
-                        {% if api.last_check %}
-                        <p><strong>最後檢查:</strong> {{ api.last_check[:19].replace('T', ' ') }}</p>
-                        {% endif %}
-                        {% if api.error_count > 0 %}
-                        <p><strong>錯誤次數:</strong> {{ api.error_count }}</p>
-                        {% endif %}
-                        {% if api.stress_test %}
-                        <details style="margin: 10px 0;">
-                            <summary style="cursor: pointer; color: #6f42c1; font-weight: bold;">🔥 壓力測試配置</summary>
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 5px;">
-                                <p><strong>併發請求:</strong> {{ api.stress_test.concurrent_requests }} 個</p>
-                                <p><strong>持續時間:</strong> {{ api.stress_test.duration_seconds }} 秒</p>
-                                <p><strong>請求間隔:</strong> {{ api.stress_test.interval_seconds }} 秒</p>
-                                {% if api.stress_test.last_test %}
-                                <p><strong>最後測試:</strong> {{ api.stress_test.last_test[:19].replace('T', ' ') }}</p>
-                                {% endif %}
-                                {% if api.stress_test.results %}
-                                <p><strong>測試記錄:</strong> {{ api.stress_test.results|length }} 次</p>
-                                {% endif %}
-                            </div>
-                        </details>
-                        {% endif %}
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <a href="/admin/edit/{{ api.id }}" class="btn btn-primary">✏️ 編輯</a>
-                        <form method="POST" action="/admin/delete/{{ api.id }}" 
-                              style="display: inline-block;"
-                              onsubmit="return confirm('確定要刪除這個 API 嗎？')">
-                            <button type="submit" class="btn btn-danger">🗑️ 刪除</button>
-                        </form>
-                    </div>
-                </div>
-                {% else %}
-                <div class="api-item">
-                    <div style="text-align: center; color: #666; width: 100%;">
-                        <p>🔍 尚未添加任何 API</p>
-                        <p>使用上方表單新增您要監控的 API</p>
-                    </div>
-                </div>
-                {% endfor %}
             </div>
-        </div>
-    </div>
-
-    <script>
-        // 隱私切換功能
-        let privacyMode = localStorage.getItem('privacy-mode') === 'true';
-        
-        function togglePrivacy() {
-            privacyMode = !privacyMode;
-            localStorage.setItem('privacy-mode', privacyMode);
-            updatePrivacyDisplay();
-        }
-        
-        function updatePrivacyDisplay() {
-            const button = document.getElementById('privacy-toggle');
-            const apiUrls = document.querySelectorAll('.api-url');
             
-            if (privacyMode) {
-                button.textContent = '👁️ 顯示 URL';
-                button.classList.add('active');
-                apiUrls.forEach(element => {
-                    element.textContent = '*** API URL 已隱藏 (Demo 模式) ***';
-                    element.classList.add('url-hidden');
-                });
-            } else {
-                button.textContent = '🙈 隱藏 URL';
-                button.classList.remove('active');
-                apiUrls.forEach(element => {
-                    element.textContent = element.getAttribute('data-url');
-                    element.classList.remove('url-hidden');
-                });
+            <div class="form-group">
+                <label for="request_body">Request Body (JSON)</label>
+                <textarea id="request_body" name="request_body" class="form-control" rows="4" 
+                         placeholder='{"key": "value", "timestamp": "{{timestamp}}"}'></textarea>
+                <small class="text-muted">支援 {{timestamp}} 動態時間戳</small>
+            </div>
+            
+            <!-- 壓力測試配置 -->
+            <h5><i class="fas fa-bolt"></i> 壓力測試配置</h5>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="concurrent_requests">併發請求數</label>
+                    <input type="number" id="concurrent_requests" name="concurrent_requests" 
+                           class="form-control" value="1" min="1" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="duration_seconds">持續時間 (秒)</label>
+                    <input type="number" id="duration_seconds" name="duration_seconds" 
+                           class="form-control" value="10" min="5" max="300">
+                </div>
+                
+                <div class="form-group">
+                    <label for="interval_seconds">請求間隔 (秒)</label>
+                    <input type="number" id="interval_seconds" name="interval_seconds" 
+                           class="form-control" value="1.0" min="0.1" max="10" step="0.1">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-plus"></i> 新增 API
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- API 列表 -->
+<div class="api-list">
+    <div class="list-header">
+        <h2 class="list-title"><i class="fas fa-list"></i> 現有 API 列表</h2>
+    </div>
+    
+    {% if apis %}
+        {% for api in apis %}
+        <div class="api-item">
+            <div class="api-header">
+                <div style="flex: 1;">
+                    <h3 class="api-name">{{ api.name }}</h3>
+                    <div class="api-url">{{ api.url }}</div>
+                </div>
+                <div class="api-actions">
+                    <a href="{{ url_for('edit_api', api_id=api.id) }}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit"></i> 編輯
+                    </a>
+                    <form method="POST" action="{{ url_for('delete_api', api_id=api.id) }}" 
+                          style="display: inline;" 
+                          onsubmit="return confirm('確定要刪除這個 API 嗎？')">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash"></i> 刪除
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="api-details">
+                <div class="detail-item">
+                    <span class="detail-label">類型：</span>
+                    <span class="badge bg-info">{{ api.type }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">方法：</span>
+                    <span class="badge bg-secondary">{{ api.method }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">狀態：</span>
+                    {% if api.status == 'healthy' %}
+                        <span class="badge bg-success">健康</span>
+                    {% elif api.status == 'unhealthy' %}
+                        <span class="badge bg-danger">異常</span>
+                    {% else %}
+                        <span class="badge bg-warning">未知</span>
+                    {% endif %}
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">最後檢查：</span>
+                    <span class="detail-value">{{ api.last_checked or '從未檢查' }}</span>
+                </div>
+            </div>
+            
+            {% if api.stress_test %}
+            <div class="stress-test-config">
+                <div class="stress-test-title">
+                    <i class="fas fa-bolt"></i> 壓力測試配置
+                </div>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <div class="config-value">{{ api.stress_test.concurrent_requests }}</div>
+                        <div class="config-label">併發請求</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-value">{{ api.stress_test.duration_seconds }}s</div>
+                        <div class="config-label">持續時間</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-value">{{ api.stress_test.interval_seconds }}s</div>
+                        <div class="config-label">請求間隔</div>
+                    </div>
+                    {% if api.stress_test.results %}
+                    <div class="config-item">
+                        <div class="config-value">{{ api.stress_test.results|length }}</div>
+                        <div class="config-label">測試記錄</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <h4>尚未新增任何 API</h4>
+            <p>使用上方表單新增您的第一個 API 監控服務</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 表單驗證
+    const form = document.querySelector('form');
+    const requestBodyTextarea = document.getElementById('request_body');
+    const methodSelect = document.getElementById('method');
+    
+    // 根據 HTTP 方法顯示/隱藏 Request Body
+    function toggleRequestBody() {
+        const method = methodSelect.value;
+        const showBody = ['POST', 'PUT', 'PATCH'].includes(method);
+        requestBodyTextarea.closest('.form-group').style.display = showBody ? 'block' : 'none';
+    }
+    
+    methodSelect.addEventListener('change', toggleRequestBody);
+    toggleRequestBody(); // 初始化
+    
+    // JSON 語法驗證
+    requestBodyTextarea.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && methodSelect.value !== 'GET') {
+            try {
+                JSON.parse(value);
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } catch (e) {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        } else {
+            this.classList.remove('is-invalid', 'is-valid');
+        }
+    });
+    
+    // 表單提交驗證
+    form.addEventListener('submit', function(e) {
+        const requestBody = requestBodyTextarea.value.trim();
+        const method = methodSelect.value;
+        
+        if (requestBody && ['POST', 'PUT', 'PATCH'].includes(method)) {
+            try {
+                JSON.parse(requestBody);
+            } catch (error) {
+                e.preventDefault();
+                alert('Request Body 必須是有效的 JSON 格式');
+                requestBodyTextarea.focus();
+                return false;
             }
         }
-        
-        // 頁面載入時設置初始狀態
-        document.addEventListener('DOMContentLoaded', function() {
-            updatePrivacyDisplay();
+    });
+    
+    // 數值輸入驗證
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const min = parseFloat(this.min);
+            const max = parseFloat(this.max);
+            const value = parseFloat(this.value);
+            
+            if (value < min) this.value = min;
+            if (value > max) this.value = max;
         });
-    </script>
-</body>
-</html>
+    });
+});
+</script>
+{% endblock %}

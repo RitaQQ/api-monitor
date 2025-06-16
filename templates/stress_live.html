@@ -1,144 +1,179 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>壓力測試進行中 - {{ api.name }}</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        .header {
-            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 2.2em;
-        }
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 4px solid #fd7e14;
-        }
-        .stat-number {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-        .live-table {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-        }
-        .live-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .live-table thead {
-            background: #e9ecef;
-            position: sticky;
-            top: 0;
-        }
-        .live-table th, .live-table td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #f1f3f4;
-        }
-        .success { color: #28a745; }
-        .error { color: #dc3545; }
-        .warning { color: #ffc107; }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            margin-right: 10px;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .refresh-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #fd7e14;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            animation: fadeInOut 2s infinite;
-        }
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔥 壓力測試進行中</h1>
-            <p>{{ api.name }}</p>
-            <p style="font-size: 0.9em; opacity: 0.9;">{{ api.url }}</p>
-        </div>
-        
-        <div class="refresh-indicator">
-            🔄 即時更新中...
-        </div>
-        
-        <div class="nav-links" style="margin-bottom: 20px;">
-            <a href="/" class="btn btn-secondary">← 返回監控頁面</a>
-        </div>
-        
-        <div class="card">
-            <h3>📊 測試狀態 <span id="status-indicator" class="success">進行中</span></h3>
+{% extends "base.html" %}
+
+{% block title %}壓力測試進行中 - {{ api.name }} - API Monitor{% endblock %}
+{% block page_title %}壓力測試進行中{% endblock %}
+{% block page_subtitle %}{{ api.name }} - {{ api.url }}{% endblock %}
+
+{% block extra_css %}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+.content-header {
+    background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+    animation: pulse 2s infinite;
+}
+
+.content-title {
+    color: white !important;
+}
+
+.content-subtitle {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    border-left: 4px solid #fd7e14;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-number {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.live-table {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.live-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.live-table thead {
+    background: #e9ecef;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.live-table th, .live-table td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.live-table th {
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.success { color: #28a745; }
+.error { color: #dc3545; }
+.warning { color: #ffc107; }
+
+.loading {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+}
+
+.refresh-indicator {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: #fd7e14;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 25px;
+    font-size: 0.9em;
+    font-weight: 500;
+    animation: fadeInOut 2s infinite;
+    box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+    z-index: 100;
+}
+
+.nav-links {
+    margin-bottom: 20px;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.status-running {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .refresh-indicator {
+        top: 120px;
+        right: 10px;
+        padding: 8px 12px;
+        font-size: 0.8em;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="refresh-indicator">
+    <i class="fas fa-sync-alt"></i> 即時更新中...
+</div>
+
+<div class="nav-links">
+    <a href="/" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> 返回監控頁面
+    </a>
+</div>
+<div class="card">
+    <h3>
+        <i class="fas fa-chart-line"></i> 測試狀態 
+        <span id="status-indicator" class="status-badge status-running">進行中</span>
+    </h3>
             <div class="stats-grid" id="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number" id="total-requests">-</div>
@@ -166,9 +201,8 @@
                 </div>
             </div>
         </div>
-        
-        <div class="card">
-            <h3>📋 最近請求記錄</h3>
+<div class="card">
+    <h3><i class="fas fa-list"></i> 最近請求記錄</h3>
             <div class="live-table">
                 <table>
                     <thead>
@@ -189,88 +223,94 @@
                 </table>
             </div>
         </div>
-        
-        <div class="card" id="completion-card" style="display: none;">
-            <h3>✅ 測試完成</h3>
-            <p>壓力測試已完成，正在處理結果...</p>
-            <a href="/stress-test-results/{{ api.id }}" class="btn" style="background: #28a745; color: white;">查看完整結果</a>
-        </div>
+<div class="card" id="completion-card" style="display: none;">
+    <div class="text-center">
+        <h3 class="mb-3">
+            <i class="fas fa-check-circle text-success"></i> 測試完成
+        </h3>
+        <p class="lead mb-4">壓力測試已完成，正在處理結果...</p>
+        <a href="/stress-test-results/{{ api.id }}" class="btn btn-success btn-lg">
+            <i class="fas fa-chart-bar"></i> 查看完整結果
+        </a>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        const apiId = '{{ api.id }}';
-        let updateInterval;
-        
-        function updateTestStatus() {
-            fetch(`/api/stress-test-status/${apiId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const statusIndicator = document.getElementById('status-indicator');
-                    
-                    if (data.is_running) {
-                        statusIndicator.textContent = '進行中';
-                        statusIndicator.className = 'warning';
-                    } else {
-                        statusIndicator.textContent = '已完成';
-                        statusIndicator.className = 'success';
-                        document.getElementById('completion-card').style.display = 'block';
-                        clearInterval(updateInterval);
-                    }
-                    
-                    if (data.latest_result) {
-                        const result = data.latest_result;
-                        
-                        // 更新統計數字
-                        document.getElementById('total-requests').textContent = result.total_requests || '-';
-                        document.getElementById('successful-requests').textContent = result.successful_requests || '-';
-                        document.getElementById('failed-requests').textContent = result.failed_requests || '-';
-                        document.getElementById('success-rate').textContent = result.success_rate ? `${result.success_rate.toFixed(1)}%` : '-';
-                        document.getElementById('avg-response-time').textContent = result.avg_response_time ? `${result.avg_response_time.toFixed(3)}s` : '-';
-                        document.getElementById('requests-per-second').textContent = result.requests_per_second ? result.requests_per_second.toFixed(1) : '-';
-                        
-                        // 更新請求表格
-                        const tableBody = document.getElementById('requests-table');
-                        if (result.last_5_requests && result.last_5_requests.length > 0) {
-                            tableBody.innerHTML = result.last_5_requests.map(req => `
-                                <tr>
-                                    <td style="font-weight: bold;">${req.request_number}</td>
-                                    <td style="font-size: 0.85em;">${req.timestamp.substring(11, 19)}</td>
-                                    <td>
-                                        <span class="${req.success ? 'success' : 'error'}">
-                                            ${req.success ? '✅ 成功' : '❌ 失敗'}
-                                        </span>
-                                    </td>
-                                    <td style="font-family: monospace;">
-                                        <span class="${req.response_time < 1 ? 'success' : (req.response_time < 3 ? 'warning' : 'error')}">
-                                            ${req.response_time.toFixed(3)}s
-                                        </span>
-                                    </td>
-                                    <td style="font-family: monospace;">
-                                        ${req.status_code ? `<span class="${req.status_code < 300 ? 'success' : (req.status_code < 400 ? 'warning' : 'error')}">${req.status_code}</span>` : '-'}
-                                    </td>
-                                    <td style="font-size: 0.85em; color: #dc3545;">
-                                        ${req.error || '-'}
-                                    </td>
-                                </tr>
-                            `).join('');
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('更新狀態時發生錯誤:', error);
-                });
-        }
-        
-        // 初始載入
-        updateTestStatus();
-        
-        // 每2秒更新一次
-        updateInterval = setInterval(updateTestStatus, 2000);
-        
-        // 頁面關閉時清除定時器
-        window.addEventListener('beforeunload', () => {
-            clearInterval(updateInterval);
+{% block extra_js %}
+
+<script>
+const apiId = '{{ api.id }}';
+let updateInterval;
+
+function updateTestStatus() {
+    fetch(`/api/stress-test-status/${apiId}`)
+        .then(response => response.json())
+        .then(data => {
+            const statusIndicator = document.getElementById('status-indicator');
+            
+            if (data.is_running) {
+                statusIndicator.textContent = '進行中';
+                statusIndicator.className = 'status-badge status-running';
+            } else {
+                statusIndicator.textContent = '已完成';
+                statusIndicator.className = 'status-badge status-completed';
+                document.getElementById('completion-card').style.display = 'block';
+                clearInterval(updateInterval);
+            }
+            
+            if (data.latest_result) {
+                const result = data.latest_result;
+                
+                // 更新統計數字
+                document.getElementById('total-requests').textContent = result.total_requests || '-';
+                document.getElementById('successful-requests').textContent = result.successful_requests || '-';
+                document.getElementById('failed-requests').textContent = result.failed_requests || '-';
+                document.getElementById('success-rate').textContent = result.success_rate ? `${result.success_rate.toFixed(1)}%` : '-';
+                document.getElementById('avg-response-time').textContent = result.avg_response_time ? `${result.avg_response_time.toFixed(3)}s` : '-';
+                document.getElementById('requests-per-second').textContent = result.requests_per_second ? result.requests_per_second.toFixed(1) : '-';
+                
+                // 更新請求表格
+                const tableBody = document.getElementById('requests-table');
+                if (result.last_5_requests && result.last_5_requests.length > 0) {
+                    tableBody.innerHTML = result.last_5_requests.map(req => `
+                        <tr>
+                            <td style="font-weight: bold;">${req.request_number}</td>
+                            <td style="font-size: 0.85em;">${req.timestamp.substring(11, 19)}</td>
+                            <td>
+                                <span class="${req.success ? 'success' : 'error'}">
+                                    ${req.success ? '✅ 成功' : '❌ 失敗'}
+                                </span>
+                            </td>
+                            <td style="font-family: monospace;">
+                                <span class="${req.response_time < 1 ? 'success' : (req.response_time < 3 ? 'warning' : 'error')}">
+                                    ${req.response_time.toFixed(3)}s
+                                </span>
+                            </td>
+                            <td style="font-family: monospace;">
+                                ${req.status_code ? `<span class="${req.status_code < 300 ? 'success' : (req.status_code < 400 ? 'warning' : 'error')}">${req.status_code}</span>` : '-'}
+                            </td>
+                            <td style="font-size: 0.85em; color: #dc3545;">
+                                ${req.error || '-'}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('更新狀態時發生錯誤:', error);
         });
-    </script>
-</body>
-</html>
+}
+
+// 初始載入
+updateTestStatus();
+
+// 每2秒更新一次
+updateInterval = setInterval(updateTestStatus, 2000);
+
+// 頁面關閉時清除定時器
+window.addEventListener('beforeunload', () => {
+    clearInterval(updateInterval);
+});
+</script>
+{% endblock %}

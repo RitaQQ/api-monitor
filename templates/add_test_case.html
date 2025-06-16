@@ -326,8 +326,8 @@
             <a href="/" class="menu-item">
                 <span>📊</span> 監控儀表板
             </a>
-            <a href="/test-cases" class="menu-item active">
-                <span>📋</span> 測試案例
+            <a href="/test-case-management" class="menu-item">
+                <span>📝</span> 測試案例管理
             </a>
             {% if current_user and current_user.role == 'admin' %}
             <a href="/admin" class="menu-item">
@@ -446,7 +446,7 @@
                     </div>
                     
                     <div class="form-actions">
-                        <a href="/test-cases" class="btn btn-secondary">取消</a>
+                        <a href="/test-case-management" class="btn btn-secondary">取消</a>
                         <button type="submit" class="btn btn-primary">建立測試案例</button>
                     </div>
                 </form>

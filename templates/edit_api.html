@@ -1,172 +1,156 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>編輯 API - {{ api.name }}</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        .header {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-        }
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 1em;
-            box-sizing: border-box;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #28a745;
-        }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            text-decoration: none;
-            display: inline-block;
-            margin-right: 10px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .btn:hover {
-            opacity: 0.9;
-        }
-        .flash-messages {
-            margin-bottom: 20px;
-        }
-        .flash-message {
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        .flash-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .flash-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .nav-links {
-            margin-bottom: 20px;
-        }
-        .current-info {
-            background: #e3f2fd;
-            border: 1px solid #bbdefb;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        .current-info h4 {
-            margin: 0 0 10px 0;
-            color: #1976d2;
-        }
-        .current-info p {
-            margin: 5px 0;
-            font-size: 0.9em;
-        }
-        .privacy-toggle {
-            background-color: #6c757d;
-            color: white;
-            font-size: 0.85em;
-            padding: 8px 16px;
-        }
-        .privacy-toggle.active {
-            background-color: #28a745;
-        }
-        .url-hidden {
-            color: #6c757d;
-            font-style: italic;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>✏️ 編輯 API</h1>
-            <p>修改 API 監控設定和壓力測試參數</p>
-        </div>
-        
-        <div class="nav-links">
-            <a href="/admin" class="btn btn-secondary">← 返回管理後台</a>
-            <a href="/" class="btn btn-primary">監控頁面</a>
-            <button id="privacy-toggle" class="btn privacy-toggle" onclick="togglePrivacy()">
-                🙈 隱藏 URL
-            </button>
-        </div>
-        
-        <div class="flash-messages">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash-message flash-{{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-        </div>
-        
-        <!-- 當前 API 資訊 -->
-        <div class="current-info">
-            <h4>📋 當前 API 資訊</h4>
+{% extends "base.html" %}
+
+{% block title %}編輯 API - {{ api.name }} - API Monitor{% endblock %}
+{% block page_title %}編輯 API{% endblock %}
+{% block page_subtitle %}修改 API 監控設定和壓力測試參數{% endblock %}
+
+{% block extra_css %}
+.nav-links {
+    margin-bottom: 20px;
+}
+
+.current-info {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.current-info h4 {
+    margin: 0 0 15px 0;
+    color: #1976d2;
+}
+
+.current-info p {
+    margin: 8px 0;
+    font-size: 0.95em;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.privacy-toggle {
+    background-color: #6c757d;
+    color: white;
+    font-size: 0.9em;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.privacy-toggle:hover {
+    background-color: #5a6268;
+}
+
+.privacy-toggle.active {
+    background-color: #28a745;
+}
+
+.privacy-toggle.active:hover {
+    background-color: #218838;
+}
+
+.url-hidden {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.stress-test-section {
+    border-top: 2px solid #eee;
+    margin: 30px 0 20px 0;
+    padding-top: 20px;
+}
+
+.stress-test-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.info-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 0.9em;
+    color: #666;
+    border-left: 4px solid #667eea;
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .stress-test-grid {
+        grid-template-columns: 1fr;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="nav-links">
+    <a href="/admin" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> 返回管理後台
+    </a>
+    <a href="/" class="btn btn-primary">
+        <i class="fas fa-tachometer-alt"></i> 監控頁面
+    </a>
+    <button id="privacy-toggle" class="btn privacy-toggle" onclick="togglePrivacy()">
+        <i class="fas fa-eye-slash"></i> 隱藏 URL
+    </button>
+</div>
+<!-- 當前 API 資訊 -->
+<div class="current-info">
+    <h4><i class="fas fa-info-circle"></i> 當前 API 資訊</h4>
+    <div class="row">
+        <div class="col-md-6">
             <p><strong>名稱:</strong> {{ api.name }}</p>
             <p><strong>URL:</strong> <span class="api-url" data-url="{{ api.url }}">{{ api.url }}</span></p>
-            <p><strong>方法:</strong> {{ api.method or 'GET' }}</p>
+            <p><strong>方法:</strong> <span class="badge bg-primary">{{ api.method or 'GET' }}</span></p>
+        </div>
+        <div class="col-md-6">
             <p><strong>類型:</strong> {{ api.type }}</p>
             <p><strong>狀態:</strong> 
-                <span style="color: {{ '#28a745' if api.status == 'healthy' else ('#dc3545' if api.status == 'unhealthy' else '#6c757d') }};">
+                <span class="badge {{ 'bg-success' if api.status == 'healthy' else ('bg-danger' if api.status == 'unhealthy' else 'bg-secondary') }}">
                     {{ '✅ 正常' if api.status == 'healthy' else ('❌ 異常' if api.status == 'unhealthy' else '❓ 未知') }}
                 </span>
             </p>
@@ -174,9 +158,10 @@
             <p><strong>最後檢查:</strong> {{ api.last_check[:19].replace('T', ' ') }}</p>
             {% endif %}
         </div>
-        
-        <div class="card">
-            <h2>🔧 編輯 API 設定</h2>
+    </div>
+</div>
+<div class="card">
+    <h2><i class="fas fa-cog"></i> 編輯 API 設定</h2>
             <form method="POST" action="/admin/edit/{{ api.id }}">
                 <div class="form-group">
                     <label for="name">API 名稱</label>
@@ -211,116 +196,131 @@
                 <div class="form-group" id="request-body-group" style="display: {{ 'block' if api.method in ['POST', 'PUT', 'PATCH'] else 'none' }};">
                     <label for="request_body">Request Body (JSON 格式)</label>
                     <textarea id="request_body" name="request_body" rows="8" 
+                              class="form-control" 
                               placeholder='例如: {"key": "value", "timestamp": "{{timestamp}}"}' 
-                              style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.9em; resize: vertical;">{{ api.request_body or '' }}</textarea>
-                    <small style="color: #666; font-size: 0.85em;">
-                        💡 提示: 使用 {{timestamp}} 作為動態時間戳佔位符
+                              style="font-family: 'Courier New', monospace; font-size: 0.9em; resize: vertical;">{{ api.request_body or '' }}</textarea>
+                    <small class="form-text text-muted">
+                        <i class="fas fa-lightbulb"></i> 提示: 使用 {{timestamp}} 作為動態時間戳佔位符
                     </small>
                 </div>
                 
                 <!-- 壓力測試配置 -->
-                <div style="border-top: 2px solid #eee; margin: 30px 0 20px 0; padding-top: 20px;">
-                    <h3 style="color: #6f42c1; margin-bottom: 15px;">🔥 壓力測試參數</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                <div class="stress-test-section">
+                    <h3 style="color: #6f42c1; margin-bottom: 20px;">
+                        <i class="fas fa-fire"></i> 壓力測試參數
+                    </h3>
+                    <div class="stress-test-grid">
                         <div class="form-group">
                             <label for="concurrent_requests">併發請求數</label>
                             <input type="number" id="concurrent_requests" name="concurrent_requests" 
+                                   class="form-control text-center"
                                    value="{{ api.stress_test.concurrent_requests if api.stress_test else 1 }}" 
-                                   min="1" max="100" 
-                                   style="text-align: center;">
-                            <small style="color: #666; font-size: 0.8em;">1-100 個</small>
+                                   min="1" max="100">
+                            <small class="form-text text-muted">1-100 個</small>
                         </div>
                         <div class="form-group">
                             <label for="duration_seconds">持續時間 (秒)</label>
                             <input type="number" id="duration_seconds" name="duration_seconds" 
+                                   class="form-control text-center"
                                    value="{{ api.stress_test.duration_seconds if api.stress_test else 10 }}" 
-                                   min="5" max="300"
-                                   style="text-align: center;">
-                            <small style="color: #666; font-size: 0.8em;">5-300 秒</small>
+                                   min="5" max="300">
+                            <small class="form-text text-muted">5-300 秒</small>
                         </div>
                         <div class="form-group">
                             <label for="interval_seconds">請求間隔 (秒)</label>
                             <input type="number" id="interval_seconds" name="interval_seconds" 
+                                   class="form-control text-center"
                                    value="{{ api.stress_test.interval_seconds if api.stress_test else 1.0 }}" 
-                                   min="0.1" max="10" step="0.1"
-                                   style="text-align: center;">
-                            <small style="color: #666; font-size: 0.8em;">0.1-10 秒</small>
+                                   min="0.1" max="10" step="0.1">
+                            <small class="form-text text-muted">0.1-10 秒</small>
                         </div>
                     </div>
-                    <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 0.85em; color: #666;">
-                        💡 更新後將重置 API 監控狀態，需要重新檢查以獲得最新狀態
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i> 更新後將重置 API 監控狀態，需要重新檢查以獲得最新狀態
                     </div>
                 </div>
                 
-                <div style="margin-top: 30px;">
-                    <button type="submit" class="btn btn-success">✅ 儲存變更</button>
-                    <a href="/admin" class="btn btn-secondary">取消</a>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div>
+                        <button type="submit" class="btn btn-success me-2">
+                            <i class="fas fa-save"></i> 儲存變更
+                        </button>
+                        <a href="/admin" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> 取消
+                        </a>
+                    </div>
                 </div>
-                
-                <script>
-                // 根據選擇的 HTTP 方法顯示/隱藏 Request Body 欄位
-                document.getElementById('method').addEventListener('change', function() {
-                    const method = this.value;
-                    const requestBodyGroup = document.getElementById('request-body-group');
-                    
-                    if (['POST', 'PUT', 'PATCH'].includes(method)) {
-                        requestBodyGroup.style.display = 'block';
-                    } else {
-                        requestBodyGroup.style.display = 'none';
-                    }
-                });
-                </script>
             </form>
         </div>
         
         <!-- API 歷史資訊 -->
         {% if api.stress_test and api.stress_test.results %}
         <div class="card">
-            <h3>📊 壓力測試歷史</h3>
-            <p>此 API 已進行過 {{ api.stress_test.results|length }} 次壓力測試</p>
-            {% if api.stress_test.last_test %}
-            <p><strong>最後測試:</strong> {{ api.stress_test.last_test[:19].replace('T', ' ') }}</p>
-            {% endif %}
-            <a href="/stress-test-results/{{ api.id }}" class="btn btn-primary">📈 查看詳細結果</a>
+            <h3><i class="fas fa-chart-line"></i> 壓力測試歷史</h3>
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="mb-2">此 API 已進行過 <strong>{{ api.stress_test.results|length }}</strong> 次壓力測試</p>
+                    {% if api.stress_test.last_test %}
+                    <p class="text-muted"><strong>最後測試:</strong> {{ api.stress_test.last_test[:19].replace('T', ' ') }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="/stress-test-results/{{ api.id }}" class="btn btn-primary">
+                        <i class="fas fa-chart-bar"></i> 查看詳細結果
+                    </a>
+                </div>
+            </div>
         </div>
         {% endif %}
-    </div>
+{% endblock %}
 
-    <script>
-        // 隱私切換功能
-        let privacyMode = localStorage.getItem('privacy-mode') === 'true';
-        
-        function togglePrivacy() {
-            privacyMode = !privacyMode;
-            localStorage.setItem('privacy-mode', privacyMode);
-            updatePrivacyDisplay();
-        }
-        
-        function updatePrivacyDisplay() {
-            const button = document.getElementById('privacy-toggle');
-            const apiUrls = document.querySelectorAll('.api-url');
-            
-            if (privacyMode) {
-                button.textContent = '👁️ 顯示 URL';
-                button.classList.add('active');
-                apiUrls.forEach(element => {
-                    element.textContent = '*** API URL 已隱藏 (Demo 模式) ***';
-                    element.classList.add('url-hidden');
-                });
-            } else {
-                button.textContent = '🙈 隱藏 URL';
-                button.classList.remove('active');
-                apiUrls.forEach(element => {
-                    element.textContent = element.getAttribute('data-url');
-                    element.classList.remove('url-hidden');
-                });
-            }
-        }
-        
-        // 頁面載入時設置初始狀態
-        document.addEventListener('DOMContentLoaded', function() {
-            updatePrivacyDisplay();
+{% block extra_js %}
+<script>
+// 根據選擇的 HTTP 方法顯示/隱藏 Request Body 欄位
+document.getElementById('method').addEventListener('change', function() {
+    const method = this.value;
+    const requestBodyGroup = document.getElementById('request-body-group');
+    
+    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+        requestBodyGroup.style.display = 'block';
+    } else {
+        requestBodyGroup.style.display = 'none';
+    }
+});
+
+// 隱私切換功能
+let privacyMode = localStorage.getItem('privacy-mode') === 'true';
+
+function togglePrivacy() {
+    privacyMode = !privacyMode;
+    localStorage.setItem('privacy-mode', privacyMode);
+    updatePrivacyDisplay();
+}
+
+function updatePrivacyDisplay() {
+    const button = document.getElementById('privacy-toggle');
+    const apiUrls = document.querySelectorAll('.api-url');
+    
+    if (privacyMode) {
+        button.innerHTML = '<i class="fas fa-eye"></i> 顯示 URL';
+        button.classList.add('active');
+        apiUrls.forEach(element => {
+            element.textContent = '*** API URL 已隱藏 (Demo 模式) ***';
+            element.classList.add('url-hidden');
         });
-    </script>
-</body>
-</html>
+    } else {
+        button.innerHTML = '<i class="fas fa-eye-slash"></i> 隱藏 URL';
+        button.classList.remove('active');
+        apiUrls.forEach(element => {
+            element.textContent = element.getAttribute('data-url');
+            element.classList.remove('url-hidden');
+        });
+    }
+}
+
+// 頁面載入時設置初始狀態
+document.addEventListener('DOMContentLoaded', function() {
+    updatePrivacyDisplay();
+});
+</script>
+{% endblock %}
