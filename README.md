@@ -1,6 +1,6 @@
 # API 監控系統 (API Monitor)
 
-一個功能完整的 Python Flask API 監控系統，提供即時監控、自動檢查、狀態追蹤和回應內容查看功能。
+一個功能完整的 Python Flask API 監控系統，提供即時監控、自動檢查、狀態追蹤、測試案例管理和專案測試管理功能。
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-2.3+-green.svg)
@@ -33,6 +33,26 @@
 - Console 和 Log 檔案記錄
 - 可自訂錯誤閾值
 
+### 📋 測試案例管理
+- TC格式ID系統（TC00001, TC00002等）
+- 橫向表格式檢視，提高資訊密度
+- CSV批量匯入/匯出功能
+- 產品標籤分類管理
+- 簡化的表單介面設計
+
+### 🎯 測試專案管理
+- 表格式專案概覽
+- 專案狀態追蹤（草稿/進行中/已完成）
+- 測試案例分配和進度監控
+- 通過/失敗/阻擋統計
+- 負責人指派管理
+
+### 🎨 優化的使用者介面
+- 可收納的管理區塊
+- 統一的深色主題設計
+- 響應式設計支援
+- 動態統計顯示
+
 ## 📷 螢幕截圖
 
 ### 主監控頁面
@@ -42,8 +62,20 @@
 
 ### 管理後台
 - 簡易的 API 管理介面
+- 可收納的新增API區塊
 - Request Body 編輯器
 - 回應內容預覽
+
+### 測試案例管理
+- 橫向表格顯示所有測試案例
+- TC格式ID自動生成
+- CSV匯入/匯出功能
+- 產品標籤管理
+
+### 測試專案管理
+- 專案狀態和進度一覽
+- 測試案例分配
+- 統計資料追蹤
 
 ## 🛠 安裝與使用
 
@@ -74,8 +106,10 @@
    ```
 
 4. **訪問網頁介面**
-   - 監控儀表板: http://localhost:3000
-   - 管理後台: http://localhost:3000/admin
+   - 監控儀表板: http://localhost:5001
+   - 管理後台: http://localhost:5001/admin
+   - 測試案例管理: http://localhost:5001/test-cases
+   - 測試專案管理: http://localhost:5001/test-projects
 
 ## 📁 專案結構
 
@@ -90,10 +124,16 @@ api_monitor/
 ├── requirements.txt      # 依賴套件清單
 ├── start.sh             # 啟動腳本
 ├── data/
-│   └── apis.json        # API 資料儲存
+│   ├── apis.json        # API 資料儲存
+│   ├── test_cases.json  # 測試案例資料
+│   ├── test_projects.json # 測試專案資料
+│   ├── product_tags.json # 產品標籤資料
+│   └── users.json       # 使用者資料
 └── templates/
     ├── index.html       # 監控儀表板頁面
-    └── admin.html       # 管理後台頁面
+    ├── admin.html       # 管理後台頁面
+    ├── test_case_management.html # 測試案例管理
+    └── test_projects.html # 測試專案管理
 ```
 
 ## ⚙️ 配置設定
@@ -110,22 +150,41 @@ REQUEST_TIMEOUT = 10     # HTTP 請求超時時間
 
 ### 新增 API
 
-1. 訪問管理後台：http://localhost:3000/admin
-2. 填寫 API 資訊：
+1. 訪問管理後台：http://localhost:5001/admin
+2. 點擊「新增 API 監控」展開表單
+3. 填寫 API 資訊：
    - **名稱**: API 的顯示名稱
    - **URL**: API 端點位址
    - **HTTP 方法**: GET, POST, PUT, DELETE
    - **API 類型**: REST, GraphQL, 其他
    - **Request Body**: JSON 格式（POST/PUT 時可用）
 
-3. 點擊「新增 API」
+4. 點擊「新增 API 監控」
 
 ### 查看監控狀態
 
-1. 訪問主頁面：http://localhost:3000
+1. 訪問主頁面：http://localhost:5001
 2. 查看即時統計和狀態指示
 3. 點擊「📄 查看回應」查看 API 回應內容
 4. 使用「🔄 立即檢查」手動觸發檢查
+
+### 測試案例管理
+
+1. 訪問測試案例管理：http://localhost:5001/test-cases
+2. 使用「匯入」功能批量新增測試案例：
+   - 下載CSV範本檔案
+   - 填寫測試案例資料
+   - 上傳CSV檔案進行批量匯入
+3. 使用「匯出」功能將測試案例匯出為CSV
+4. 點擊「新增測試案例」按鈕手動新增單一測試案例
+
+### 測試專案管理
+
+1. 訪問測試專案管理：http://localhost:5001/test-projects
+2. 點擊「新增專案」建立測試專案
+3. 選擇要包含的測試案例
+4. 指派負責人和設定測試日期
+5. 在專案詳情頁面追蹤測試進度
 
 ### 動態變數
 
@@ -136,6 +195,7 @@ REQUEST_TIMEOUT = 10     # HTTP 請求超時時間
 
 系統提供以下 REST API 端點：
 
+**監控相關：**
 - `GET /` - 主監控頁面
 - `GET /admin` - 管理後台
 - `POST /admin/add` - 新增 API
@@ -143,6 +203,24 @@ REQUEST_TIMEOUT = 10     # HTTP 請求超時時間
 - `GET /check-now` - 立即檢查
 - `GET /api/status` - 取得 JSON 格式狀態
 - `GET /health` - 應用程式健康檢查
+
+**測試案例管理：**
+- `GET /test-cases` - 測試案例管理頁面
+- `GET /api/test-cases` - 取得測試案例列表
+- `POST /api/test-cases` - 新增測試案例
+- `PUT /api/test-cases/<id>` - 更新測試案例
+- `DELETE /api/test-cases/<id>` - 刪除測試案例
+
+**測試專案管理：**
+- `GET /test-projects` - 測試專案管理頁面
+- `GET /api/test-projects` - 取得專案列表
+- `POST /api/test-projects` - 新增測試專案
+- `PUT /api/test-projects/<id>` - 更新測試專案
+- `DELETE /api/test-projects/<id>` - 刪除測試專案
+
+**產品標籤管理：**
+- `GET /api/product-tags` - 取得產品標籤列表
+- `POST /api/product-tags` - 新增產品標籤
 
 ## 🎯 使用範例
 
@@ -168,6 +246,13 @@ REQUEST_TIMEOUT = 10     # HTTP 請求超時時間
     "timestamp": "{{timestamp}}"
   }
 }
+```
+
+### 測試案例 CSV 格式範例
+```csv
+標題,用戶角色,功能描述,驗收條件,測試備註,產品標籤
+登入功能測試,一般用戶,我希望能夠使用帳號密碼登入系統,輸入正確帳密可成功登入; 錯誤帳密顯示錯誤訊息,需測試各種瀏覽器,web
+購物車功能測試,購物用戶,我希望能夠將商品加入購物車,點擊加入購物車按鈕; 購物車數量增加,,app
 ```
 
 ## 🤝 貢獻

@@ -1,15 +1,24 @@
 [
   {
-    "id": "fcbe464e-4a11-4964-b422-e8967830654b",
-    "name": "test",
+    "id": "48896000-3659-4f53-b2a7-dcf42f61e2a1",
+    "name": "test111",
     "test_date": "2025-06-20T00:00:00",
-    "responsible_user": "rita",
+    "responsible_user": "test1",
     "selected_test_cases": [
-      "1e2cef39-c4b1-4b23-9a7a-58ffab8d00d6"
+      "b5574c6c-9def-402c-a4b2-b89b2a33b0a7"
     ],
-    "test_results": {},
-    "status": "in_progress",
-    "created_at": "2025-06-17T14:34:17.835684",
-    "updated_at": "2025-06-17T14:49:44.062266"
+    "test_results": {
+      "b5574c6c-9def-402c-a4b2-b89b2a33b0a7": {
+        "test_case_id": "b5574c6c-9def-402c-a4b2-b89b2a33b0a7",
+        "status": "fail",
+        "notes": "",
+        "known_issues": "",
+        "blocked_reason": "",
+        "tested_at": "2025-06-17T21:56:55.247772"
+      }
+    },
+    "status": "draft",
+    "created_at": "2025-06-17T21:56:49.992762",
+    "updated_at": "2025-06-17T21:56:55.247791"
   }
 ]

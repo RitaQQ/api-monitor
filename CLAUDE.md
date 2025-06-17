@@ -70,7 +70,9 @@ pkill -f simple_app.py
 **Data Storage:**
 - `data/apis.json` - API configurations and status data
 - `data/users.json` - User accounts and authentication data
-- `data/user_stories.json` - Test cases and user stories
+- `data/test_cases.json` - Test cases data with TC format IDs
+- `data/test_projects.json` - Test project management data
+- `data/product_tags.json` - Product tag definitions
 
 ### UI Architecture
 
@@ -99,9 +101,11 @@ pkill -f simple_app.py
 
 **Web Interface:**
 - Real-time dashboard with auto-refresh
-- Admin panel for API management
+- Admin panel for API management with collapsible sections
 - Stress testing interface with live results
-- Test case management system
+- Comprehensive test case management system with CSV import/export
+- Test project management with table-based views
+- Product tag management for categorization
 
 ## Configuration
 
@@ -150,6 +154,35 @@ All functional pages should extend `base.html` to maintain unified sidebar navig
 - Tooltip support for collapsed state
 - Active page highlighting
 - User avatar display in collapsed mode
+
+## Test Case Management Features
+
+**Test Case System:**
+- TC format IDs (TC00001, TC00002, etc.) for easy identification
+- Table-based horizontal layout for efficient data viewing
+- CSV import/export functionality for bulk operations
+- Product tag integration for categorization
+- Simplified form interface (hidden user roles and acceptance criteria)
+
+**CSV Import/Export:**
+- Template file generation with example data
+- Support for batch test case creation
+- Validation and error reporting
+- Progress tracking during import
+- All field export including timestamps and tags
+
+**Test Project Management:**
+- Table-based project overview
+- Project status tracking (draft, in_progress, completed)
+- Test case assignment and progress monitoring
+- Statistical overview with pass/fail/blocked counts
+- Responsible user assignment
+
+**UI Improvements:**
+- Collapsible sections in admin panel for cleaner interface
+- Dynamic count displays instead of large statistical blocks
+- Horizontal table layouts for better information density
+- Consistent dark theme across all management interfaces
 
 ## Dependencies
 

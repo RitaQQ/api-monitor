@@ -1,26 +1,20 @@
 [
   {
-    "id": "06b5bd6b-8378-472a-a1cc-0b7180ec122d",
-    "name": "User APP",
-    "description": "手機App測試",
-    "created_at": "2025-06-15T22:23:13.430457"
-  },
-  {
-    "id": "aef2120f-333a-47b8-83a7-59b36c841640",
-    "name": "iEnergy Console",
-    "description": "用戶界面和前端功能測試",
-    "created_at": "2025-06-17T13:58:25.007971"
-  },
-  {
-    "id": "891e970c-a421-4c1f-8595-f4da51bb20d4",
-    "name": "Cabinet",
-    "description": "服務器端API和業務邏輯測試",
-    "created_at": "2025-06-17T13:58:39.344768"
-  },
-  {
-    "id": "c8868d85-025e-4fe9-9708-1aff473abb8a",
-    "name": "Control Center",
+    "id": "cbeb23da-7ec4-450d-95bb-4c3fa333b395",
+    "name": "web",
     "description": null,
-    "created_at": "2025-06-17T14:03:26.257491"
+    "created_at": "2025-06-17T21:53:38.973577"
+  },
+  {
+    "id": "1bce2f89-10b7-4a4d-b671-33e25ed3daad",
+    "name": "app",
+    "description": null,
+    "created_at": "2025-06-17T21:53:47.539613"
+  },
+  {
+    "id": "6f8a3161-5be2-4a64-9373-0cf027798e53",
+    "name": "firmware",
+    "description": null,
+    "created_at": "2025-06-17T21:53:58.770333"
   }
 ]
