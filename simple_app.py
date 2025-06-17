@@ -480,142 +480,6 @@ def delete_user(user_id):
     
     return redirect(url_for('user_management'))
 
-# User Story 管理路由
-@app.route('/test-cases')
-@login_required
-def test_cases():
-    """測試案例管理頁面"""
-    user_stories = user_story_manager.load_user_stories()
-    stats = user_story_manager.get_statistics()
-    projects_overview = user_story_manager.get_projects_overview()
-    current_user = user_manager.get_user_by_id(session['user_id'])
-    return render_template('test_cases.html', 
-                         user_stories=user_stories, 
-                         stats=stats, 
-                         projects_overview=projects_overview,
-                         current_user=current_user)
-
-@app.route('/test-cases/add')
-@login_required
-def add_test_case_form():
-    """新增測試案例表單頁面"""
-    current_user = user_manager.get_user_by_id(session['user_id'])
-    existing_projects = user_story_manager.get_all_projects()
-    return render_template('add_test_case.html', current_user=current_user, existing_projects=existing_projects)
-
-@app.route('/test-cases/add', methods=['POST'])
-@login_required
-def add_test_case():
-    """新增測試案例"""
-    project_names_str = request.form.get('project_name', '').strip()
-    project_names = [name.strip() for name in project_names_str.split(',') if name.strip()]
-    title = request.form.get('title', '').strip()
-    user_role = request.form.get('user_role', '').strip()
-    feature_description = request.form.get('feature_description', '').strip()
-    purpose = request.form.get('purpose', '').strip()
-    test_result = request.form.get('test_result', 'Pending').strip()
-    test_notes = request.form.get('test_notes', '').strip()
-    
-    # 處理驗收條件（多行文字，每行一個條件）
-    acceptance_criteria_text = request.form.get('acceptance_criteria', '').strip()
-    acceptance_criteria = [line.strip() for line in acceptance_criteria_text.split('\n') if line.strip()]
-    
-    if not project_names or not title or not user_role or not feature_description or not purpose:
-        flash('請填寫所有必要欄位', 'error')
-        return redirect(url_for('add_test_case_form'))
-    
-    try:
-        current_user = user_manager.get_user_by_id(session['user_id'])
-        created_by = current_user.get('username', 'Unknown') if current_user else 'Unknown'
-        
-        user_story_manager.create_user_story(
-            project_names=project_names,
-            title=title,
-            user_role=user_role,
-            feature_description=feature_description,
-            purpose=purpose,
-            acceptance_criteria=acceptance_criteria,
-            test_result=test_result,
-            test_notes=test_notes,
-            created_by=created_by
-        )
-        
-        flash(f'成功新增測試案例: {title}', 'success')
-    except Exception as e:
-        flash(f'新增測試案例時發生錯誤: {str(e)}', 'error')
-    
-    return redirect(url_for('test_cases'))
-
-@app.route('/test-cases/edit/<story_id>')
-@login_required
-def edit_test_case_form(story_id):
-    """編輯測試案例表單頁面"""
-    story = user_story_manager.get_user_story_by_id(story_id)
-    if not story:
-        flash('找不到指定的測試案例', 'error')
-        return redirect(url_for('test_cases'))
-    
-    current_user = user_manager.get_user_by_id(session['user_id'])
-    existing_projects = user_story_manager.get_all_projects()
-    return render_template('edit_test_case.html', story=story, current_user=current_user, existing_projects=existing_projects)
-
-@app.route('/test-cases/edit/<story_id>', methods=['POST'])
-@login_required
-def edit_test_case(story_id):
-    """更新測試案例"""
-    project_names_str = request.form.get('project_name', '').strip()
-    project_names = [name.strip() for name in project_names_str.split(',') if name.strip()]
-    title = request.form.get('title', '').strip()
-    user_role = request.form.get('user_role', '').strip()
-    feature_description = request.form.get('feature_description', '').strip()
-    purpose = request.form.get('purpose', '').strip()
-    test_result = request.form.get('test_result', 'Pending').strip()
-    test_notes = request.form.get('test_notes', '').strip()
-    
-    # 處理驗收條件
-    acceptance_criteria_text = request.form.get('acceptance_criteria', '').strip()
-    acceptance_criteria = [line.strip() for line in acceptance_criteria_text.split('\n') if line.strip()]
-    
-    if not project_names or not title or not user_role or not feature_description or not purpose:
-        flash('請填寫所有必要欄位', 'error')
-        return redirect(url_for('edit_test_case_form', story_id=story_id))
-    
-    try:
-        success = user_story_manager.update_user_story(
-            story_id=story_id,
-            project_names=project_names,
-            title=title,
-            user_role=user_role,
-            feature_description=feature_description,
-            purpose=purpose,
-            acceptance_criteria=acceptance_criteria,
-            test_result=test_result,
-            test_notes=test_notes
-        )
-        
-        if success:
-            flash(f'成功更新測試案例: {title}', 'success')
-        else:
-            flash('找不到要更新的測試案例', 'error')
-    except Exception as e:
-        flash(f'更新測試案例時發生錯誤: {str(e)}', 'error')
-    
-    return redirect(url_for('test_cases'))
-
-@app.route('/test-cases/delete/<story_id>', methods=['POST'])
-@login_required
-def delete_user_story(story_id):
-    """刪除測試案例"""
-    try:
-        success = user_story_manager.delete_user_story(story_id)
-        if success:
-            flash('測試案例已成功刪除', 'success')
-        else:
-            flash('找不到要刪除的測試案例', 'error')
-    except Exception as e:
-        flash(f'刪除測試案例時發生錯誤: {str(e)}', 'error')
-    
-    return redirect(url_for('test_cases'))
 
 @app.route('/projects/delete/<project_name>', methods=['POST'])
 @login_required
@@ -648,10 +512,11 @@ def delete_project(project_name):
 
 if __name__ == '__main__':
     print("🚀 啟動 API 監控系統（簡化版）...")
-    print("請訪問: http://127.0.0.1:5001")
-    print("登入頁面: http://127.0.0.1:5001/login")
-    print("管理頁面: http://127.0.0.1:5001/admin (需管理員權限)")
-    print("用戶管理: http://127.0.0.1:5001/user-management (需管理員權限)")
+    print("請訪問: http://127.0.0.1:5001 (本機)")
+    print("      http://192.168.12.5:5001 (局域網)")
+    print("登入頁面: http://192.168.12.5:5001/login")
+    print("管理頁面: http://192.168.12.5:5001/admin (需管理員權限)")
+    print("用戶管理: http://192.168.12.5:5001/user-management (需管理員權限)")
     print("")
     print("🔧 預設管理員帳號:")
     print("   用戶名: admin")
@@ -660,4 +525,4 @@ if __name__ == '__main__':
     print("按 Ctrl+C 停止服務")
     
     # 啟動 Flask 應用程式
-    app.run(debug=True, host='127.0.0.1', port=5001)
+    app.run(debug=True, host='0.0.0.0', port=5001)

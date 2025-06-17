@@ -7,6 +7,7 @@ import uuid
 class TestStatus(Enum):
     PASS = "pass"
     FAIL = "fail"
+    BLOCKED = "blocked"
     NOT_TESTED = "not_tested"
 
 class ProjectStatus(Enum):
@@ -86,6 +87,7 @@ class TestResult:
     status: TestStatus
     notes: Optional[str] = None
     known_issues: Optional[str] = None
+    blocked_reason: Optional[str] = None
     tested_at: datetime = field(default_factory=datetime.now)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -94,6 +96,7 @@ class TestResult:
             'status': self.status.value,
             'notes': self.notes,
             'known_issues': self.known_issues,
+            'blocked_reason': self.blocked_reason,
             'tested_at': self.tested_at.isoformat() if self.tested_at else None
         }
     
@@ -104,6 +107,7 @@ class TestResult:
             status=TestStatus(data['status']),
             notes=data.get('notes'),
             known_issues=data.get('known_issues'),
+            blocked_reason=data.get('blocked_reason'),
             tested_at=datetime.fromisoformat(data['tested_at']) if data.get('tested_at') else datetime.now()
         )
 
@@ -153,16 +157,18 @@ class TestStatistics:
     total_cases: int
     passed_cases: int
     failed_cases: int
+    blocked_cases: int
     not_tested_cases: int
     pass_rate: float
     fail_rate: float
-    product_stats: Dict[str, Dict[str, Any]]  # product_tag -> {'passed': int, 'failed': int, 'total': int, 'pass_rate': float}
+    product_stats: Dict[str, Dict[str, Any]]  # product_tag -> {'passed': int, 'failed': int, 'blocked': int, 'total': int, 'pass_rate': float}
     
     def to_dict(self) -> Dict[str, Any]:
         return {
             'total_cases': self.total_cases,
             'passed_cases': self.passed_cases,
             'failed_cases': self.failed_cases,
+            'blocked_cases': self.blocked_cases,
             'not_tested_cases': self.not_tested_cases,
             'pass_rate': self.pass_rate,
             'fail_rate': self.fail_rate,

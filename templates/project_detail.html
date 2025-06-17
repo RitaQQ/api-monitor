@@ -148,9 +148,39 @@
 
 .test-result-form {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr 1fr auto;
     gap: 15px;
     align-items: end;
+}
+
+.blocked-reason-section {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(138, 43, 226, 0.1);
+    border: 1px solid rgba(138, 43, 226, 0.3);
+    border-radius: 6px;
+    display: none;
+}
+
+.blocked-reason-section.active {
+    display: block;
+}
+
+.blocked-reason-input {
+    background: #161B22;
+    color: #C9D1D9;
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    border-radius: 6px;
+    padding: 8px 12px;
+    resize: vertical;
+    min-height: 60px;
+    width: 100%;
+}
+
+.blocked-reason-input:focus {
+    border-color: #8a2be2;
+    box-shadow: 0 0 0 0.2rem rgba(138, 43, 226, 0.25);
+    outline: none;
 }
 
 .result-status-buttons {
@@ -203,6 +233,17 @@
 
 .status-btn.not_tested.active {
     background: #d29922;
+    color: white;
+}
+
+.status-btn.blocked {
+    background: rgba(138, 43, 226, 0.2);
+    color: #8a2be2;
+    border: 1px solid #8a2be2;
+}
+
+.status-btn.blocked.active {
+    background: #8a2be2;
     color: white;
 }
 
@@ -260,6 +301,10 @@
 
 .progress-pending {
     background: #d29922;
+}
+
+.progress-blocked {
+    background: #8a2be2;
 }
 
 .filter-controls {
@@ -341,9 +386,39 @@
             <button class="filter-btn active" data-filter="all">全部</button>
             <button class="filter-btn" data-filter="pass">已通過</button>
             <button class="filter-btn" data-filter="fail">已失敗</button>
+            <button class="filter-btn" data-filter="blocked">已阻擋</button>
             <button class="filter-btn" data-filter="not_tested">待測試</button>
         </div>
         <div>
+            <div class="dropdown me-2" style="display: inline-block;">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-tasks"></i> 批量操作
+                </button>
+                <ul class="dropdown-menu" style="background: #161B22; border: 1px solid #30363D;">
+                    <li><a class="dropdown-item" href="#" onclick="batchSetStatus('pass')" 
+                           style="color: #C9D1D9;">
+                        <i class="fas fa-check" style="color: #238636;"></i> 全部設為通過
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="batchSetStatus('fail')" 
+                           style="color: #C9D1D9;">
+                        <i class="fas fa-times" style="color: #f85149;"></i> 全部設為失敗
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="batchSetStatus('blocked')" 
+                           style="color: #C9D1D9;">
+                        <i class="fas fa-ban" style="color: #8a2be2;"></i> 全部設為阻擋
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="batchSetStatus('not_tested')" 
+                           style="color: #C9D1D9;">
+                        <i class="fas fa-clock" style="color: #d29922;"></i> 全部設為待測試
+                    </a></li>
+                    <li><hr class="dropdown-divider" style="border-color: #30363D;"></li>
+                    <li><a class="dropdown-item" href="#" onclick="clearAllResults()" 
+                           style="color: #C9D1D9;">
+                        <i class="fas fa-eraser"></i> 清除所有結果
+                    </a></li>
+                </ul>
+            </div>
             <button class="btn btn-outline-primary btn-sm" onclick="saveAllResults()">
                 <i class="fas fa-save"></i> 保存所有結果
             </button>
@@ -490,7 +565,8 @@ function renderProgressStats() {
     
     const passCount = Object.values(testResults).filter(r => r.status === 'pass').length;
     const failCount = Object.values(testResults).filter(r => r.status === 'fail').length;
-    const pendingCount = totalCases - passCount - failCount;
+    const blockedCount = Object.values(testResults).filter(r => r.status === 'blocked').length;
+    const pendingCount = totalCases - passCount - failCount - blockedCount;
     
     const progressStats = document.getElementById('progressStats');
     progressStats.innerHTML = `
@@ -507,6 +583,10 @@ function renderProgressStats() {
             <div class="meta-value" style="color: #f85149;">${failCount}</div>
         </div>
         <div class="meta-item">
+            <div class="meta-label">阻擋</div>
+            <div class="meta-value" style="color: #8a2be2;">${blockedCount}</div>
+        </div>
+        <div class="meta-item">
             <div class="meta-label">待測試</div>
             <div class="meta-value" style="color: #d29922;">${pendingCount}</div>
         </div>
@@ -516,11 +596,13 @@ function renderProgressStats() {
     const progressBar = document.getElementById('progressBar');
     const passPercent = totalCases > 0 ? (passCount / totalCases) * 100 : 0;
     const failPercent = totalCases > 0 ? (failCount / totalCases) * 100 : 0;
+    const blockedPercent = totalCases > 0 ? (blockedCount / totalCases) * 100 : 0;
     const pendingPercent = totalCases > 0 ? (pendingCount / totalCases) * 100 : 0;
     
     progressBar.innerHTML = `
         <div class="progress-pass" style="width: ${passPercent}%"></div>
         <div class="progress-fail" style="width: ${failPercent}%"></div>
+        <div class="progress-blocked" style="width: ${blockedPercent}%"></div>
         <div class="progress-pending" style="width: ${pendingPercent}%"></div>
     `;
 }
@@ -542,6 +624,7 @@ function renderTestCases() {
         const currentStatus = result ? result.status : 'not_tested';
         const notes = result ? result.notes : '';
         const knownIssues = result ? result.known_issues : '';
+        const blockedReason = result ? result.blocked_reason : '';
         
         return `
             <div class="test-case-card" data-case-id="${testCase.id}">
@@ -571,27 +654,48 @@ function renderTestCases() {
                     
                     <div class="test-result-section">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label" style="color: #C9D1D9;">測試結果</label>
                                 <div class="result-status-buttons">
                                     <button class="status-btn pass ${currentStatus === 'pass' ? 'active' : ''}" 
                                             onclick="setTestStatus('${testCase.id}', 'pass')">通過</button>
                                     <button class="status-btn fail ${currentStatus === 'fail' ? 'active' : ''}" 
                                             onclick="setTestStatus('${testCase.id}', 'fail')">失敗</button>
+                                    <button class="status-btn blocked ${currentStatus === 'blocked' ? 'active' : ''}" 
+                                            onclick="setTestStatus('${testCase.id}', 'blocked')">阻擋</button>
                                     <button class="status-btn not_tested ${currentStatus === 'not_tested' ? 'active' : ''}" 
                                             onclick="setTestStatus('${testCase.id}', 'not_tested')">待測試</button>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label" style="color: #C9D1D9;">測試備註</label>
                                 <textarea class="test-notes-input" placeholder="輸入測試備註..." 
                                           data-case-id="${testCase.id}" data-field="notes">${notes}</textarea>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label" style="color: #C9D1D9;">已知問題</label>
                                 <textarea class="test-notes-input" placeholder="輸入已知問題..." 
                                           data-case-id="${testCase.id}" data-field="known_issues">${knownIssues}</textarea>
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label" style="color: #C9D1D9;">測試時間</label>
+                                <small class="text-muted" style="color: #8B949E; display: block; padding: 8px 0;">
+                                    ${result && result.tested_at ? new Date(result.tested_at).toLocaleString('zh-TW') : '未測試'}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- 阻擋原因區塊 -->
+                        <div class="blocked-reason-section ${currentStatus === 'blocked' ? 'active' : ''}" id="blockedSection_${testCase.id}">
+                            <label class="form-label" style="color: #8a2be2; font-weight: 600;">
+                                <i class="fas fa-exclamation-triangle"></i> 阻擋原因
+                            </label>
+                            <textarea class="blocked-reason-input" placeholder="請說明阻擋的原因..." 
+                                      data-case-id="${testCase.id}" data-field="blocked_reason"
+                                      onblur="updateBlockedReason('${testCase.id}')">${blockedReason}</textarea>
+                            <small style="color: #8B949E; margin-top: 5px; display: block;">
+                                請詳細說明導致測試無法進行的原因，如：缺少測試環境、依賴項目未完成等
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -601,29 +705,276 @@ function renderTestCases() {
 }
 
 // 設置測試狀態
-function setTestStatus(testCaseId, status) {
+async function setTestStatus(testCaseId, status) {
     // 更新按鈕狀態
     const card = document.querySelector(`[data-case-id="${testCaseId}"]`);
     const buttons = card.querySelectorAll('.status-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
     card.querySelector(`.status-btn.${status}`).classList.add('active');
     
-    // 更新本地資料
-    if (!currentProject.test_results[testCaseId]) {
-        currentProject.test_results[testCaseId] = {
-            test_case_id: testCaseId,
-            status: status,
-            notes: '',
-            known_issues: '',
-            tested_at: new Date().toISOString()
-        };
-    } else {
-        currentProject.test_results[testCaseId].status = status;
-        currentProject.test_results[testCaseId].tested_at = new Date().toISOString();
+    // 顯示/隱藏阻擋原因區塊
+    const blockedSection = document.getElementById(`blockedSection_${testCaseId}`);
+    if (blockedSection) {
+        if (status === 'blocked') {
+            blockedSection.classList.add('active');
+            // 聚焦到阻擋原因輸入框
+            setTimeout(() => {
+                const reasonInput = blockedSection.querySelector('.blocked-reason-input');
+                if (reasonInput) {
+                    reasonInput.focus();
+                }
+            }, 100);
+        } else {
+            blockedSection.classList.remove('active');
+        }
     }
     
-    // 更新進度統計
+    // 準備測試結果資料
+    let testResult = currentProject.test_results[testCaseId] || {};
+    
+    // 收集當前的備註和阻擋原因
+    const notesInput = document.querySelector(`[data-case-id="${testCaseId}"][data-field="notes"]`);
+    const blockedReasonInput = document.querySelector(`[data-case-id="${testCaseId}"][data-field="blocked_reason"]`);
+    
+    const resultData = {
+        test_case_id: testCaseId,
+        status: status,
+        notes: notesInput ? notesInput.value.trim() : (testResult.notes || ''),
+        known_issues: testResult.known_issues || '',
+        blocked_reason: status === 'blocked' ? (blockedReasonInput ? blockedReasonInput.value.trim() : (testResult.blocked_reason || '')) : ''
+    };
+    
+    try {
+        // 立即向後端同步狀態變更
+        const response = await fetch(`/api/test-projects/${currentProject.id}/results`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(resultData)
+        });
+        
+        if (response.ok) {
+            const updatedProject = await response.json();
+            // 更新本地專案資料
+            currentProject = updatedProject;
+            
+            // 更新進度統計
+            renderProgressStats();
+            
+            // 顯示狀態變更通知
+            showStatusChangeNotification(testCaseId, status);
+        } else {
+            throw new Error('狀態更新失敗');
+        }
+    } catch (error) {
+        console.error('更新測試狀態失敗:', error);
+        showAlert('狀態更新失敗: ' + error.message, 'danger');
+        
+        // 恢復按鈕狀態
+        buttons.forEach(btn => btn.classList.remove('active'));
+        const currentStatus = currentProject.test_results[testCaseId]?.status || 'not_tested';
+        const currentBtn = card.querySelector(`.status-btn.${currentStatus}`);
+        if (currentBtn) {
+            currentBtn.classList.add('active');
+        }
+    }
+}
+
+// 更新阻擋原因
+async function updateBlockedReason(testCaseId) {
+    const blockedReasonInput = document.querySelector(`[data-case-id="${testCaseId}"][data-field="blocked_reason"]`);
+    if (!blockedReasonInput) return;
+    
+    const blockedReason = blockedReasonInput.value.trim();
+    const testResult = currentProject.test_results[testCaseId];
+    
+    if (!testResult || testResult.status !== 'blocked') {
+        return;
+    }
+    
+    const resultData = {
+        test_case_id: testCaseId,
+        status: testResult.status,
+        notes: testResult.notes || '',
+        known_issues: testResult.known_issues || '',
+        blocked_reason: blockedReason
+    };
+    
+    try {
+        const response = await fetch(`/api/test-projects/${currentProject.id}/results`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(resultData)
+        });
+        
+        if (response.ok) {
+            const updatedProject = await response.json();
+            currentProject = updatedProject;
+            
+            // 顯示保存成功提示
+            showAlert('阻擋原因已保存', 'success');
+        } else {
+            throw new Error('保存失敗');
+        }
+    } catch (error) {
+        console.error('更新阻擋原因失敗:', error);
+        showAlert('保存阻擋原因失敗: ' + error.message, 'danger');
+    }
+}
+
+// 顯示狀態變更通知
+function showStatusChangeNotification(testCaseId, status) {
+    const statusText = {
+        'pass': '通過',
+        'fail': '失敗', 
+        'blocked': '阻擋',
+        'not_tested': '待測試'
+    };
+    
+    const statusColor = {
+        'pass': '#238636',
+        'fail': '#f85149',
+        'blocked': '#8a2be2',
+        'not_tested': '#d29922'
+    };
+    
+    // 創建通知元素
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${statusColor[status]};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 9999;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    `;
+    notification.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        測試案例狀態已更新為：${statusText[status]}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 顯示動畫
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // 自動消失
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 2000);
+}
+
+// 批量設置狀態
+function batchSetStatus(status) {
+    const statusText = {
+        'pass': '通過',
+        'fail': '失敗', 
+        'blocked': '阻擋',
+        'not_tested': '待測試'
+    };
+    
+    const confirmMessage = `確定要將所有可見的測試案例狀態設為「${statusText[status]}」嗎？`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // 取得當前可見的測試案例
+    const visibleTestCases = document.querySelectorAll('.test-case-card:not([style*="display: none"])');
+    let updatedCount = 0;
+    
+    visibleTestCases.forEach(card => {
+        const testCaseId = card.dataset.caseId;
+        if (testCaseId) {
+            setTestStatus(testCaseId, status);
+            updatedCount++;
+        }
+    });
+    
+    // 顯示批量操作完成通知
+    showBatchOperationNotification(updatedCount, statusText[status]);
+}
+
+// 清除所有結果
+function clearAllResults() {
+    const confirmMessage = '確定要清除所有測試結果嗎？此操作將重置所有測試案例的狀態、備註和阻擋原因。\n\n此操作無法復原！';
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // 清除所有測試結果
+    currentProject.test_results = {};
+    
+    // 重新渲染測試案例
+    renderTestCases();
     renderProgressStats();
+    
+    // 顯示操作完成通知
+    showAlert('所有測試結果已清除', 'warning');
+}
+
+// 顯示批量操作通知
+function showBatchOperationNotification(count, statusText) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: #238636;
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 9999;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        border-left: 4px solid #2ea043;
+    `;
+    notification.innerHTML = `
+        <i class="fas fa-check-double"></i>
+        批量操作完成：${count} 個測試案例已設為「${statusText}」
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 顯示動畫
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // 自動消失
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
 }
 
 // 設置過濾按鈕
@@ -640,8 +991,8 @@ function setupFilterButtons() {
 
 // 保存所有測試結果
 async function saveAllResults() {
-    // 收集所有備註和已知問題
-    document.querySelectorAll('.test-notes-input').forEach(textarea => {
+    // 收集所有備註、已知問題和阻擋原因
+    document.querySelectorAll('.test-notes-input, .blocked-reason-input').forEach(textarea => {
         const caseId = textarea.dataset.caseId;
         const field = textarea.dataset.field;
         const value = textarea.value.trim();
@@ -652,6 +1003,7 @@ async function saveAllResults() {
                 status: 'not_tested',
                 notes: '',
                 known_issues: '',
+                blocked_reason: '',
                 tested_at: new Date().toISOString()
             };
         }

@@ -79,14 +79,28 @@ class TestCaseManager:
         return None
     
     def delete_product_tag(self, tag_id: str) -> bool:
-        """刪除產品標籤"""
+        """刪除產品標籤（同時從測試案例中移除關聯）"""
         tags = self._load_json(self.product_tags_file)
         original_length = len(tags)
         
         tags = [tag for tag in tags if tag['id'] != tag_id]
         
         if len(tags) < original_length:
+            # 保存更新後的標籤列表
             self._save_json(self.product_tags_file, tags)
+            
+            # 從所有測試案例中移除此標籤的關聯
+            test_cases = self._load_json(self.test_cases_file)
+            updated = False
+            for test_case in test_cases:
+                if 'product_tags' in test_case and tag_id in test_case['product_tags']:
+                    test_case['product_tags'].remove(tag_id)
+                    test_case['updated_at'] = datetime.now().isoformat()
+                    updated = True
+            
+            if updated:
+                self._save_json(self.test_cases_file, test_cases)
+            
             return True
         
         return False
@@ -248,7 +262,8 @@ class TestCaseManager:
     
     def update_test_result(self, project_id: str, test_case_id: str, 
                           status: TestStatus, notes: Optional[str] = None,
-                          known_issues: Optional[str] = None) -> Optional[TestProject]:
+                          known_issues: Optional[str] = None,
+                          blocked_reason: Optional[str] = None) -> Optional[TestProject]:
         """更新測試結果"""
         projects = self._load_json(self.test_projects_file)
         
@@ -258,7 +273,8 @@ class TestCaseManager:
                     test_case_id=test_case_id,
                     status=status,
                     notes=notes,
-                    known_issues=known_issues
+                    known_issues=known_issues,
+                    blocked_reason=blocked_reason
                 )
                 
                 if 'test_results' not in project_data:
@@ -303,6 +319,8 @@ class TestCaseManager:
                           if result.status == TestStatus.PASS)
         failed_cases = sum(1 for result in project.test_results.values() 
                           if result.status == TestStatus.FAIL)
+        blocked_cases = sum(1 for result in project.test_results.values() 
+                           if result.status == TestStatus.BLOCKED)
         not_tested_cases = total_cases - len(project.test_results)
         
         pass_rate = (passed_cases / total_cases * 100) if total_cases > 0 else 0
@@ -324,13 +342,17 @@ class TestCaseManager:
             tag_failed = sum(1 for case in tag_cases 
                            if case.id in project.test_results and 
                            project.test_results[case.id].status == TestStatus.FAIL)
+            tag_blocked = sum(1 for case in tag_cases 
+                            if case.id in project.test_results and 
+                            project.test_results[case.id].status == TestStatus.BLOCKED)
             tag_pass_rate = (tag_passed / tag_total * 100) if tag_total > 0 else 0
             
             product_stats[tag.name] = {
                 'total': tag_total,
                 'passed': tag_passed,
                 'failed': tag_failed,
-                'not_tested': tag_total - tag_passed - tag_failed,
+                'blocked': tag_blocked,
+                'not_tested': tag_total - tag_passed - tag_failed - tag_blocked,
                 'pass_rate': round(tag_pass_rate, 2)
             }
         
@@ -338,6 +360,7 @@ class TestCaseManager:
             total_cases=total_cases,
             passed_cases=passed_cases,
             failed_cases=failed_cases,
+            blocked_cases=blocked_cases,
             not_tested_cases=not_tested_cases,
             pass_rate=round(pass_rate, 2),
             fail_rate=round(fail_rate, 2),

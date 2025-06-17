@@ -1,75 +1,22 @@
 [
   {
-    "id": "e5fcda5e-aead-4cc0-ac33-268d2ef216f4",
-    "title": "用戶登入功能",
-    "user_role": "作為一位註冊用戶",
-    "feature_description": "我希望能夠使用帳號密碼登入系統",
+    "id": "1e2cef39-c4b1-4b23-9a7a-58ffab8d00d6",
+    "title": "幫Operator新增iEnergy帳號",
+    "user_role": "車能網營運者",
+    "feature_description": "協助外部新增iEnergy使用帳號\n1.登入Control Center, 用IA的帳號fotaqa@ionexenergy.com\n2.新增User\n3.User Assign到特定的iEnergy Group\n4.將User新增到特定的iEnergy Group",
     "acceptance_criteria": [
-      "輸入正確的帳號密碼能成功登入",
-      "輸入錯誤的帳號密碼會顯示錯誤訊息",
-      "登入成功後會跳轉到首頁"
+      "可以登入Control Center",
+      "可以新增User",
+      "User會收到驗證信",
+      "User可以成功被Assign到Group",
+      "User登入iEnergy, 可以查看到Group指定的功能"
     ],
-    "test_notes": "需要測試各種邊界條件和錯誤情況",
+    "test_notes": "",
     "product_tags": [
-      "8a64bfd4-7987-4a41-b9e0-95d9379b18d3",
-      "3c1b36d7-e00e-4faa-af6c-616cd362fb07"
+      "aef2120f-333a-47b8-83a7-59b36c841640",
+      "c8868d85-025e-4fe9-9708-1aff473abb8a"
     ],
-    "created_at": "2025-06-15T22:23:13.430757",
-    "updated_at": "2025-06-15T22:23:13.430758"
-  },
-  {
-    "id": "c6986cc3-ec24-40ad-85bf-1f4e7112ed88",
-    "title": "商品搜尋功能",
-    "user_role": "作為一位購物者",
-    "feature_description": "我希望能夠搜尋我想要的商品",
-    "acceptance_criteria": [
-      "輸入關鍵字能夠找到相關商品",
-      "搜尋結果能夠按相關度排序",
-      "能夠使用篩選條件縮小搜尋範圍"
-    ],
-    "test_notes": "需要測試搜尋性能和準確度",
-    "product_tags": [
-      "8a64bfd4-7987-4a41-b9e0-95d9379b18d3",
-      "06b5bd6b-8378-472a-a1cc-0b7180ec122d"
-    ],
-    "created_at": "2025-06-15T22:23:13.430900",
-    "updated_at": "2025-06-15T22:23:13.430901"
-  },
-  {
-    "id": "552e176b-c141-43eb-ab37-119560a8c8f6",
-    "title": "訂單結帳流程",
-    "user_role": "作為一位已登入的購物者",
-    "feature_description": "我希望能夠完成商品結帳流程",
-    "acceptance_criteria": [
-      "能夠選擇配送方式",
-      "能夠選擇付款方式",
-      "訂單確認後會收到確認郵件"
-    ],
-    "test_notes": "需要測試各種付款方式的整合",
-    "product_tags": [
-      "8a64bfd4-7987-4a41-b9e0-95d9379b18d3",
-      "3c1b36d7-e00e-4faa-af6c-616cd362fb07",
-      "ea24e9af-35be-4eb2-9aaa-78df561b1c0f"
-    ],
-    "created_at": "2025-06-15T22:23:13.431050",
-    "updated_at": "2025-06-15T22:23:13.431051"
-  },
-  {
-    "id": "22c4f884-da1e-4cae-b53b-5d3637e55379",
-    "title": "用戶資料安全",
-    "user_role": "作為一位系統管理員",
-    "feature_description": "我希望確保用戶資料的安全性",
-    "acceptance_criteria": [
-      "密碼需要加密存儲",
-      "敏感資料需要HTTPS傳輸",
-      "需要防範SQL注入攻擊"
-    ],
-    "test_notes": "使用安全掃描工具進行測試",
-    "product_tags": [
-      "ea24e9af-35be-4eb2-9aaa-78df561b1c0f",
-      "3c1b36d7-e00e-4faa-af6c-616cd362fb07"
-    ],
-    "created_at": "2025-06-15T22:23:13.431218",
-    "updated_at": "2025-06-15T22:23:13.431219"
+    "created_at": "2025-06-17T14:07:28.029270",
+    "updated_at": "2025-06-17T14:32:20.124392"
   }
 ]

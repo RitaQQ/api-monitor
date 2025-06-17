@@ -49,6 +49,7 @@
 
 .stat-number.pass { color: #238636; }
 .stat-number.fail { color: #f85149; }
+.stat-number.blocked { color: #8a2be2; }
 .stat-number.pending { color: #d29922; }
 
 .stat-label {
@@ -360,7 +361,8 @@ function renderProjects(projects) {
         const testResults = project.test_results || {};
         const passedCount = Object.values(testResults).filter(r => r.status === 'pass').length;
         const failedCount = Object.values(testResults).filter(r => r.status === 'fail').length;
-        const pendingCount = testCasesCount - passedCount - failedCount;
+        const blockedCount = Object.values(testResults).filter(r => r.status === 'blocked').length;
+        const pendingCount = testCasesCount - passedCount - failedCount - blockedCount;
         
         const statusText = {
             'draft': '草稿',
@@ -398,6 +400,10 @@ function renderProjects(projects) {
                         <div class="stat-item">
                             <div class="stat-number fail">${failedCount}</div>
                             <div class="stat-label">失敗</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number blocked">${blockedCount}</div>
+                            <div class="stat-label">阻擋</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-number pending">${pendingCount}</div>
@@ -770,22 +776,52 @@ function updateStatsOverview() {
     const inProgressProjects = allProjects.filter(p => p.status === 'in_progress').length;
     const completedProjects = allProjects.filter(p => p.status === 'completed').length;
     
+    // 計算測試案例統計
+    let totalTestCases = 0;
+    let totalPassed = 0;
+    let totalFailed = 0;
+    let totalBlocked = 0;
+    let totalPending = 0;
+    
+    allProjects.forEach(project => {
+        const testCasesCount = project.selected_test_cases ? project.selected_test_cases.length : 0;
+        const testResults = project.test_results || {};
+        const passedCount = Object.values(testResults).filter(r => r.status === 'pass').length;
+        const failedCount = Object.values(testResults).filter(r => r.status === 'fail').length;
+        const blockedCount = Object.values(testResults).filter(r => r.status === 'blocked').length;
+        const pendingCount = testCasesCount - passedCount - failedCount - blockedCount;
+        
+        totalTestCases += testCasesCount;
+        totalPassed += passedCount;
+        totalFailed += failedCount;
+        totalBlocked += blockedCount;
+        totalPending += pendingCount;
+    });
+    
     statsOverview.innerHTML = `
         <div class="stat-item">
             <div class="stat-number" style="color: #58a6ff;">${totalProjects}</div>
             <div class="stat-label">總專案數</div>
         </div>
         <div class="stat-item">
-            <div class="stat-number" style="color: #d29922;">${draftProjects}</div>
-            <div class="stat-label">草稿</div>
+            <div class="stat-number" style="color: #238636;">${totalPassed}</div>
+            <div class="stat-label">測試通過</div>
         </div>
         <div class="stat-item">
-            <div class="stat-number" style="color: #58a6ff;">${inProgressProjects}</div>
-            <div class="stat-label">進行中</div>
+            <div class="stat-number" style="color: #f85149;">${totalFailed}</div>
+            <div class="stat-label">測試失敗</div>
         </div>
         <div class="stat-item">
-            <div class="stat-number" style="color: #238636;">${completedProjects}</div>
-            <div class="stat-label">已完成</div>
+            <div class="stat-number" style="color: #8a2be2;">${totalBlocked}</div>
+            <div class="stat-label">測試阻擋</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #d29922;">${totalPending}</div>
+            <div class="stat-label">待測試</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #58a6ff;">${completedProjects}</div>
+            <div class="stat-label">已完成專案</div>
         </div>
     `;
 }

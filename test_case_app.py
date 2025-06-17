@@ -6,6 +6,7 @@ from models import TestCase, ProductTag, TestProject, TestResult, TestStatus, Pr
 from test_case_manager import TestCaseManager
 from report_generator import ReportGenerator
 from pdf_exporter import PDFExporter
+from user_manager import UserManager
 import io
 import tempfile
 
@@ -14,6 +15,7 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     
     report_generator = ReportGenerator(test_case_manager)
     pdf_exporter = PDFExporter()
+    user_manager = UserManager()
     
     # ========== 頁面路由 ==========
     
@@ -26,6 +28,16 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     def test_projects():
         """測試專案管理頁面"""
         return render_template('test_projects.html')
+    
+    @app.route('/test-projects/<project_id>')
+    def project_detail(project_id):
+        """測試專案詳情頁面"""
+        return render_template('project_detail.html', project_id=project_id)
+    
+    @app.route('/product-tag-management')
+    def product_tag_management():
+        """產品標籤管理頁面"""
+        return render_template('product_tag_management.html')
     
     # ========== API 路由 - 產品標籤 ==========
     
@@ -229,7 +241,8 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                 test_case_id=data['test_case_id'],
                 status=TestStatus(data['status']),
                 notes=data.get('notes'),
-                known_issues=data.get('known_issues')
+                known_issues=data.get('known_issues'),
+                blocked_reason=data.get('blocked_reason')
             )
             
             if project:
@@ -308,15 +321,35 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     def get_users():
         """取得所有用戶（用於專案負責人選擇）"""
         try:
-            # 這裡應該從用戶管理系統取得用戶列表
-            # 暫時返回模擬資料
-            users = [
-                {'username': 'admin', 'display_name': '系統管理員'},
-                {'username': 'tester1', 'display_name': '測試員 A'},
-                {'username': 'tester2', 'display_name': '測試員 B'},
-                {'username': 'pm', 'display_name': '專案經理'}
-            ]
-            return jsonify(users)
+            # 從用戶管理系統獲取真實用戶列表
+            all_users = user_manager.get_all_users()
+            
+            # 只返回活躍用戶，並格式化為前端需要的格式
+            active_users = []
+            for user in all_users:
+                if user.get('is_active', True):  # 只包含活躍用戶
+                    # 構建顯示名稱
+                    display_name = user.get('email', user['username'])
+                    
+                    # 根據角色添加標識
+                    role = user.get('role', 'user')
+                    if role == 'admin':
+                        display_name = f"👑 {display_name} (管理員)"
+                    else:
+                        display_name = f"👤 {display_name} (用戶)"
+                    
+                    active_users.append({
+                        'username': user['username'],
+                        'display_name': display_name,
+                        'role': role,
+                        'email': user.get('email', ''),
+                        'created_at': user.get('created_at', '')
+                    })
+            
+            # 按角色排序：管理員在前，然後按用戶名排序
+            active_users.sort(key=lambda u: (u['role'] != 'admin', u['username']))
+            
+            return jsonify(active_users)
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 

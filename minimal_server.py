@@ -41,7 +41,6 @@ def index():
     <div class="container">
         <div class="nav">
             <a href="/">🏠 首頁</a>
-            <a href="/test-cases">📝 測試案例</a>
             <a href="/projects">🎯 測試專案</a>
         </div>
         
@@ -57,7 +56,7 @@ def index():
         
         <div class="card">
             <h3>🎯 快速開始</h3>
-            <p>1. 點擊 <a href="/test-cases">測試案例</a> 開始建立測試案例</p>
+            <p>1. 點擊測試案例開始建立測試案例</p>
             <p>2. 點擊 <a href="/projects">測試專案</a> 建立和管理測試專案</p>
         </div>
     </div>
@@ -65,170 +64,6 @@ def index():
 </html>
     ''')
 
-@app.route('/test-cases')
-def test_cases_page():
-    return render_template_string('''
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <title>測試案例管理</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .nav { background: #007bff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .nav a { color: white; text-decoration: none; margin-right: 20px; }
-        .btn { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer; margin: 5px; }
-        .btn-danger { background: #dc3545; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .form-group { margin: 10px 0; }
-        input, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="nav">
-            <a href="/">🏠 首頁</a>
-            <a href="/test-cases">📝 測試案例</a>
-            <a href="/projects">🎯 測試專案</a>
-        </div>
-        
-        <h1>📝 測試案例管理</h1>
-        
-        <div style="margin-bottom: 20px;">
-            <button class="btn" onclick="showAddForm()">➕ 新增測試案例</button>
-        </div>
-        
-        <div id="addForm" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h3>新增測試案例</h3>
-            <div class="form-group">
-                <label>標題：</label>
-                <input type="text" id="title" placeholder="測試案例標題">
-            </div>
-            <div class="form-group">
-                <label>使用者角色：</label>
-                <input type="text" id="userRole" placeholder="作為一位用戶" value="作為一位用戶">
-            </div>
-            <div class="form-group">
-                <label>功能描述：</label>
-                <input type="text" id="description" placeholder="我希望能夠...">
-            </div>
-            <div class="form-group">
-                <label>驗收條件：</label>
-                <textarea id="criteria" rows="3" placeholder="請輸入驗收條件，每行一個條件"></textarea>
-            </div>
-            <button class="btn" onclick="addTestCase()">💾 儲存</button>
-            <button class="btn btn-danger" onclick="hideAddForm()">❌ 取消</button>
-        </div>
-        
-        <table id="testCasesTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>標題</th>
-                    <th>使用者角色</th>
-                    <th>功能描述</th>
-                    <th>驗收條件</th>
-                    <th>建立時間</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="testCasesBody">
-                <!-- 測試案例將在這裡顯示 -->
-            </tbody>
-        </table>
-    </div>
-    
-    <script>
-        function showAddForm() {
-            document.getElementById('addForm').style.display = 'block';
-        }
-        
-        function hideAddForm() {
-            document.getElementById('addForm').style.display = 'none';
-            clearForm();
-        }
-        
-        function clearForm() {
-            document.getElementById('title').value = '';
-            document.getElementById('userRole').value = '作為一位用戶';
-            document.getElementById('description').value = '';
-            document.getElementById('criteria').value = '';
-        }
-        
-        function addTestCase() {
-            const data = {
-                title: document.getElementById('title').value,
-                user_role: document.getElementById('userRole').value,
-                description: document.getElementById('description').value,
-                criteria: document.getElementById('criteria').value.split('\\n').filter(c => c.trim())
-            };
-            
-            fetch('/api/test-cases', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    loadTestCases();
-                    hideAddForm();
-                    alert('測試案例新增成功！');
-                } else {
-                    alert('新增失敗：' + result.error);
-                }
-            });
-        }
-        
-        function loadTestCases() {
-            fetch('/api/test-cases')
-            .then(response => response.json())
-            .then(data => {
-                const tbody = document.getElementById('testCasesBody');
-                tbody.innerHTML = '';
-                
-                data.test_cases.forEach(tc => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${tc.id}</td>
-                        <td>${tc.title}</td>
-                        <td>${tc.user_role}</td>
-                        <td>${tc.description}</td>
-                        <td>${tc.criteria.join('<br>')}</td>
-                        <td>${tc.created_at}</td>
-                        <td>
-                            <button class="btn btn-danger" onclick="deleteTestCase('${tc.id}')">🗑️ 刪除</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            });
-        }
-        
-        function deleteTestCase(id) {
-            if (confirm('確定要刪除這個測試案例嗎？')) {
-                fetch(`/api/test-cases/${id}`, {method: 'DELETE'})
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        loadTestCases();
-                        alert('刪除成功！');
-                    } else {
-                        alert('刪除失敗：' + result.error);
-                    }
-                });
-            }
-        }
-        
-        // 頁面載入時載入測試案例
-        document.addEventListener('DOMContentLoaded', loadTestCases);
-    </script>
-</body>
-</html>
-    ''')
 
 @app.route('/projects')
 def projects_page():
@@ -251,7 +86,6 @@ def projects_page():
     <div class="container">
         <div class="nav">
             <a href="/">🏠 首頁</a>
-            <a href="/test-cases">📝 測試案例</a>
             <a href="/projects">🎯 測試專案</a>
         </div>
         
@@ -270,7 +104,7 @@ def projects_page():
         
         <div class="card">
             <h3>🚀 開始使用</h3>
-            <p>1. 先到 <a href="/test-cases">測試案例</a> 頁面建立一些測試案例</p>
+            <p>1. 先到測試案例頁面建立一些測試案例</p>
             <p>2. 回到這裡建立測試專案</p>
             <p>3. 選擇要測試的案例並開始執行測試</p>
         </div>

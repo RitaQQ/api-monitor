@@ -7,21 +7,21 @@
       "role": "admin",
       "email": "admin@api-monitor.com",
       "created_at": "2025-06-15T13:02:12.313331",
-      "last_login": "2025-06-15T21:53:46.676344",
+      "last_login": "2025-06-17T14:16:49.427563",
       "is_active": true
     },
     {
-      "id": "d271e925-d5d7-4daa-9a33-46963a8911b6",
+      "id": "494a94ee-871b-445e-8b2a-967157c1dcc1",
       "username": "rita",
       "password_hash": "aa20c9c97581de1eb773c5b9585a245fa791d6cc48c3bbc6d5e55158a7c04136",
-      "role": "admin",
-      "email": "rita791111@gmail.com",
-      "created_at": "2025-06-15T13:29:10.868830",
-      "last_login": "2025-06-15T13:29:27.016104",
+      "role": "user",
+      "email": "",
+      "created_at": "2025-06-16T09:55:44.968328",
+      "last_login": null,
       "is_active": true
     }
   ],
   "created_at": "2025-06-15T13:02:12.313338",
   "version": "1.0",
-  "updated_at": "2025-06-15T21:53:46.676600"
+  "updated_at": "2025-06-17T14:16:49.427709"
 }

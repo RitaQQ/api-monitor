@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "fcbe464e-4a11-4964-b422-e8967830654b",
+    "name": "test",
+    "test_date": "2025-06-20T00:00:00",
+    "responsible_user": "rita",
+    "selected_test_cases": [
+      "1e2cef39-c4b1-4b23-9a7a-58ffab8d00d6"
+    ],
+    "test_results": {},
+    "status": "in_progress",
+    "created_at": "2025-06-17T14:34:17.835684",
+    "updated_at": "2025-06-17T14:49:44.062266"
+  }
+]

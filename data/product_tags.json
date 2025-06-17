@@ -1,26 +1,26 @@
 [
   {
-    "id": "8a64bfd4-7987-4a41-b9e0-95d9379b18d3",
-    "name": "Web前端",
-    "description": "網頁前端功能測試",
-    "created_at": "2025-06-15T22:23:13.429736"
-  },
-  {
-    "id": "3c1b36d7-e00e-4faa-af6c-616cd362fb07",
-    "name": "API後端",
-    "description": "後端API介面測試",
-    "created_at": "2025-06-15T22:23:13.430178"
-  },
-  {
     "id": "06b5bd6b-8378-472a-a1cc-0b7180ec122d",
-    "name": "行動裝置",
+    "name": "User APP",
     "description": "手機App測試",
     "created_at": "2025-06-15T22:23:13.430457"
   },
   {
-    "id": "ea24e9af-35be-4eb2-9aaa-78df561b1c0f",
-    "name": "資訊安全",
-    "description": "安全性相關測試",
-    "created_at": "2025-06-15T22:23:13.430606"
+    "id": "aef2120f-333a-47b8-83a7-59b36c841640",
+    "name": "iEnergy Console",
+    "description": "用戶界面和前端功能測試",
+    "created_at": "2025-06-17T13:58:25.007971"
+  },
+  {
+    "id": "891e970c-a421-4c1f-8595-f4da51bb20d4",
+    "name": "Cabinet",
+    "description": "服務器端API和業務邏輯測試",
+    "created_at": "2025-06-17T13:58:39.344768"
+  },
+  {
+    "id": "c8868d85-025e-4fe9-9708-1aff473abb8a",
+    "name": "Control Center",
+    "description": null,
+    "created_at": "2025-06-17T14:03:26.257491"
   }
 ]
