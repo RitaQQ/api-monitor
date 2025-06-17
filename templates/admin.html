@@ -240,15 +240,48 @@
 .required {
     color: #f85149;
 }
+
+.collapsible-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.collapsible-header:hover {
+    background: #1C2128;
+}
+
+.collapse-icon {
+    transition: transform 0.3s ease;
+    font-size: 0.9em;
+}
+
+.collapse-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
+.collapsible-content {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.collapsible-content.collapsed {
+    max-height: 0 !important;
+    padding: 0;
+    border: none;
+}
 {% endblock %}
 
 {% block content %}
 <!-- 新增 API 表單 -->
 <div class="form-card">
-    <div class="form-header">
+    <div class="form-header collapsible-header" onclick="toggleCollapse('add-api-form')">
         <h3><i class="fas fa-plus-circle"></i> 新增 API 監控</h3>
+        <i class="fas fa-chevron-down collapse-icon" id="add-api-form-icon"></i>
     </div>
-    <div class="form-body">
+    <div class="form-body collapsible-content" id="add-api-form">
         <form action="{{ url_for('add_api') }}" method="POST">
             <div class="form-section">
                 <h4>基本設定</h4>
@@ -425,6 +458,44 @@
 
 {% block extra_js %}
 <script>
+// 收納/展開功能
+function toggleCollapse(elementId) {
+    const content = document.getElementById(elementId);
+    const icon = document.getElementById(elementId + '-icon');
+    
+    if (content.classList.contains('collapsed')) {
+        // 展開
+        content.classList.remove('collapsed');
+        content.style.maxHeight = content.scrollHeight + 'px';
+        icon.classList.remove('collapsed');
+        localStorage.setItem(elementId + '-collapsed', 'false');
+    } else {
+        // 收納
+        content.classList.add('collapsed');
+        content.style.maxHeight = '0px';
+        icon.classList.add('collapsed');
+        localStorage.setItem(elementId + '-collapsed', 'true');
+    }
+}
+
+// 頁面載入時恢復收納狀態
+document.addEventListener('DOMContentLoaded', function() {
+    const elementId = 'add-api-form';
+    const content = document.getElementById(elementId);
+    const icon = document.getElementById(elementId + '-icon');
+    const isCollapsed = localStorage.getItem(elementId + '-collapsed') === 'true';
+    
+    if (isCollapsed) {
+        content.classList.add('collapsed');
+        content.style.maxHeight = '0px';
+        icon.classList.add('collapsed');
+    } else {
+        content.classList.remove('collapsed');
+        content.style.maxHeight = content.scrollHeight + 'px';
+        icon.classList.remove('collapsed');
+    }
+});
+
 // 根據HTTP方法切換請求內容欄位的可見性
 document.getElementById('method').addEventListener('change', function() {
     const method = this.value;

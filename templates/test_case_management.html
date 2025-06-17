@@ -194,35 +194,6 @@
     color: #C9D1D9;
 }
 
-.stats-overview {
-    background: #0D1117;
-    border: 1px solid #30363D;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px;
-}
-
-.stat-item {
-    text-align: center;
-}
-
-.stat-number {
-    font-size: 2em;
-    font-weight: bold;
-    color: #58a6ff;
-    margin-bottom: 5px;
-}
-
-.stat-label {
-    color: #8B949E;
-    font-size: 0.9em;
-}
 
 .bulk-actions {
     background: #0D1117;
@@ -244,6 +215,93 @@
 .selected-count {
     color: #58a6ff;
     font-weight: bold;
+}
+
+.test-cases-table {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.test-cases-table table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+}
+
+.test-cases-table th {
+    background: #0D1117;
+    color: #C9D1D9;
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid #30363D;
+    font-size: 0.9em;
+}
+
+.test-cases-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #30363D;
+    vertical-align: top;
+}
+
+.test-cases-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.test-cases-table tbody tr:hover {
+    background-color: #0D1117;
+}
+
+.test-cases-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.test-case-title-cell {
+    font-weight: 600;
+    color: #C9D1D9;
+    max-width: 250px;
+}
+
+.test-case-id-cell {
+    font-family: 'Courier New', monospace;
+    color: #8B949E;
+    font-size: 0.85em;
+    width: 100px;
+}
+
+.test-case-description-cell {
+    color: #C9D1D9;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.test-case-tags-cell {
+    max-width: 200px;
+}
+
+.test-case-actions-cell {
+    width: 120px;
+    text-align: right;
+}
+
+.table-tag-badge {
+    background: #30363D;
+    color: #8B949E;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.7em;
+    font-weight: 500;
+    margin-right: 4px;
+    margin-bottom: 2px;
+    display: inline-block;
+}
+
+.table-checkbox {
+    margin: 0;
 }
 {% endblock %}
 
@@ -270,6 +328,9 @@
             <button class="btn btn-outline-secondary btn-sm me-2" onclick="toggleSelectAll()">
                 <i class="fas fa-check-square"></i> 全選/取消
             </button>
+            <button class="btn btn-outline-success btn-sm me-2" onclick="showImportModal()">
+                <i class="fas fa-upload"></i> 匯入
+            </button>
             <button class="btn btn-outline-primary btn-sm me-2" onclick="exportTestCases()">
                 <i class="fas fa-download"></i> 匯出
             </button>
@@ -280,13 +341,6 @@
     </div>
 </div>
 
-<!-- 統計概覽 -->
-<div class="stats-overview">
-    <h5 style="color: #C9D1D9; margin-bottom: 15px;">測試案例統計</h5>
-    <div class="stats-grid" id="statsOverview">
-        <!-- 統計資料將通過 JavaScript 載入 -->
-    </div>
-</div>
 
 <!-- 批量操作 -->
 <div class="bulk-actions" id="bulkActions">
@@ -306,8 +360,30 @@
 </div>
 
 <!-- 測試案例列表 -->
-<div class="row" id="testCasesContainer">
-    <!-- 測試案例卡片將通過 JavaScript 載入 -->
+<div class="test-cases-table" id="testCasesTableContainer">
+    <div class="d-flex justify-content-between align-items-center" style="padding: 15px 15px 0 15px;">
+        <div></div>
+        <small class="text-muted" id="testCaseCount" style="color: #8B949E; font-size: 0.8em;">
+            <!-- 總數顯示 -->
+        </small>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th width="40">
+                    <input type="checkbox" class="table-checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                </th>
+                <th width="100">測項ID</th>
+                <th>標題</th>
+                <th>功能描述</th>
+                <th width="200">產品標籤</th>
+                <th width="120">操作</th>
+            </tr>
+        </thead>
+        <tbody id="testCasesContainer">
+            <!-- 測試案例將通過 JavaScript 載入 -->
+        </tbody>
+    </table>
 </div>
 
 <!-- 載入中提示 -->
@@ -367,7 +443,7 @@ async function loadTestCases(showLoading = false) {
             testCasesContainer.innerHTML = '';
         } else {
             renderTestCases(allTestCases);
-            updateStatsOverview();
+            updateTestCaseCount(allTestCases.length);
         }
         
     } catch (error) {
@@ -407,119 +483,75 @@ function updateTagFilter() {
     availableProductTags.forEach(tag => {
         const option = document.createElement('option');
         option.value = tag.id;
-        option.textContent = tag.name;
+        option.textContent = tag.name; // 只顯示名稱，不顯示ID
         tagFilter.appendChild(option);
     });
+}
+
+// 生成TC格式的顯示ID
+function generateTCId(index) {
+    return `TC${String(index + 1).padStart(5, '0')}`;
 }
 
 // 渲染測試案例
 function renderTestCases(testCases) {
     const testCasesContainer = document.getElementById('testCasesContainer');
     
-    testCasesContainer.innerHTML = testCases.map(testCase => {
+    testCasesContainer.innerHTML = testCases.map((testCase, index) => {
         const tagNames = testCase.product_tags.map(tagId => {
             const tag = availableProductTags.find(t => t.id === tagId);
-            return tag ? tag.name : tagId;
-        });
+            return tag ? tag.name : '';
+        }).filter(name => name); // 過濾掉空字串，只顯示標籤名稱
+        
+        const tcId = generateTCId(index);
         
         return `
-            <div class="col-lg-6 col-xl-4" data-test-case-id="${testCase.id}">
-                <div class="test-case-card">
-                    <div class="test-case-header">
-                        <div>
-                            <input type="checkbox" class="test-case-checkbox" value="${testCase.id}" 
-                                   onchange="handleTestCaseSelection()">
-                            <h5 class="test-case-title">${testCase.title}</h5>
-                            <div class="test-case-id">ID: ${testCase.id}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="test-case-meta">
-                        <div class="user-role">${testCase.user_role}</div>
-                    </div>
-                    
-                    <div class="feature-description">
-                        ${testCase.feature_description}
-                    </div>
-                    
-                    ${testCase.acceptance_criteria && testCase.acceptance_criteria.length > 0 ? `
-                        <div class="acceptance-criteria">
-                            <div class="criteria-title">驗收條件:</div>
-                            <ul class="criteria-list">
-                                ${testCase.acceptance_criteria.map(criteria => 
-                                    `<li class="criteria-item">${criteria}</li>`
-                                ).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-                    
-                    ${testCase.test_notes ? `
-                        <div class="test-notes">
-                            <strong>測試備註:</strong> ${testCase.test_notes}
-                        </div>
-                    ` : ''}
-                    
-                    ${tagNames.length > 0 ? `
-                        <div class="product-tags">
-                            ${tagNames.map(tagName => 
-                                `<span class="tag-badge">${tagName}</span>`
-                            ).join('')}
-                        </div>
-                    ` : ''}
-                    
-                    <div class="test-case-actions">
-                        <button class="btn btn-sm btn-outline-warning" 
-                                onclick="editTestCase('${testCase.id}')" title="編輯">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" 
-                                onclick="deleteTestCase('${testCase.id}', '${testCase.title}')" title="刪除">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <tr data-test-case-id="${testCase.id}">
+                <td>
+                    <input type="checkbox" class="table-checkbox test-case-checkbox" value="${testCase.id}" 
+                           onchange="handleTestCaseSelection()">
+                </td>
+                <td class="test-case-id-cell">${tcId}</td>
+                <td class="test-case-title-cell">${testCase.title}</td>
+                <td class="test-case-description-cell">${testCase.feature_description}</td>
+                <td class="test-case-tags-cell">
+                    ${tagNames.length > 0 ? 
+                        tagNames.map(tagName => 
+                            `<span class="table-tag-badge">${tagName}</span>`
+                        ).join('') : 
+                        '<span style="color: #8B949E;">無標籤</span>'
+                    }
+                </td>
+                <td class="test-case-actions-cell">
+                    <button class="btn btn-sm btn-outline-warning me-1" 
+                            onclick="editTestCase('${testCase.id}')" title="編輯">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" 
+                            onclick="deleteTestCase('${testCase.id}', '${testCase.title}')" title="刪除">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
         `;
     }).join('');
 }
 
-// 更新統計概覽
-function updateStatsOverview() {
-    const statsOverview = document.getElementById('statsOverview');
-    const totalCases = allTestCases.length;
-    const casesWithCriteria = allTestCases.filter(tc => tc.acceptance_criteria && tc.acceptance_criteria.length > 0).length;
-    const casesWithNotes = allTestCases.filter(tc => tc.test_notes && tc.test_notes.trim().length > 0).length;
-    const casesWithTags = allTestCases.filter(tc => tc.product_tags && tc.product_tags.length > 0).length;
-    
-    statsOverview.innerHTML = `
-        <div class="stat-item">
-            <div class="stat-number">${totalCases}</div>
-            <div class="stat-label">總測試案例</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #238636;">${casesWithCriteria}</div>
-            <div class="stat-label">含驗收條件</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #d29922;">${casesWithNotes}</div>
-            <div class="stat-label">含測試備註</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #f85149;">${casesWithTags}</div>
-            <div class="stat-label">含產品標籤</div>
-        </div>
-    `;
+// 更新測試案例總數顯示
+function updateTestCaseCount(count) {
+    const testCaseCount = document.getElementById('testCaseCount');
+    testCaseCount.textContent = `共 ${count} 項測試案例`;
 }
 
 // 過濾測試案例
 function filterTestCases() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const selectedTagId = document.getElementById('tagFilter').value;
-    const testCaseCards = document.querySelectorAll('[data-test-case-id]');
+    const testCaseRows = document.querySelectorAll('[data-test-case-id]');
     
     let visibleCount = 0;
-    testCaseCards.forEach(card => {
-        const testCaseId = card.dataset.testCaseId;
+    testCaseRows.forEach(row => {
+        const testCaseId = row.dataset.testCaseId;
         const testCase = allTestCases.find(tc => tc.id === testCaseId);
         
         if (!testCase) return;
@@ -534,14 +566,17 @@ function filterTestCases() {
         const tagMatch = !selectedTagId || testCase.product_tags.includes(selectedTagId);
         
         const shouldShow = textMatch && tagMatch;
-        card.style.display = shouldShow ? 'block' : 'none';
+        row.style.display = shouldShow ? '' : 'none';
         
         if (shouldShow) visibleCount++;
     });
     
     // 更新空狀態顯示
     const emptyState = document.getElementById('emptyState');
+    const tableContainer = document.getElementById('testCasesTableContainer');
+    
     if (visibleCount === 0 && allTestCases.length > 0) {
+        tableContainer.style.display = 'none';
         emptyState.style.display = 'block';
         emptyState.innerHTML = `
             <div class="empty-icon">
@@ -551,6 +586,7 @@ function filterTestCases() {
             <p>請嘗試調整搜尋條件</p>
         `;
     } else if (allTestCases.length === 0) {
+        tableContainer.style.display = 'none';
         emptyState.style.display = 'block';
         emptyState.innerHTML = `
             <div class="empty-icon">
@@ -560,8 +596,12 @@ function filterTestCases() {
             <p>點擊右下角的按鈕建立您的第一個測試案例</p>
         `;
     } else {
+        tableContainer.style.display = 'block';
         emptyState.style.display = 'none';
     }
+    
+    // 更新總數顯示
+    updateTestCaseCount(visibleCount);
 }
 
 // 處理測試案例選擇
@@ -588,11 +628,16 @@ function handleTestCaseSelection() {
 
 // 全選/取消全選
 function toggleSelectAll() {
-    const checkboxes = document.querySelectorAll('.test-case-checkbox:not([style*="display: none"])');
-    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const visibleCheckboxes = document.querySelectorAll('.test-case-checkbox');
+    const visibleRows = Array.from(visibleCheckboxes).filter(cb => 
+        cb.closest('tr').style.display !== 'none'
+    );
     
-    checkboxes.forEach(cb => {
-        cb.checked = !allChecked;
+    const shouldCheck = selectAllCheckbox.checked;
+    
+    visibleRows.forEach(cb => {
+        cb.checked = shouldCheck;
     });
     
     handleTestCaseSelection();
@@ -633,36 +678,14 @@ function showTestCaseModal(testCase = null) {
                                        style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" style="color: #C9D1D9;">用戶角色 *</label>
-                                <input type="text" class="form-control" id="userRole" 
-                                       value="${testCase?.user_role || ''}" required
-                                       style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
-                                       placeholder="例如：作為一位註冊用戶">
-                            </div>
-                            <div class="mb-3">
                                 <label class="form-label" style="color: #C9D1D9;">功能描述 *</label>
                                 <textarea class="form-control" id="featureDescription" rows="3" required
                                           style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
-                                          placeholder="我希望能夠...">${testCase?.feature_description || ''}</textarea>
+                                          placeholder="描述這個測試項目的功能...">${testCase?.feature_description || ''}</textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label" style="color: #C9D1D9;">驗收條件</label>
-                                <div id="criteriaContainer">
-                                    ${(testCase?.acceptance_criteria || ['']).map((criteria, index) => `
-                                        <div class="input-group mb-2">
-                                            <input type="text" class="form-control criteria-input" 
-                                                   value="${criteria}" placeholder="輸入驗收條件"
-                                                   style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
-                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCriteria(this)">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addCriteria()">
-                                    <i class="fas fa-plus"></i> 新增條件
-                                </button>
-                            </div>
+                            <!-- 隱藏用戶角色和驗收條件，但保留在後端數據中 -->
+                            <input type="hidden" id="userRole" value="${testCase?.user_role || '系統用戶'}">
+                            <input type="hidden" id="acceptanceCriteria" value="${JSON.stringify(testCase?.acceptance_criteria || []).replace(/"/g, '&quot;')}">
                             <div class="mb-3">
                                 <label class="form-label" style="color: #C9D1D9;">測試備註</label>
                                 <textarea class="form-control" id="testNotes" rows="2"
@@ -713,26 +736,7 @@ function showTestCaseModal(testCase = null) {
     modal.show();
 }
 
-// 新增驗收條件
-function addCriteria() {
-    const container = document.getElementById('criteriaContainer');
-    const newCriteria = `
-        <div class="input-group mb-2">
-            <input type="text" class="form-control criteria-input" 
-                   placeholder="輸入驗收條件"
-                   style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
-            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCriteria(this)">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', newCriteria);
-}
-
-// 移除驗收條件
-function removeCriteria(button) {
-    button.closest('.input-group').remove();
-}
+// 這些函數已不再需要，因為驗收條件已隱藏
 
 // 保存測試案例
 async function saveTestCase(testCaseId = null) {
@@ -746,18 +750,20 @@ async function saveTestCase(testCaseId = null) {
         test_notes: document.getElementById('testNotes').value.trim() || null
     };
     
-    // 收集驗收條件
-    const criteriaInputs = document.querySelectorAll('.criteria-input');
-    formData.acceptance_criteria = Array.from(criteriaInputs)
-        .map(input => input.value.trim())
-        .filter(criteria => criteria.length > 0);
+    // 收集隱藏的驗收條件
+    try {
+        const criteriaValue = document.getElementById('acceptanceCriteria').value;
+        formData.acceptance_criteria = criteriaValue ? JSON.parse(criteriaValue) : [];
+    } catch (e) {
+        formData.acceptance_criteria = [];
+    }
     
     // 收集產品標籤
     const tagCheckboxes = document.querySelectorAll('.tag-checkbox:checked');
     formData.product_tags = Array.from(tagCheckboxes).map(cb => cb.value);
     
     // 驗證
-    if (!formData.title || !formData.user_role || !formData.feature_description) {
+    if (!formData.title || !formData.feature_description) {
         showAlert('請填寫所有必填欄位', 'danger');
         return;
     }
@@ -835,9 +841,541 @@ function bulkDelete() {
     showAlert('批量刪除功能開發中...', 'info');
 }
 
-// 匯出測試案例
+// 顯示匯入模態框
+function showImportModal() {
+    const modalHtml = `
+        <div class="modal fade" id="importModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content" style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                    <div class="modal-header" style="background: #0D1117; border-bottom: 1px solid #30363D;">
+                        <h5 class="modal-title" style="color: #C9D1D9;">
+                            <i class="fas fa-upload"></i> 匯入測試案例
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label" style="color: #C9D1D9;">選擇CSV檔案</label>
+                            <input type="file" class="form-control" id="csvFileInput" accept=".csv"
+                                   style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                            <div class="form-text" style="color: #8B949E;">
+                                請選擇CSV格式的測試案例檔案
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 style="color: #C9D1D9; margin-bottom: 10px;">CSV格式要求：</h6>
+                            <div style="background: #0D1117; padding: 12px; border-radius: 6px; font-size: 0.85em; color: #8B949E;">
+                                <div><strong style="color: #C9D1D9;">必要欄位（按順序）：</strong></div>
+                                <div>1. 標題</div>
+                                <div>2. 用戶角色</div>
+                                <div>3. 功能描述</div>
+                                <div><br><strong style="color: #C9D1D9;">選用欄位：</strong></div>
+                                <div>4. 驗收條件（用分號分隔）</div>
+                                <div>5. 測試備註</div>
+                                <div>6. 產品標籤（用逗號分隔標籤名稱）</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="downloadTemplate()">
+                                <i class="fas fa-download"></i> 下載範本檔案
+                            </button>
+                        </div>
+                        
+                        <!-- 進度顯示 -->
+                        <div id="importProgress" style="display: none;">
+                            <div class="mb-2">
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar" id="importProgressBar" role="progressbar" 
+                                         style="width: 0%; background-color: #238636;"></div>
+                                </div>
+                            </div>
+                            <div id="importStatus" style="color: #8B949E; font-size: 0.85em;">準備匯入...</div>
+                        </div>
+                        
+                        <!-- 結果顯示 -->
+                        <div id="importResults" style="display: none; margin-top: 15px;">
+                            <div id="importSummary" class="mb-2"></div>
+                            <div id="importErrors" style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #30363D;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-success" onclick="startImport()">
+                            <i class="fas fa-upload"></i> 開始匯入
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除舊的模態框
+    const existingModal = document.getElementById('importModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 添加新的模態框
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // 顯示模態框
+    const modal = new bootstrap.Modal(document.getElementById('importModal'));
+    modal.show();
+}
+
+// 下載CSV範本檔案
+function downloadTemplate() {
+    const templateHeaders = [
+        '標題',
+        '用戶角色',
+        '功能描述',
+        '驗收條件',
+        '測試備註',
+        '產品標籤'
+    ];
+    
+    const templateData = [
+        [
+            '登入功能測試',
+            '一般用戶',
+            '我希望能夠使用帳號密碼登入系統',
+            '輸入正確帳密可成功登入; 錯誤帳密顯示錯誤訊息; 登入後導向首頁',
+            '需測試各種瀏覽器',
+            'web, app'
+        ],
+        [
+            '購物車功能測試',
+            '購物用戶',
+            '我希望能夠將商品加入購物車',
+            '點擊加入購物車按鈕; 購物車數量增加; 商品出現在購物車列表',
+            '',
+            'web'
+        ]
+    ];
+    
+    const allRows = [templateHeaders, ...templateData];
+    const csvContent = allRows.map(row => 
+        row.map(field => {
+            const fieldStr = String(field);
+            if (fieldStr.includes(',') || fieldStr.includes('\n') || fieldStr.includes('"')) {
+                return '"' + fieldStr.replace(/"/g, '""') + '"';
+            }
+            return fieldStr;
+        }).join(',')
+    ).join('\n');
+    
+    // 添加BOM以支援中文
+    const bom = '\uFEFF';
+    const csvWithBom = bom + csvContent;
+    
+    const blob = new Blob([csvWithBom], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', '測試案例匯入範本.csv');
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showAlert('範本檔案下載完成', 'success');
+}
+
+// 開始匯入流程
+async function startImport() {
+    const fileInput = document.getElementById('csvFileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showAlert('請選擇CSV檔案', 'warning');
+        return;
+    }
+    
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        showAlert('請選擇CSV格式檔案', 'warning');
+        return;
+    }
+    
+    // 顯示進度條
+    document.getElementById('importProgress').style.display = 'block';
+    document.getElementById('importResults').style.display = 'none';
+    
+    updateImportProgress(0, '讀取檔案中...');
+    
+    try {
+        // 讀取檔案內容
+        const csvContent = await readFileAsText(file);
+        updateImportProgress(20, '解析CSV格式...');
+        
+        // 解析CSV
+        const parsedData = parseCSV(csvContent);
+        updateImportProgress(40, '驗證數據格式...');
+        
+        // 驗證數據
+        const validationResult = validateImportData(parsedData);
+        updateImportProgress(60, '準備建立測試案例...');
+        
+        if (validationResult.errors.length > 0) {
+            showImportResults(0, validationResult.errors.length, validationResult.errors);
+            return;
+        }
+        
+        // 批量建立測試案例
+        const importResult = await batchCreateTestCases(validationResult.validData);
+        updateImportProgress(100, '匯入完成');
+        
+        // 顯示結果
+        showImportResults(importResult.success, importResult.failed, importResult.errors);
+        
+        // 重新載入測試案例列表
+        if (importResult.success > 0) {
+            await loadTestCases();
+        }
+        
+    } catch (error) {
+        console.error('匯入失敗:', error);
+        showImportResults(0, 1, [`匯入失敗: ${error.message}`]);
+    }
+}
+
+// 讀取檔案為文字
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error('檔案讀取失敗'));
+        reader.readAsText(file, 'UTF-8');
+    });
+}
+
+// 解析CSV內容
+function parseCSV(csvContent) {
+    const lines = csvContent.split('\n').filter(line => line.trim());
+    const result = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const row = parseCSVLine(line);
+        result.push({
+            lineNumber: i + 1,
+            data: row
+        });
+    }
+    
+    return result;
+}
+
+// 解析單行CSV（處理引號和逗號）
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
+    
+    while (i < line.length) {
+        const char = line[i];
+        
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                // 雙引號轉義
+                current += '"';
+                i += 2;
+            } else {
+                // 切換引號狀態
+                inQuotes = !inQuotes;
+                i++;
+            }
+        } else if (char === ',' && !inQuotes) {
+            // 欄位分隔符
+            result.push(current.trim());
+            current = '';
+            i++;
+        } else {
+            current += char;
+            i++;
+        }
+    }
+    
+    // 添加最後一個欄位
+    result.push(current.trim());
+    
+    return result;
+}
+
+// 驗證匯入數據
+function validateImportData(parsedData) {
+    const validData = [];
+    const errors = [];
+    
+    // 跳過標題行（如果存在）
+    let startIndex = 0;
+    if (parsedData.length > 0) {
+        const firstRow = parsedData[0].data;
+        if (firstRow[0] === '標題' || firstRow[0] === 'title') {
+            startIndex = 1;
+        }
+    }
+    
+    for (let i = startIndex; i < parsedData.length; i++) {
+        const row = parsedData[i];
+        const data = row.data;
+        
+        // 檢查必要欄位
+        if (data.length < 3) {
+            errors.push(`第 ${row.lineNumber} 行：缺少必要欄位（至少需要標題、用戶角色、功能描述）`);
+            continue;
+        }
+        
+        const title = data[0]?.trim();
+        const userRole = data[1]?.trim();
+        const featureDescription = data[2]?.trim();
+        
+        if (!title) {
+            errors.push(`第 ${row.lineNumber} 行：標題不能為空`);
+            continue;
+        }
+        
+        if (!userRole) {
+            errors.push(`第 ${row.lineNumber} 行：用戶角色不能為空`);
+            continue;
+        }
+        
+        if (!featureDescription) {
+            errors.push(`第 ${row.lineNumber} 行：功能描述不能為空`);
+            continue;
+        }
+        
+        // 處理選用欄位
+        const acceptanceCriteria = data[3] ? data[3].split(';').map(c => c.trim()).filter(c => c) : [];
+        const testNotes = data[4]?.trim() || null;
+        const productTagNames = data[5] ? data[5].split(',').map(t => t.trim()).filter(t => t) : [];
+        
+        // 轉換產品標籤名稱為ID
+        const productTags = productTagNames.map(tagName => {
+            const tag = availableProductTags.find(t => t.name === tagName);
+            return tag ? tag.id : null;
+        }).filter(id => id);
+        
+        // 檢查無效的產品標籤
+        const invalidTags = productTagNames.filter(tagName => 
+            !availableProductTags.find(t => t.name === tagName)
+        );
+        
+        if (invalidTags.length > 0) {
+            errors.push(`第 ${row.lineNumber} 行：無效的產品標籤：${invalidTags.join(', ')}`);
+        }
+        
+        validData.push({
+            title,
+            user_role: userRole,
+            feature_description: featureDescription,
+            acceptance_criteria: acceptanceCriteria,
+            test_notes: testNotes,
+            product_tags: productTags,
+            lineNumber: row.lineNumber
+        });
+    }
+    
+    return { validData, errors };
+}
+
+// 批量建立測試案例
+async function batchCreateTestCases(testCases) {
+    const result = { success: 0, failed: 0, errors: [] };
+    const total = testCases.length;
+    
+    for (let i = 0; i < testCases.length; i++) {
+        const testCase = testCases[i];
+        
+        try {
+            updateImportProgress(
+                60 + (i / total) * 35, 
+                `建立測試案例 ${i + 1}/${total}...`
+            );
+            
+            const response = await fetch('/api/test-cases', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: testCase.title,
+                    user_role: testCase.user_role,
+                    feature_description: testCase.feature_description,
+                    acceptance_criteria: testCase.acceptance_criteria,
+                    test_notes: testCase.test_notes,
+                    product_tags: testCase.product_tags
+                })
+            });
+            
+            if (response.ok) {
+                result.success++;
+            } else {
+                const error = await response.json();
+                result.failed++;
+                result.errors.push(`第 ${testCase.lineNumber} 行：${error.error || '建立失敗'}`);
+            }
+            
+        } catch (error) {
+            result.failed++;
+            result.errors.push(`第 ${testCase.lineNumber} 行：${error.message}`);
+        }
+    }
+    
+    return result;
+}
+
+// 更新匯入進度
+function updateImportProgress(percentage, status) {
+    const progressBar = document.getElementById('importProgressBar');
+    const statusText = document.getElementById('importStatus');
+    
+    if (progressBar) {
+        progressBar.style.width = percentage + '%';
+    }
+    
+    if (statusText) {
+        statusText.textContent = status;
+    }
+}
+
+// 顯示匯入結果
+function showImportResults(successCount, errorCount, errors) {
+    const importResults = document.getElementById('importResults');
+    const importSummary = document.getElementById('importSummary');
+    const importErrors = document.getElementById('importErrors');
+    
+    importResults.style.display = 'block';
+    
+    // 顯示摘要
+    let summaryHtml = '';
+    if (successCount > 0) {
+        summaryHtml += `<span style="color: #238636;"><i class="fas fa-check-circle"></i> 成功匯入 ${successCount} 個測試案例</span>`;
+    }
+    if (errorCount > 0) {
+        if (summaryHtml) summaryHtml += '<br>';
+        summaryHtml += `<span style="color: #f85149;"><i class="fas fa-exclamation-circle"></i> ${errorCount} 個錯誤</span>`;
+    }
+    
+    importSummary.innerHTML = summaryHtml;
+    
+    // 顯示錯誤詳情
+    if (errors.length > 0) {
+        const errorsHtml = errors.map(error => 
+            `<div style="color: #f85149; font-size: 0.85em; margin-bottom: 4px;">• ${error}</div>`
+        ).join('');
+        importErrors.innerHTML = `<div style="color: #C9D1D9; font-weight: 600; margin-bottom: 8px;">錯誤詳情：</div>${errorsHtml}`;
+    } else {
+        importErrors.innerHTML = '';
+    }
+}
+
+// 匯出測試案例為CSV
 function exportTestCases() {
-    showAlert('匯出功能開發中...', 'info');
+    if (allTestCases.length === 0) {
+        showAlert('沒有測試案例可匯出', 'warning');
+        return;
+    }
+    
+    try {
+        // 準備CSV標題行
+        const headers = [
+            '測項ID',
+            '標題',
+            '用戶角色', 
+            '功能描述',
+            '驗收條件',
+            '測試備註',
+            '產品標籤',
+            '建立時間',
+            '更新時間'
+        ];
+        
+        // 準備CSV數據行
+        const csvData = allTestCases.map((testCase, index) => {
+            // 生成TC格式ID
+            const tcId = generateTCId(index);
+            
+            // 處理產品標籤名稱轉換
+            const tagNames = testCase.product_tags.map(tagId => {
+                const tag = availableProductTags.find(t => t.id === tagId);
+                return tag ? tag.name : '';
+            }).filter(name => name).join(', ');
+            
+            // 處理驗收條件（陣列轉字串）
+            const acceptanceCriteria = Array.isArray(testCase.acceptance_criteria) 
+                ? testCase.acceptance_criteria.join('; ') 
+                : '';
+            
+            // 處理時間格式
+            const createdAt = testCase.created_at ? new Date(testCase.created_at).toLocaleString('zh-TW') : '';
+            const updatedAt = testCase.updated_at ? new Date(testCase.updated_at).toLocaleString('zh-TW') : '';
+            
+            return [
+                tcId,
+                testCase.title || '',
+                testCase.user_role || '',
+                testCase.feature_description || '',
+                acceptanceCriteria,
+                testCase.test_notes || '',
+                tagNames,
+                createdAt,
+                updatedAt
+            ];
+        });
+        
+        // 組合完整的CSV數據
+        const allRows = [headers, ...csvData];
+        
+        // 轉換為CSV格式
+        const csvContent = allRows.map(row => 
+            row.map(field => {
+                // 處理包含逗號、換行或雙引號的字段
+                const fieldStr = String(field);
+                if (fieldStr.includes(',') || fieldStr.includes('\n') || fieldStr.includes('"')) {
+                    return '"' + fieldStr.replace(/"/g, '""') + '"';
+                }
+                return fieldStr;
+            }).join(',')
+        ).join('\n');
+        
+        // 添加BOM以支援中文
+        const bom = '\uFEFF';
+        const csvWithBom = bom + csvContent;
+        
+        // 創建下載
+        const blob = new Blob([csvWithBom], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            
+            // 生成檔案名稱（包含當前日期時間）
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0, 19).replace(/[:.]/g, '-');
+            link.setAttribute('download', `測試案例匯出_${timestamp}.csv`);
+            
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert(`成功匯出 ${allTestCases.length} 個測試案例`, 'success');
+        } else {
+            throw new Error('瀏覽器不支援檔案下載');
+        }
+        
+    } catch (error) {
+        console.error('匯出失敗:', error);
+        showAlert('匯出失敗: ' + error.message, 'danger');
+    }
 }
 
 // 顯示警告訊息

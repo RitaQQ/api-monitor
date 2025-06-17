@@ -225,6 +225,82 @@
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 20px;
 }
+
+.projects-table {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.projects-table table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+}
+
+.projects-table th {
+    background: #0D1117;
+    color: #C9D1D9;
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid #30363D;
+    font-size: 0.9em;
+}
+
+.projects-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #30363D;
+    vertical-align: middle;
+}
+
+.projects-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.projects-table tbody tr:hover {
+    background-color: #0D1117;
+}
+
+.projects-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.project-name-cell {
+    font-weight: 600;
+    color: #C9D1D9;
+}
+
+.project-status-cell {
+    text-align: center;
+}
+
+.project-date-cell {
+    color: #8B949E;
+    font-size: 0.9em;
+}
+
+.project-user-cell {
+    color: #C9D1D9;
+    font-size: 0.9em;
+}
+
+.project-stat-cell {
+    text-align: center;
+    font-weight: 600;
+}
+
+.project-actions-cell {
+    text-align: center;
+}
+
+.stat-pass { color: #238636; }
+.stat-fail { color: #f85149; }
+.stat-blocked { color: #8a2be2; }
+.stat-pending { color: #d29922; }
+.stat-total { color: #58a6ff; }
 {% endblock %}
 
 {% block content %}
@@ -259,17 +335,34 @@
     </div>
 </div>
 
-<!-- 統計概覽 -->
-<div class="stats-overview">
-    <h5 style="color: #C9D1D9; margin-bottom: 15px;">專案統計</h5>
-    <div class="stats-grid" id="statsOverview">
-        <!-- 統計資料將通過 JavaScript 載入 -->
-    </div>
-</div>
 
 <!-- 專案概覽 -->
-<div class="row" id="projectsContainer">
-    <!-- 專案卡片將通過 JavaScript 載入 -->
+<div class="projects-table" id="projectsTableContainer">
+    <div class="d-flex justify-content-between align-items-center" style="padding: 15px 15px 0 15px;">
+        <div></div>
+        <small class="text-muted" id="projectCount" style="color: #8B949E; font-size: 0.8em;">
+            <!-- 總數顯示 -->
+        </small>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>專案名稱</th>
+                <th width="100">狀態</th>
+                <th width="120">測試日期</th>
+                <th width="120">負責人</th>
+                <th width="80">測試案例</th>
+                <th width="60">通過</th>
+                <th width="60">失敗</th>
+                <th width="60">阻擋</th>
+                <th width="60">待測</th>
+                <th width="120">操作</th>
+            </tr>
+        </thead>
+        <tbody id="projectsContainer">
+            <!-- 專案將通過 JavaScript 載入 -->
+        </tbody>
+    </table>
 </div>
 
 <!-- 載入中提示 -->
@@ -333,7 +426,7 @@ async function loadProjects(showLoading = false) {
             projectsContainer.innerHTML = '';
         } else {
             renderProjects(allProjects);
-            updateStatsOverview();
+            updateProjectCount(allProjects.length);
         }
         
     } catch (error) {
@@ -352,7 +445,7 @@ async function loadProjects(showLoading = false) {
     }
 }
 
-// 渲染專案卡片
+// 渲染專案表格
 function renderProjects(projects) {
     const projectsContainer = document.getElementById('projectsContainer');
     
@@ -371,70 +464,43 @@ function renderProjects(projects) {
         };
         
         return `
-            <div class="col-lg-6 col-xl-4" data-project-name="${project.name.toLowerCase()}" data-project-status="${project.status}">
-                <div class="project-card">
-                    <div class="project-header">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h5 class="mb-2">${project.name}</h5>
-                                <span class="status-badge status-${project.status}">
-                                    ${statusText[project.status] || project.status}
-                                </span>
-                            </div>
-                            <div class="text-end">
-                                <small style="color: #8B949E;">測試日期</small><br>
-                                <small style="color: #C9D1D9;">${formatDate(project.test_date)}</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="project-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">${testCasesCount}</div>
-                            <div class="stat-label">測試案例</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number pass">${passedCount}</div>
-                            <div class="stat-label">通過</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number fail">${failedCount}</div>
-                            <div class="stat-label">失敗</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number blocked">${blockedCount}</div>
-                            <div class="stat-label">阻擋</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number pending">${pendingCount}</div>
-                            <div class="stat-label">待測試</div>
-                        </div>
-                    </div>
-                    
-                    <div class="project-meta">
-                        <div class="project-meta-info">
-                            <div>負責人: ${getUserDisplayInfo(project.responsible_user).displayName}</div>
-                            <div>建立時間: ${formatDate(project.created_at)}</div>
-                        </div>
-                        <div class="project-actions">
-                            <button class="btn btn-sm btn-outline-primary" 
-                                    onclick="viewProject('${project.id}')" title="檢視詳情">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning" 
-                                    onclick="editProject('${project.id}')" title="編輯">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" 
-                                    onclick="deleteProject('${project.id}', '${project.name}')" title="刪除">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <tr data-project-name="${project.name.toLowerCase()}" data-project-status="${project.status}">
+                <td class="project-name-cell">${project.name}</td>
+                <td class="project-status-cell">
+                    <span class="status-badge status-${project.status}">
+                        ${statusText[project.status] || project.status}
+                    </span>
+                </td>
+                <td class="project-date-cell">${formatDate(project.test_date)}</td>
+                <td class="project-user-cell">${getUserDisplayInfo(project.responsible_user).displayName}</td>
+                <td class="project-stat-cell stat-total">${testCasesCount}</td>
+                <td class="project-stat-cell stat-pass">${passedCount}</td>
+                <td class="project-stat-cell stat-fail">${failedCount}</td>
+                <td class="project-stat-cell stat-blocked">${blockedCount}</td>
+                <td class="project-stat-cell stat-pending">${pendingCount}</td>
+                <td class="project-actions-cell">
+                    <button class="btn btn-sm btn-outline-primary me-1" 
+                            onclick="viewProject('${project.id}')" title="檢視詳情">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning me-1" 
+                            onclick="editProject('${project.id}')" title="編輯">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" 
+                            onclick="deleteProject('${project.id}', '${project.name}')" title="刪除">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
         `;
     }).join('');
+}
+
+// 更新專案總數顯示
+function updateProjectCount(count) {
+    const projectCount = document.getElementById('projectCount');
+    projectCount.textContent = `共 ${count} 個專案`;
 }
 
 // 格式化日期
@@ -768,74 +834,17 @@ async function deleteProject(projectId, projectName) {
     }
 }
 
-// 更新統計概覽
-function updateStatsOverview() {
-    const statsOverview = document.getElementById('statsOverview');
-    const totalProjects = allProjects.length;
-    const draftProjects = allProjects.filter(p => p.status === 'draft').length;
-    const inProgressProjects = allProjects.filter(p => p.status === 'in_progress').length;
-    const completedProjects = allProjects.filter(p => p.status === 'completed').length;
-    
-    // 計算測試案例統計
-    let totalTestCases = 0;
-    let totalPassed = 0;
-    let totalFailed = 0;
-    let totalBlocked = 0;
-    let totalPending = 0;
-    
-    allProjects.forEach(project => {
-        const testCasesCount = project.selected_test_cases ? project.selected_test_cases.length : 0;
-        const testResults = project.test_results || {};
-        const passedCount = Object.values(testResults).filter(r => r.status === 'pass').length;
-        const failedCount = Object.values(testResults).filter(r => r.status === 'fail').length;
-        const blockedCount = Object.values(testResults).filter(r => r.status === 'blocked').length;
-        const pendingCount = testCasesCount - passedCount - failedCount - blockedCount;
-        
-        totalTestCases += testCasesCount;
-        totalPassed += passedCount;
-        totalFailed += failedCount;
-        totalBlocked += blockedCount;
-        totalPending += pendingCount;
-    });
-    
-    statsOverview.innerHTML = `
-        <div class="stat-item">
-            <div class="stat-number" style="color: #58a6ff;">${totalProjects}</div>
-            <div class="stat-label">總專案數</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #238636;">${totalPassed}</div>
-            <div class="stat-label">測試通過</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #f85149;">${totalFailed}</div>
-            <div class="stat-label">測試失敗</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #8a2be2;">${totalBlocked}</div>
-            <div class="stat-label">測試阻擋</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #d29922;">${totalPending}</div>
-            <div class="stat-label">待測試</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #58a6ff;">${completedProjects}</div>
-            <div class="stat-label">已完成專案</div>
-        </div>
-    `;
-}
 
 // 過濾專案
 function filterProjects() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const selectedStatus = document.getElementById('statusFilter').value;
-    const projectCards = document.querySelectorAll('[data-project-name]');
+    const projectRows = document.querySelectorAll('[data-project-name]');
     
     let visibleCount = 0;
-    projectCards.forEach(card => {
-        const projectName = card.dataset.projectName;
-        const projectStatus = card.dataset.projectStatus;
+    projectRows.forEach(row => {
+        const projectName = row.dataset.projectName;
+        const projectStatus = row.dataset.projectStatus;
         
         // 文字搜尋
         const nameMatch = projectName.includes(searchTerm);
@@ -844,14 +853,17 @@ function filterProjects() {
         const statusMatch = !selectedStatus || projectStatus === selectedStatus;
         
         const shouldShow = nameMatch && statusMatch;
-        card.style.display = shouldShow ? 'block' : 'none';
+        row.style.display = shouldShow ? '' : 'none';
         
         if (shouldShow) visibleCount++;
     });
     
     // 更新空狀態顯示
     const emptyState = document.getElementById('emptyState');
+    const tableContainer = document.getElementById('projectsTableContainer');
+    
     if (visibleCount === 0 && allProjects.length > 0) {
+        tableContainer.style.display = 'none';
         emptyState.style.display = 'block';
         emptyState.innerHTML = `
             <div class="empty-icon">
@@ -861,6 +873,7 @@ function filterProjects() {
             <p>請嘗試調整搜尋條件</p>
         `;
     } else if (allProjects.length === 0) {
+        tableContainer.style.display = 'none';
         emptyState.style.display = 'block';
         emptyState.innerHTML = `
             <div class="empty-icon">
@@ -870,8 +883,12 @@ function filterProjects() {
             <p>點擊右下角的按鈕建立您的第一個測試專案</p>
         `;
     } else {
+        tableContainer.style.display = 'block';
         emptyState.style.display = 'none';
     }
+    
+    // 更新總數顯示
+    updateProjectCount(visibleCount);
 }
 
 // 匯出專案
