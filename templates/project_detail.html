@@ -1,0 +1,745 @@
+{% extends "base.html" %}
+
+{% block title %}專案詳情 - API Monitor{% endblock %}
+{% block page_title %}測試專案詳情{% endblock %}
+{% block page_subtitle %}執行測試並記錄結果{% endblock %}
+
+{% block extra_css %}
+.project-header-card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.project-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.meta-item {
+    text-align: center;
+    padding: 15px;
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+}
+
+.meta-label {
+    font-size: 0.85em;
+    color: #8B949E;
+    margin-bottom: 5px;
+}
+
+.meta-value {
+    font-size: 1.1em;
+    color: #C9D1D9;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-draft {
+    background: rgba(210, 153, 34, 0.2);
+    color: #d29922;
+}
+
+.status-in_progress {
+    background: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
+}
+
+.status-completed {
+    background: rgba(35, 134, 54, 0.2);
+    color: #238636;
+}
+
+.test-case-card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.test-case-card:hover {
+    border-color: #58a6ff;
+}
+
+.test-case-header {
+    background: #0D1117;
+    padding: 15px 20px;
+    border-bottom: 1px solid #30363D;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.test-case-title {
+    color: #C9D1D9;
+    font-weight: 600;
+    margin: 0;
+}
+
+.test-case-id {
+    font-size: 0.8em;
+    color: #8B949E;
+    font-family: 'Courier New', monospace;
+}
+
+.test-case-body {
+    padding: 20px;
+}
+
+.test-case-description {
+    color: #C9D1D9;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #0D1117;
+    border-radius: 6px;
+    border-left: 3px solid #58a6ff;
+}
+
+.acceptance-criteria {
+    margin-bottom: 20px;
+}
+
+.criteria-title {
+    color: #C9D1D9;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.criteria-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.criteria-item {
+    padding: 6px 0;
+    padding-left: 20px;
+    position: relative;
+    color: #C9D1D9;
+}
+
+.criteria-item:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #238636;
+    font-weight: bold;
+}
+
+.test-result-section {
+    border-top: 1px solid #30363D;
+    padding-top: 15px;
+}
+
+.test-result-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 15px;
+    align-items: end;
+}
+
+.result-status-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.status-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.status-btn.active {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.status-btn.pass {
+    background: rgba(35, 134, 54, 0.2);
+    color: #238636;
+    border: 1px solid #238636;
+}
+
+.status-btn.pass.active {
+    background: #238636;
+    color: white;
+}
+
+.status-btn.fail {
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
+    border: 1px solid #f85149;
+}
+
+.status-btn.fail.active {
+    background: #f85149;
+    color: white;
+}
+
+.status-btn.not_tested {
+    background: rgba(210, 153, 34, 0.2);
+    color: #d29922;
+    border: 1px solid #d29922;
+}
+
+.status-btn.not_tested.active {
+    background: #d29922;
+    color: white;
+}
+
+.test-notes-input {
+    background: #161B22;
+    color: #C9D1D9;
+    border: 1px solid #30363D;
+    border-radius: 6px;
+    padding: 8px 12px;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.test-notes-input:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    outline: none;
+}
+
+.progress-summary {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.progress-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.progress-bar-container {
+    background: #30363D;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    display: flex;
+    border-radius: 10px;
+}
+
+.progress-pass {
+    background: #238636;
+}
+
+.progress-fail {
+    background: #f85149;
+}
+
+.progress-pending {
+    background: #d29922;
+}
+
+.filter-controls {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 6px 12px;
+    border: 1px solid #30363D;
+    background: #161B22;
+    color: #8B949E;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn.active {
+    background: #58a6ff;
+    color: white;
+    border-color: #58a6ff;
+}
+
+.filter-btn:hover {
+    border-color: #58a6ff;
+    color: #C9D1D9;
+}
+{% endblock %}
+
+{% block content %}
+<!-- 專案標題和基本資訊 -->
+<div class="project-header-card">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h2 id="projectName" style="color: #C9D1D9; margin-bottom: 10px;">載入中...</h2>
+            <span id="projectStatus" class="status-badge">載入中</span>
+        </div>
+        <div class="text-end">
+            <button class="btn btn-outline-primary btn-sm me-2" onclick="editCurrentProject()">
+                <i class="fas fa-edit"></i> 編輯專案
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="updateProjectStatus()">
+                <i class="fas fa-check-circle"></i> 更新狀態
+            </button>
+        </div>
+    </div>
+    
+    <div class="project-meta" id="projectMeta">
+        <!-- 專案資訊將通過 JavaScript 載入 -->
+    </div>
+</div>
+
+<!-- 測試進度總覽 -->
+<div class="progress-summary">
+    <h4 style="color: #C9D1D9; margin-bottom: 15px;">測試進度</h4>
+    <div class="progress-stats" id="progressStats">
+        <!-- 進度統計將通過 JavaScript 載入 -->
+    </div>
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar">
+            <!-- 進度條將通過 JavaScript 載入 -->
+        </div>
+    </div>
+</div>
+
+<!-- 過濾控制 -->
+<div class="filter-controls">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="pass">已通過</button>
+            <button class="filter-btn" data-filter="fail">已失敗</button>
+            <button class="filter-btn" data-filter="not_tested">待測試</button>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary btn-sm" onclick="saveAllResults()">
+                <i class="fas fa-save"></i> 保存所有結果
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 測試案例列表 -->
+<div id="testCasesList">
+    <!-- 測試案例將通過 JavaScript 載入 -->
+</div>
+
+<!-- 載入指示器 -->
+<div id="loadingIndicator" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">載入中...</span>
+    </div>
+    <p class="mt-3" style="color: #8B949E;">載入專案資料中...</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentProject = null;
+let testCases = [];
+let currentFilter = 'all';
+
+// 頁面載入時初始化
+document.addEventListener('DOMContentLoaded', function() {
+    const projectId = getProjectIdFromUrl();
+    if (projectId) {
+        loadProjectDetail(projectId);
+    } else {
+        showAlert('無效的專案 ID', 'danger');
+        window.location.href = '/test-projects';
+    }
+    
+    setupFilterButtons();
+});
+
+// 從 URL 獲取專案 ID
+function getProjectIdFromUrl() {
+    const pathParts = window.location.pathname.split('/');
+    return pathParts[pathParts.length - 1];
+}
+
+// 載入專案詳情
+async function loadProjectDetail(projectId) {
+    try {
+        const [projectResponse, testCasesResponse, usersResponse] = await Promise.all([
+            fetch(`/api/test-projects/${projectId}`),
+            fetch('/api/test-cases'),
+            fetch('/api/users')
+        ]);
+        
+        if (projectResponse.ok && testCasesResponse.ok) {
+            currentProject = await projectResponse.json();
+            const allTestCases = await testCasesResponse.json();
+            
+            // 載入用戶資料
+            if (usersResponse.ok) {
+                const users = await usersResponse.json();
+                window.availableUsers = users;
+            }
+            
+            // 只保留專案中選擇的測試案例
+            testCases = allTestCases.filter(tc => 
+                currentProject.selected_test_cases.includes(tc.id)
+            );
+            
+            renderProjectDetail();
+            renderTestCases();
+        } else {
+            throw new Error('載入專案資料失敗');
+        }
+    } catch (error) {
+        console.error('載入專案失敗:', error);
+        showAlert('載入專案資料失敗: ' + error.message, 'danger');
+    } finally {
+        document.getElementById('loadingIndicator').style.display = 'none';
+    }
+}
+
+// 根據用戶名獲取用戶顯示信息
+function getUserDisplayInfo(username) {
+    if (!window.availableUsers) return { displayName: username, role: 'unknown' };
+    
+    const user = window.availableUsers.find(u => u.username === username);
+    if (user) {
+        return {
+            displayName: user.display_name,
+            role: user.role,
+            email: user.email
+        };
+    }
+    return {
+        displayName: username,
+        role: 'unknown',
+        email: ''
+    };
+}
+
+// 渲染專案詳情
+function renderProjectDetail() {
+    const statusText = {
+        'draft': '草稿',
+        'in_progress': '進行中', 
+        'completed': '已完成'
+    };
+    
+    document.getElementById('projectName').textContent = currentProject.name;
+    document.getElementById('projectStatus').textContent = statusText[currentProject.status] || currentProject.status;
+    document.getElementById('projectStatus').className = `status-badge status-${currentProject.status}`;
+    
+    // 渲染專案資訊
+    const projectMeta = document.getElementById('projectMeta');
+    projectMeta.innerHTML = `
+        <div class="meta-item">
+            <div class="meta-label">負責人</div>
+            <div class="meta-value">${currentProject.responsible_user}</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">測試日期</div>
+            <div class="meta-value">${formatDate(currentProject.test_date)}</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">測試案例數</div>
+            <div class="meta-value">${currentProject.selected_test_cases.length}</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">建立時間</div>
+            <div class="meta-value">${formatDate(currentProject.created_at)}</div>
+        </div>
+    `;
+    
+    // 渲染進度統計
+    renderProgressStats();
+}
+
+// 渲染進度統計
+function renderProgressStats() {
+    const testResults = currentProject.test_results || {};
+    const totalCases = currentProject.selected_test_cases.length;
+    
+    const passCount = Object.values(testResults).filter(r => r.status === 'pass').length;
+    const failCount = Object.values(testResults).filter(r => r.status === 'fail').length;
+    const pendingCount = totalCases - passCount - failCount;
+    
+    const progressStats = document.getElementById('progressStats');
+    progressStats.innerHTML = `
+        <div class="meta-item">
+            <div class="meta-label">總計</div>
+            <div class="meta-value" style="color: #58a6ff;">${totalCases}</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">通過</div>
+            <div class="meta-value" style="color: #238636;">${passCount}</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">失敗</div>
+            <div class="meta-value" style="color: #f85149;">${failCount}</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">待測試</div>
+            <div class="meta-value" style="color: #d29922;">${pendingCount}</div>
+        </div>
+    `;
+    
+    // 渲染進度條
+    const progressBar = document.getElementById('progressBar');
+    const passPercent = totalCases > 0 ? (passCount / totalCases) * 100 : 0;
+    const failPercent = totalCases > 0 ? (failCount / totalCases) * 100 : 0;
+    const pendingPercent = totalCases > 0 ? (pendingCount / totalCases) * 100 : 0;
+    
+    progressBar.innerHTML = `
+        <div class="progress-pass" style="width: ${passPercent}%"></div>
+        <div class="progress-fail" style="width: ${failPercent}%"></div>
+        <div class="progress-pending" style="width: ${pendingPercent}%"></div>
+    `;
+}
+
+// 渲染測試案例
+function renderTestCases() {
+    const testCasesList = document.getElementById('testCasesList');
+    
+    const filteredTestCases = testCases.filter(testCase => {
+        if (currentFilter === 'all') return true;
+        
+        const result = currentProject.test_results[testCase.id];
+        const status = result ? result.status : 'not_tested';
+        return status === currentFilter;
+    });
+    
+    testCasesList.innerHTML = filteredTestCases.map(testCase => {
+        const result = currentProject.test_results[testCase.id];
+        const currentStatus = result ? result.status : 'not_tested';
+        const notes = result ? result.notes : '';
+        const knownIssues = result ? result.known_issues : '';
+        
+        return `
+            <div class="test-case-card" data-case-id="${testCase.id}">
+                <div class="test-case-header">
+                    <div>
+                        <h5 class="test-case-title">${testCase.title}</h5>
+                        <div class="test-case-id">ID: ${testCase.id}</div>
+                    </div>
+                </div>
+                
+                <div class="test-case-body">
+                    <div class="test-case-description">
+                        <strong>用戶角色:</strong> ${testCase.user_role}<br>
+                        <strong>功能描述:</strong> ${testCase.feature_description}
+                    </div>
+                    
+                    ${testCase.acceptance_criteria && testCase.acceptance_criteria.length > 0 ? `
+                        <div class="acceptance-criteria">
+                            <div class="criteria-title">驗收條件:</div>
+                            <ul class="criteria-list">
+                                ${testCase.acceptance_criteria.map(criteria => 
+                                    `<li class="criteria-item">${criteria}</li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="test-result-section">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label" style="color: #C9D1D9;">測試結果</label>
+                                <div class="result-status-buttons">
+                                    <button class="status-btn pass ${currentStatus === 'pass' ? 'active' : ''}" 
+                                            onclick="setTestStatus('${testCase.id}', 'pass')">通過</button>
+                                    <button class="status-btn fail ${currentStatus === 'fail' ? 'active' : ''}" 
+                                            onclick="setTestStatus('${testCase.id}', 'fail')">失敗</button>
+                                    <button class="status-btn not_tested ${currentStatus === 'not_tested' ? 'active' : ''}" 
+                                            onclick="setTestStatus('${testCase.id}', 'not_tested')">待測試</button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" style="color: #C9D1D9;">測試備註</label>
+                                <textarea class="test-notes-input" placeholder="輸入測試備註..." 
+                                          data-case-id="${testCase.id}" data-field="notes">${notes}</textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" style="color: #C9D1D9;">已知問題</label>
+                                <textarea class="test-notes-input" placeholder="輸入已知問題..." 
+                                          data-case-id="${testCase.id}" data-field="known_issues">${knownIssues}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 設置測試狀態
+function setTestStatus(testCaseId, status) {
+    // 更新按鈕狀態
+    const card = document.querySelector(`[data-case-id="${testCaseId}"]`);
+    const buttons = card.querySelectorAll('.status-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    card.querySelector(`.status-btn.${status}`).classList.add('active');
+    
+    // 更新本地資料
+    if (!currentProject.test_results[testCaseId]) {
+        currentProject.test_results[testCaseId] = {
+            test_case_id: testCaseId,
+            status: status,
+            notes: '',
+            known_issues: '',
+            tested_at: new Date().toISOString()
+        };
+    } else {
+        currentProject.test_results[testCaseId].status = status;
+        currentProject.test_results[testCaseId].tested_at = new Date().toISOString();
+    }
+    
+    // 更新進度統計
+    renderProgressStats();
+}
+
+// 設置過濾按鈕
+function setupFilterButtons() {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            renderTestCases();
+        });
+    });
+}
+
+// 保存所有測試結果
+async function saveAllResults() {
+    // 收集所有備註和已知問題
+    document.querySelectorAll('.test-notes-input').forEach(textarea => {
+        const caseId = textarea.dataset.caseId;
+        const field = textarea.dataset.field;
+        const value = textarea.value.trim();
+        
+        if (!currentProject.test_results[caseId]) {
+            currentProject.test_results[caseId] = {
+                test_case_id: caseId,
+                status: 'not_tested',
+                notes: '',
+                known_issues: '',
+                tested_at: new Date().toISOString()
+            };
+        }
+        
+        currentProject.test_results[caseId][field] = value;
+    });
+    
+    try {
+        const response = await fetch(`/api/test-projects/${currentProject.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                test_results: currentProject.test_results
+            })
+        });
+        
+        if (response.ok) {
+            showAlert('測試結果保存成功！', 'success');
+        } else {
+            throw new Error('保存失敗');
+        }
+    } catch (error) {
+        console.error('保存測試結果失敗:', error);
+        showAlert('保存失敗: ' + error.message, 'danger');
+    }
+}
+
+// 其他功能函數
+function editCurrentProject() {
+    window.location.href = `/test-projects?edit=${currentProject.id}`;
+}
+
+function updateProjectStatus() {
+    // 簡單的狀態更新，可以擴展為模態框
+    const newStatus = prompt('請輸入新的專案狀態 (draft/in_progress/completed):', currentProject.status);
+    if (newStatus && ['draft', 'in_progress', 'completed'].includes(newStatus)) {
+        updateProject({ status: newStatus });
+    }
+}
+
+async function updateProject(updates) {
+    try {
+        const response = await fetch(`/api/test-projects/${currentProject.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updates)
+        });
+        
+        if (response.ok) {
+            const updatedProject = await response.json();
+            currentProject = updatedProject;
+            renderProjectDetail();
+            showAlert('專案更新成功！', 'success');
+        } else {
+            throw new Error('更新失敗');
+        }
+    } catch (error) {
+        console.error('更新專案失敗:', error);
+        showAlert('更新失敗: ' + error.message, 'danger');
+    }
+}
+
+// 工具函數
+function formatDate(dateString) {
+    if (!dateString) return '未知';
+    return new Date(dateString).toLocaleDateString('zh-TW');
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}

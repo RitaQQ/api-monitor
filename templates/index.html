@@ -13,16 +13,17 @@
 }
 
 .stat-card {
-    background: white;
+    background: #161B22;
+    border: 1px solid #30363D;
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     text-align: center;
-    transition: transform 0.2s;
+    transition: transform 0.2s, border-color 0.2s;
 }
 
 .stat-card:hover {
     transform: translateY(-2px);
+    border-color: #58a6ff;
 }
 
 .stat-number {
@@ -33,35 +34,41 @@
 
 .stat-label {
     font-size: 1.1em;
-    color: #666;
+    color: #8B949E;
 }
 
-.stat-healthy { color: #28a745; }
-.stat-unhealthy { color: #dc3545; }
-.stat-unknown { color: #ffc107; }
-.stat-total { color: #007bff; }
+.stat-healthy { color: #238636; }
+.stat-unhealthy { color: #f85149; }
+.stat-unknown { color: #d29922; }
+.stat-total { color: #58a6ff; }
 
 .api-table {
-    background: white;
+    background: #161B22;
+    border: 1px solid #30363D;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
 }
 
 .table-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #0D1117;
+    color: #C9D1D9;
     padding: 20px;
+    border-bottom: 1px solid #30363D;
 }
 
 .table-title {
     margin: 0;
+    font-size: 1.3em;
+    font-weight: 600;
 }
 
 .actions-bar {
-    background: #f8f9fa;
+    background: #0D1117;
     padding: 15px 20px;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #30363D;
+    display: flex;
+    justify-content: between;
+    align-items: center;
 }
 
 .status-badge {
@@ -73,18 +80,18 @@
 }
 
 .status-healthy {
-    background-color: #d4edda;
-    color: #155724;
+    background: rgba(35, 134, 54, 0.2);
+    color: #238636;
 }
 
 .status-unhealthy {
-    background-color: #f8d7da;
-    color: #721c24;
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
 }
 
 .status-unknown {
-    background-color: #fff3cd;
-    color: #856404;
+    background: rgba(210, 153, 34, 0.2);
+    color: #d29922;
 }
 
 .action-buttons {
@@ -97,30 +104,668 @@
     align-items: center;
     gap: 10px;
     margin-left: auto;
+    color: #8B949E;
 }
 
+.auto-refresh input[type="checkbox"] {
+    accent-color: #58a6ff;
+}
+
+.search-controls {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.search-input, .filter-select {
+    background: #0D1117;
+    color: #C9D1D9;
+    border: 1px solid #30363D;
+    border-radius: 6px;
+    padding: 10px 15px;
+}
+
+.search-input:focus, .filter-select:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    outline: none;
+    background: #0D1117;
+    color: #C9D1D9;
+}
+
+.api-row {
+    border-bottom: 1px solid #30363D;
+    transition: background-color 0.2s;
+}
+
+.api-row:hover {
+    background-color: #0D1117;
+}
+
+.api-row:last-child {
+    border-bottom: none;
+}
+
+.api-cell {
+    padding: 15px 20px;
+    color: #C9D1D9;
+    vertical-align: middle;
+}
+
+.api-name {
+    font-weight: 600;
+    color: #C9D1D9;
+    margin-bottom: 4px;
+}
+
+.api-url {
+    font-size: 0.85em;
+    color: #8B949E;
+    font-family: 'Courier New', monospace;
+}
+
+.response-time {
+    color: #8B949E;
+    font-family: 'Courier New', monospace;
+}
+
+.last-checked {
+    color: #8B949E;
+    font-size: 0.85em;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8B949E;
+}
+
+.empty-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    color: #30363D;
+}
+
+.refresh-indicator {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.quick-actions {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.quick-actions h5 {
+    color: #C9D1D9;
+    margin-bottom: 15px;
+}
+
+.btn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.quick-btn {
+    padding: 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #C9D1D9;
+    background: #161B22;
+    border: 1px solid #30363D;
+}
+
+.quick-btn:hover {
+    color: #C9D1D9;
+    background: #0D1117;
+    border-color: #58a6ff;
+    transform: translateY(-2px);
+}
+
+.quick-btn i {
+    font-size: 1.2em;
+    width: 20px;
+    text-align: center;
+}
+
+/* 監控區塊樣式 */
+.monitor-widget {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    min-width: 320px;
+    max-width: 400px;
+    cursor: move;
+}
+
+.monitor-widget.collapsed {
+    min-width: 60px;
+    max-width: 60px;
+}
+
+.monitor-widget.mini-mode {
+    min-width: 200px;
+    max-width: 200px;
+}
+
+.monitor-widget.dragging {
+    user-select: none;
+    cursor: grabbing;
+    z-index: 1001;
+    transform: scale(1.02);
+}
+
+.monitor-header {
+    background: #0D1117;
+    padding: 12px 15px;
+    border-bottom: 1px solid #30363D;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.monitor-title {
+    color: #C9D1D9;
+    font-size: 0.9em;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.monitor-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.monitor-toggle {
+    background: none;
+    border: none;
+    color: #8B949E;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.8em;
+}
+
+.monitor-toggle:hover {
+    color: #C9D1D9;
+    background: #30363D;
+}
+
+.mini-mode-btn {
+    background: none;
+    border: none;
+    color: #8B949E;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.7em;
+}
+
+.mini-mode-btn:hover {
+    color: #C9D1D9;
+    background: #30363D;
+}
+
+.mini-mode-btn.active {
+    color: #58a6ff;
+    background: rgba(88, 166, 255, 0.1);
+}
+
+.monitor-content {
+    padding: 15px;
+    max-height: 500px;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+}
+
+.monitor-widget.collapsed .monitor-content {
+    display: none;
+}
+
+.monitor-widget.collapsed .monitor-title span {
+    display: none;
+}
+
+.monitor-widget.mini-mode .monitor-stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.monitor-widget.mini-mode .mini-stat {
+    padding: 8px;
+}
+
+.monitor-widget.mini-mode .mini-stat-number {
+    font-size: 1.1em;
+}
+
+.monitor-widget.mini-mode .mini-stat-label {
+    font-size: 0.65em;
+}
+
+.monitor-widget.mini-mode .monitor-apis {
+    max-height: 150px;
+}
+
+.monitor-widget.mini-mode .mini-api-item {
+    padding: 4px 0;
+}
+
+.monitor-widget.mini-mode .mini-api-name {
+    font-size: 0.75em;
+}
+
+.monitor-widget.mini-mode .mini-status {
+    font-size: 0.6em;
+    padding: 2px 6px;
+}
+
+.monitor-widget.mini-mode .monitor-actions {
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.monitor-widget.mini-mode .mini-btn {
+    padding: 6px 8px;
+    font-size: 0.7em;
+}
+
+.monitor-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.mini-stat {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.mini-stat:hover {
+    border-color: #58a6ff;
+}
+
+.mini-stat-number {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.mini-stat-label {
+    font-size: 0.75em;
+    color: #8B949E;
+    text-transform: uppercase;
+}
+
+.monitor-apis {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.mini-api-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #30363D;
+}
+
+.mini-api-item:last-child {
+    border-bottom: none;
+}
+
+.mini-api-name {
+    color: #C9D1D9;
+    font-size: 0.85em;
+    font-weight: 500;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+
+.mini-status {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.mini-status.healthy {
+    background: rgba(35, 134, 54, 0.2);
+    color: #238636;
+}
+
+.mini-status.unhealthy {
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
+}
+
+.mini-status.unknown {
+    background: rgba(210, 153, 34, 0.2);
+    color: #d29922;
+}
+
+.monitor-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #30363D;
+    display: flex;
+    gap: 8px;
+}
+
+.mini-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.75em;
+    border-radius: 6px;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s;
+    border: 1px solid #30363D;
+    color: #C9D1D9;
+    background: #0D1117;
+}
+
+.mini-btn:hover {
+    color: #C9D1D9;
+    border-color: #58a6ff;
+    background: #161B22;
+}
+
+.mini-btn.primary {
+    background: #238636;
+    border-color: #238636;
+    color: white;
+}
+
+.mini-btn.primary:hover {
+    background: #2ea043;
+    border-color: #2ea043;
+    color: white;
+}
+
+.widget-pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #238636;
+    animation: pulse 2s infinite;
+    margin-right: 5px;
+}
+
+.widget-pulse.unhealthy {
+    background: #f85149;
+}
+
+.widget-pulse.unknown {
+    background: #d29922;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 響應式設計 */
 @media (max-width: 768px) {
-    .stats-grid {
+    .monitor-widget {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        left: auto !important;
+        width: 100%;
+        margin-bottom: 20px;
+        max-width: none;
+        min-width: 100%;
+        cursor: default;
+    }
+    
+    .monitor-widget.collapsed {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    .monitor-widget.mini-mode {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    .monitor-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .monitor-header {
+        cursor: default;
+    }
+    
+    .quick-actions .btn-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
-    .actions-bar {
-        flex-direction: column;
-        gap: 15px;
+}
+
+@media (max-width: 480px) {
+    .monitor-widget {
+        border-radius: 8px;
     }
     
-    .auto-refresh {
-        margin-left: 0;
+    .monitor-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .mini-stat {
+        padding: 10px;
+    }
+    
+    .mini-stat-number {
+        font-size: 1.2em;
+    }
+    
+    .mini-stat-label {
+        font-size: 0.7em;
+    }
+    
+    .monitor-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .mini-btn {
+        width: 100%;
+    }
+    
+    .quick-actions .btn-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
+/* 深色模式適配 */
+@media (prefers-color-scheme: dark) {
+    .monitor-widget {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* 高對比度模式 */
+@media (prefers-contrast: high) {
+    .monitor-widget {
+        border-width: 2px;
+    }
+    
+    .mini-stat {
+        border-width: 2px;
+    }
+    
+    .status-badge,
+    .mini-status {
+        border: 1px solid currentColor;
     }
 }
 {% endblock %}
 
 {% block content %}
+<!-- 浮動監控區塊 -->
+<div class="monitor-widget" id="monitorWidget">
+    <div class="monitor-header">
+        <div class="monitor-title" onclick="toggleMonitorWidget()">
+            <span class="widget-pulse" id="widgetPulse"></span>
+            <i class="fas fa-chart-line"></i>
+            <span>API 監控</span>
+        </div>
+        <div class="monitor-controls">
+            <button class="mini-mode-btn" id="miniModeBtn" onclick="toggleMiniMode()" title="切換迷你模式">
+                <i class="fas fa-compress"></i>
+            </button>
+            <button class="monitor-toggle" id="monitorToggle" onclick="toggleMonitorWidget()">
+                <i class="fas fa-chevron-up"></i>
+            </button>
+        </div>
+    </div>
+    <div class="monitor-content" id="monitorContent">
+        <div class="monitor-stats" id="monitorStats">
+            <div class="mini-stat">
+                <div class="mini-stat-number stat-healthy" id="miniHealthy">{{ stats.healthy }}</div>
+                <div class="mini-stat-label">健康</div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-number stat-unhealthy" id="miniUnhealthy">{{ stats.unhealthy }}</div>
+                <div class="mini-stat-label">異常</div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-number stat-unknown" id="miniUnknown">{{ stats.unknown }}</div>
+                <div class="mini-stat-label">未知</div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-number stat-total" id="miniTotal">{{ stats.total }}</div>
+                <div class="mini-stat-label">總計</div>
+            </div>
+        </div>
+        
+        <div class="monitor-apis" id="monitorApis">
+            {% if apis %}
+                {% for api in apis[:5] %}
+                <div class="mini-api-item">
+                    <div class="mini-api-name" title="{{ api.name }}">{{ api.name }}</div>
+                    <span class="mini-status {{ api.status }}">
+                        {% if api.status == 'healthy' %}健康
+                        {% elif api.status == 'unhealthy' %}異常
+                        {% else %}未知{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+                {% if apis|length > 5 %}
+                <div class="mini-api-item">
+                    <div class="mini-api-name" style="color: #8B949E; font-style: italic;">
+                        還有 {{ apis|length - 5 }} 個 API...
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="mini-api-item">
+                    <div class="mini-api-name" style="color: #8B949E; text-align: center;">
+                        尚無 API 監控項目
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="monitor-actions">
+            <a href="{{ url_for('check_now') }}" class="mini-btn primary">
+                <i class="fas fa-play"></i> 檢查
+            </a>
+            <a href="{{ url_for('admin') }}" class="mini-btn">
+                <i class="fas fa-plus"></i> 新增
+            </a>
+            <button class="mini-btn" onclick="refreshMonitorData()">
+                <i class="fas fa-sync-alt" id="miniRefreshIcon"></i> 刷新
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 快速操作 -->
+<div class="quick-actions">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>快速操作</h5>
+        <button class="btn btn-outline-primary btn-sm" onclick="toggleMonitorWidget()">
+            <i class="fas fa-chart-line"></i> 切換監控區塊
+        </button>
+    </div>
+    <div class="btn-grid">
+        <a href="{{ url_for('admin') }}" class="quick-btn">
+            <i class="fas fa-cogs"></i>
+            <span>API 管理</span>
+        </a>
+        <a href="/test-case-management" class="quick-btn">
+            <i class="fas fa-list-check"></i>
+            <span>測試案例管理</span>
+        </a>
+        <a href="/test-projects" class="quick-btn">
+            <i class="fas fa-project-diagram"></i>
+            <span>測試專案</span>
+        </a>
+        <a href="/product-tag-management" class="quick-btn">
+            <i class="fas fa-tags"></i>
+            <span>產品標籤管理</span>
+        </a>
+    </div>
+</div>
+
 <!-- 統計卡片 -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-number stat-total">{{ stats.total }}</div>
-        <div class="stat-label">總計 API</div>
+        <div class="stat-label">總 API 數量</div>
     </div>
     <div class="stat-card">
         <div class="stat-number stat-healthy">{{ stats.healthy }}</div>
@@ -136,97 +781,121 @@
     </div>
 </div>
 
+<!-- 搜尋和過濾控制 -->
+<div class="search-controls">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text" style="background: #0D1117; border-color: #30363D; color: #8B949E;">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control search-input" id="searchInput" 
+                       placeholder="搜尋 API..." onkeyup="filterAPIs()">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select filter-select" id="statusFilter" onchange="filterAPIs()">
+                <option value="">所有狀態</option>
+                <option value="healthy">健康</option>
+                <option value="unhealthy">異常</option>
+                <option value="unknown">未知</option>
+            </select>
+        </div>
+        <div class="col-md-5 text-end">
+            <div class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+                <label for="autoRefresh">自動刷新</label>
+                <span id="refreshCountdown" style="margin-left: 10px;"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- API 列表 -->
 <div class="api-table">
     <div class="table-header">
-        <h2 class="table-title">API 服務列表</h2>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="table-title">API 監控列表</h3>
+            <button class="btn btn-outline-light btn-sm" onclick="refreshData()" id="refreshBtn">
+                <i class="fas fa-sync-alt" id="refreshIcon"></i> 立即刷新
+            </button>
+        </div>
     </div>
     
-    <div class="actions-bar d-flex flex-wrap align-items-center">
+    <div class="actions-bar">
         <div class="action-buttons">
-            <a href="{{ url_for('check_now') }}" class="btn btn-primary">
-                <i class="fas fa-sync-alt"></i> 立即檢查
+            <a href="{{ url_for('check_now') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-play"></i> 執行檢查
             </a>
             {% if session.role == 'admin' %}
-            <a href="{{ url_for('admin') }}" class="btn btn-success">
-                <i class="fas fa-plus"></i> 管理 API
+            <a href="{{ url_for('admin') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus"></i> 新增 API
             </a>
             {% endif %}
         </div>
-        
         <div class="auto-refresh">
-            <label class="form-check-label">
-                <input type="checkbox" class="form-check-input" id="autoRefresh" checked>
-                自動刷新 (30秒)
-            </label>
+            <small>最後更新: <span id="lastUpdated">載入中...</span></small>
         </div>
     </div>
-    
+
     {% if apis %}
     <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>API 名稱</th>
-                    <th>URL</th>
-                    <th>類型</th>
-                    <th>狀態</th>
-                    <th>響應時間</th>
-                    <th>最後檢查</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
+        <table class="table table-borderless mb-0" id="apisTable">
             <tbody>
                 {% for api in apis %}
-                <tr>
-                    <td>
-                        <strong>{{ api.name }}</strong>
+                <tr class="api-row" data-api-name="{{ api.name.lower() }}" data-api-status="{{ api.status }}">
+                    <td class="api-cell" style="width: 40%;">
+                        <div class="api-name">{{ api.name }}</div>
+                        <div class="api-url">{{ api.url }}</div>
                     </td>
-                    <td>
-                        <code>{{ api.url }}</code>
-                    </td>
-                    <td>
-                        <span class="badge bg-info">{{ api.type }}</span>
-                    </td>
-                    <td>
+                    <td class="api-cell" style="width: 15%;">
                         <span class="status-badge status-{{ api.status }}">
-                            {% if api.status == 'healthy' %}
-                                <i class="fas fa-check-circle"></i> 健康
-                            {% elif api.status == 'unhealthy' %}
-                                <i class="fas fa-times-circle"></i> 異常
-                            {% else %}
-                                <i class="fas fa-question-circle"></i> 未知
-                            {% endif %}
+                            {% if api.status == 'healthy' %}健康
+                            {% elif api.status == 'unhealthy' %}異常
+                            {% else %}未知{% endif %}
                         </span>
                     </td>
-                    <td>
-                        {% if api.response_time %}
-                            {{ "%.0f"|format(api.response_time * 1000) }} ms
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if api.last_checked %}
-                            {{ api.last_checked }}
-                        {% else %}
-                            從未檢查
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <a href="{{ url_for('start_stress_test', api_id=api.id) }}" 
-                               class="btn btn-sm btn-warning" 
-                               title="壓力測試">
-                                <i class="fas fa-bolt"></i>
-                            </a>
-                            {% if api.stress_test and api.stress_test.results %}
-                            <a href="{{ url_for('stress_test_results', api_id=api.id) }}" 
-                               class="btn btn-sm btn-info" 
-                               title="查看結果">
-                                <i class="fas fa-chart-line"></i>
-                            </a>
+                    <td class="api-cell" style="width: 15%;">
+                        <div class="response-time">
+                            {% if api.response_time %}
+                                {{ "%.0f"|format(api.response_time * 1000) }} ms
+                            {% else %}
+                                -
                             {% endif %}
+                        </div>
+                    </td>
+                    <td class="api-cell" style="width: 20%;">
+                        <div class="last-checked">
+                            {% if api.last_checked %}
+                                {{ api.last_checked.strftime('%m/%d %H:%M') }}
+                            {% else %}
+                                未檢查
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="api-cell" style="width: 10%;">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                    data-bs-toggle="dropdown">
+                                操作
+                            </button>
+                            <ul class="dropdown-menu" style="background: #161B22; border: 1px solid #30363D;">
+                                <li><a class="dropdown-item" href="{{ url_for('start_stress_test', api_id=api.id) }}" 
+                                       style="color: #C9D1D9;">
+                                    <i class="fas fa-bolt"></i> 壓力測試
+                                </a></li>
+                                {% if session.role == 'admin' %}
+                                <li><a class="dropdown-item" href="{{ url_for('edit_api', api_id=api.id) }}" 
+                                       style="color: #C9D1D9;">
+                                    <i class="fas fa-edit"></i> 編輯
+                                </a></li>
+                                <li><hr class="dropdown-divider" style="border-color: #30363D;"></li>
+                                <li><a class="dropdown-item text-danger" href="#" 
+                                       onclick="deleteAPI('{{ api.id }}', '{{ api.name }}')">
+                                    <i class="fas fa-trash"></i> 刪除
+                                </a></li>
+                                {% endif %}
+                            </ul>
                         </div>
                     </td>
                 </tr>
@@ -235,13 +904,15 @@
         </table>
     </div>
     {% else %}
-    <div class="text-center py-5">
-        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-        <h4>尚未設定任何 API</h4>
-        <p class="text-muted">請前往管理頁面新增要監控的 API</p>
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-server"></i>
+        </div>
+        <h4>尚無 API 監控項目</h4>
+        <p>開始添加您的第一個 API 監控項目</p>
         {% if session.role == 'admin' %}
-        <a href="{{ url_for('admin') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> 新增第一個 API
+        <a href="{{ url_for('admin') }}" class="btn btn-primary mt-3">
+            <i class="fas fa-plus"></i> 新增 API
         </a>
         {% endif %}
     </div>
@@ -251,98 +922,511 @@
 
 {% block extra_js %}
 <script>
+let autoRefreshInterval;
+let refreshCountdown = 30;
+let monitorWidgetCollapsed = false;
+let monitorWidgetMiniMode = false;
+let isDragging = false;
+let dragOffset = { x: 0, y: 0 };
+
+// 頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', function() {
-    const autoRefreshCheckbox = document.getElementById('autoRefresh');
-    let refreshInterval;
+    updateLastUpdated();
+    initializeMonitorWidget();
     
-    function startAutoRefresh() {
-        refreshInterval = setInterval(function() {
-            fetch('/api/status')
-                .then(response => response.json())
-                .then(data => {
-                    // 更新統計數據
-                    document.querySelector('.stat-total .stat-number').textContent = data.stats.total;
-                    document.querySelector('.stat-healthy .stat-number').textContent = data.stats.healthy;
-                    document.querySelector('.stat-unhealthy .stat-number').textContent = data.stats.unhealthy;
-                    document.querySelector('.stat-unknown .stat-number').textContent = data.stats.unknown;
-                    
-                    // 更新表格內容
-                    updateTable(data.apis);
-                })
-                .catch(error => {
-                    console.error('Auto refresh failed:', error);
-                });
-        }, 30000); // 30秒刷新一次
+    // 檢查URL參數，如果來自loading頁面則設置自動刷新
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('from_loading') === 'true') {
+        // 清理URL參數
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+});
+
+// 初始化監控區塊
+function initializeMonitorWidget() {
+    const widget = document.getElementById('monitorWidget');
+    
+    // 從 localStorage 恢復狀態
+    const savedCollapsed = localStorage.getItem('monitorWidgetCollapsed');
+    const savedMiniMode = localStorage.getItem('monitorWidgetMiniMode');
+    const savedPosition = localStorage.getItem('monitorWidgetPosition');
+    
+    if (savedCollapsed === 'true') {
+        monitorWidgetCollapsed = true;
+        widget.classList.add('collapsed');
+        document.getElementById('monitorToggle').innerHTML = '<i class="fas fa-chevron-down"></i>';
     }
     
-    function stopAutoRefresh() {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
+    if (savedMiniMode === 'true') {
+        monitorWidgetMiniMode = true;
+        widget.classList.add('mini-mode');
+        document.getElementById('miniModeBtn').classList.add('active');
+        document.getElementById('miniModeBtn').innerHTML = '<i class="fas fa-expand"></i>';
+    }
+    
+    if (savedPosition) {
+        const position = JSON.parse(savedPosition);
+        widget.style.left = position.x + 'px';
+        widget.style.top = position.y + 'px';
+        widget.style.right = 'auto';
+    }
+    
+    // 設置拖拽功能
+    setupDragFunctionality();
+    
+    // 更新脈衝指示器
+    updateWidgetPulse();
+    
+    // 設置自動更新
+    setInterval(updateMonitorWidget, 30000); // 每30秒更新一次
+    
+    // 監聽窗口大小變化
+    window.addEventListener('resize', handleWindowResize);
+    handleWindowResize(); // 初始檢查
+}
+
+// 處理窗口大小變化
+function handleWindowResize() {
+    const widget = document.getElementById('monitorWidget');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+        // 移動設備：禁用拖拽，重置位置
+        widget.style.position = 'relative';
+        widget.style.top = 'auto';
+        widget.style.left = 'auto';
+        widget.style.right = 'auto';
+    } else {
+        // 桌面設備：啟用拖拽
+        widget.style.position = 'fixed';
+        
+        // 恢復保存的位置或使用默認位置
+        const savedPosition = localStorage.getItem('monitorWidgetPosition');
+        if (savedPosition) {
+            const position = JSON.parse(savedPosition);
+            
+            // 確保位置在可見範圍內
+            const maxX = window.innerWidth - widget.offsetWidth;
+            const maxY = window.innerHeight - widget.offsetHeight;
+            
+            widget.style.left = Math.max(0, Math.min(position.x, maxX)) + 'px';
+            widget.style.top = Math.max(0, Math.min(position.y, maxY)) + 'px';
+            widget.style.right = 'auto';
+        } else {
+            // 默認位置
+            widget.style.right = '20px';
+            widget.style.top = '20px';
+            widget.style.left = 'auto';
         }
     }
+}
+
+// 設置拖拽功能
+function setupDragFunctionality() {
+    const widget = document.getElementById('monitorWidget');
+    const header = widget.querySelector('.monitor-header');
     
-    function updateTable(apis) {
-        const tbody = document.querySelector('tbody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        apis.forEach(api => {
-            const row = createTableRow(api);
-            tbody.appendChild(row);
-        });
+    header.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', stopDrag);
+    
+    // 觸控支援
+    header.addEventListener('touchstart', startDragTouch);
+    document.addEventListener('touchmove', dragTouch);
+    document.addEventListener('touchend', stopDrag);
+}
+
+function startDrag(e) {
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+    isDragging = true;
+    const widget = document.getElementById('monitorWidget');
+    const rect = widget.getBoundingClientRect();
+    dragOffset.x = e.clientX - rect.left;
+    dragOffset.y = e.clientY - rect.top;
+    widget.classList.add('dragging');
+}
+
+function startDragTouch(e) {
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+    isDragging = true;
+    const widget = document.getElementById('monitorWidget');
+    const rect = widget.getBoundingClientRect();
+    const touch = e.touches[0];
+    dragOffset.x = touch.clientX - rect.left;
+    dragOffset.y = touch.clientY - rect.top;
+    widget.classList.add('dragging');
+}
+
+function drag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const widget = document.getElementById('monitorWidget');
+    const x = e.clientX - dragOffset.x;
+    const y = e.clientY - dragOffset.y;
+    
+    // 確保小部件不會拖出視窗
+    const maxX = window.innerWidth - widget.offsetWidth;
+    const maxY = window.innerHeight - widget.offsetHeight;
+    
+    widget.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+    widget.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+    widget.style.right = 'auto';
+}
+
+function dragTouch(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const widget = document.getElementById('monitorWidget');
+    const touch = e.touches[0];
+    const x = touch.clientX - dragOffset.x;
+    const y = touch.clientY - dragOffset.y;
+    
+    // 確保小部件不會拖出視窗
+    const maxX = window.innerWidth - widget.offsetWidth;
+    const maxY = window.innerHeight - widget.offsetHeight;
+    
+    widget.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+    widget.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+    widget.style.right = 'auto';
+}
+
+function stopDrag() {
+    if (!isDragging) return;
+    isDragging = false;
+    const widget = document.getElementById('monitorWidget');
+    widget.classList.remove('dragging');
+    
+    // 保存位置到 localStorage
+    const position = {
+        x: parseInt(widget.style.left) || 20,
+        y: parseInt(widget.style.top) || 20
+    };
+    localStorage.setItem('monitorWidgetPosition', JSON.stringify(position));
+}
+
+// 切換監控區塊展開/收起
+function toggleMonitorWidget() {
+    const widget = document.getElementById('monitorWidget');
+    const toggle = document.getElementById('monitorToggle');
+    
+    monitorWidgetCollapsed = !monitorWidgetCollapsed;
+    
+    if (monitorWidgetCollapsed) {
+        widget.classList.add('collapsed');
+        toggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    } else {
+        widget.classList.remove('collapsed');
+        toggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
     }
     
-    function createTableRow(api) {
-        const row = document.createElement('tr');
-        const statusClass = `status-${api.status}`;
-        const statusIcon = api.status === 'healthy' ? 'check-circle' : 
-                          api.status === 'unhealthy' ? 'times-circle' : 'question-circle';
-        const statusText = api.status === 'healthy' ? '健康' : 
-                          api.status === 'unhealthy' ? '異常' : '未知';
+    // 保存狀態到 localStorage
+    localStorage.setItem('monitorWidgetCollapsed', monitorWidgetCollapsed);
+}
+
+// 切換迷你模式
+function toggleMiniMode() {
+    const widget = document.getElementById('monitorWidget');
+    const miniModeBtn = document.getElementById('miniModeBtn');
+    
+    monitorWidgetMiniMode = !monitorWidgetMiniMode;
+    
+    if (monitorWidgetMiniMode) {
+        widget.classList.add('mini-mode');
+        miniModeBtn.classList.add('active');
+        miniModeBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        miniModeBtn.title = '退出迷你模式';
+    } else {
+        widget.classList.remove('mini-mode');
+        miniModeBtn.classList.remove('active');
+        miniModeBtn.innerHTML = '<i class="fas fa-compress"></i>';
+        miniModeBtn.title = '切換迷你模式';
+    }
+    
+    // 保存狀態到 localStorage
+    localStorage.setItem('monitorWidgetMiniMode', monitorWidgetMiniMode);
+}
+
+// 更新監控區塊數據
+async function updateMonitorWidget() {
+    try {
+        const response = await fetch('/api/status');
+        if (response.ok) {
+            const data = await response.json();
+            updateMonitorStats(data.stats);
+            updateMonitorApis(data.apis);
+            updateWidgetPulse();
+        }
+    } catch (error) {
+        console.error('更新監控區塊失敗:', error);
+    }
+}
+
+// 更新監控統計
+function updateMonitorStats(stats) {
+    document.getElementById('miniHealthy').textContent = stats.healthy;
+    document.getElementById('miniUnhealthy').textContent = stats.unhealthy;
+    document.getElementById('miniUnknown').textContent = stats.unknown;
+    document.getElementById('miniTotal').textContent = stats.total;
+}
+
+// 更新監控 API 列表
+function updateMonitorApis(apis) {
+    const container = document.getElementById('monitorApis');
+    const topApis = apis.slice(0, 5);
+    
+    if (topApis.length === 0) {
+        container.innerHTML = `
+            <div class="mini-api-item">
+                <div class="mini-api-name" style="color: #8B949E; text-align: center;">
+                    尚無 API 監控項目
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = topApis.map(api => {
+        const statusText = {
+            'healthy': '健康',
+            'unhealthy': '異常',
+            'unknown': '未知'
+        };
         
-        row.innerHTML = `
-            <td><strong>${api.name}</strong></td>
-            <td><code>${api.url}</code></td>
-            <td><span class="badge bg-info">${api.type}</span></td>
-            <td><span class="status-badge ${statusClass}">
-                <i class="fas fa-${statusIcon}"></i> ${statusText}
-            </span></td>
-            <td>${api.response_time ? Math.round(api.response_time * 1000) + ' ms' : '-'}</td>
-            <td>${api.last_checked || '從未檢查'}</td>
-            <td>
-                <div class="btn-group" role="group">
-                    <a href="/stress-test/${api.id}" class="btn btn-sm btn-warning" title="壓力測試">
-                        <i class="fas fa-bolt"></i>
-                    </a>
-                    ${api.stress_test && api.stress_test.results ? 
-                        `<a href="/stress-test-results/${api.id}" class="btn btn-sm btn-info" title="查看結果">
-                            <i class="fas fa-chart-line"></i>
-                        </a>` : ''}
+        return `
+            <div class="mini-api-item">
+                <div class="mini-api-name" title="${api.name}">${api.name}</div>
+                <span class="mini-status ${api.status}">${statusText[api.status]}</span>
+            </div>
+        `;
+    }).join('');
+    
+    if (apis.length > 5) {
+        html += `
+            <div class="mini-api-item">
+                <div class="mini-api-name" style="color: #8B949E; font-style: italic;">
+                    還有 ${apis.length - 5} 個 API...
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+// 更新脈衝指示器
+function updateWidgetPulse() {
+    const pulse = document.getElementById('widgetPulse');
+    const miniHealthy = parseInt(document.getElementById('miniHealthy').textContent || 0);
+    const miniUnhealthy = parseInt(document.getElementById('miniUnhealthy').textContent || 0);
+    const miniUnknown = parseInt(document.getElementById('miniUnknown').textContent || 0);
+    
+    // 根據狀態設置脈衝顏色
+    pulse.className = 'widget-pulse';
+    if (miniUnhealthy > 0) {
+        pulse.classList.add('unhealthy');
+    } else if (miniUnknown > 0) {
+        pulse.classList.add('unknown');
+    }
+}
+
+// 刷新監控數據
+async function refreshMonitorData() {
+    const refreshIcon = document.getElementById('miniRefreshIcon');
+    refreshIcon.classList.add('refresh-indicator');
+    
+    try {
+        await updateMonitorWidget();
+        
+        // 也刷新主頁面數據
+        await refreshData();
+    } catch (error) {
+        console.error('刷新監控數據失敗:', error);
+    } finally {
+        refreshIcon.classList.remove('refresh-indicator');
+    }
+}
+
+// 過濾API
+function filterAPIs() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const selectedStatus = document.getElementById('statusFilter').value;
+    const apiRows = document.querySelectorAll('[data-api-name]');
+    
+    let visibleCount = 0;
+    apiRows.forEach(row => {
+        const apiName = row.dataset.apiName;
+        const apiStatus = row.dataset.apiStatus;
+        
+        // 文字搜尋
+        const nameMatch = apiName.includes(searchTerm);
+        
+        // 狀態篩選
+        const statusMatch = !selectedStatus || apiStatus === selectedStatus;
+        
+        const shouldShow = nameMatch && statusMatch;
+        row.style.display = shouldShow ? '' : 'none';
+        
+        if (shouldShow) visibleCount++;
+    });
+}
+
+// 切換自動刷新
+function toggleAutoRefresh() {
+    const checkbox = document.getElementById('autoRefresh');
+    const countdownSpan = document.getElementById('refreshCountdown');
+    
+    if (checkbox.checked) {
+        startAutoRefresh();
+    } else {
+        stopAutoRefresh();
+        countdownSpan.textContent = '';
+    }
+}
+
+// 開始自動刷新
+function startAutoRefresh() {
+    refreshCountdown = 30;
+    updateCountdown();
+    
+    autoRefreshInterval = setInterval(() => {
+        refreshCountdown--;
+        updateCountdown();
+        
+        if (refreshCountdown <= 0) {
+            refreshData();
+            refreshCountdown = 30;
+        }
+    }, 1000);
+}
+
+// 停止自動刷新
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
+// 更新倒數計時顯示
+function updateCountdown() {
+    const countdownSpan = document.getElementById('refreshCountdown');
+    countdownSpan.textContent = `(${refreshCountdown}秒後刷新)`;
+}
+
+// 刷新數據
+async function refreshData() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
+    
+    // 顯示載入狀態
+    refreshIcon.classList.add('refresh-indicator');
+    refreshBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/status');
+        if (response.ok) {
+            const data = await response.json();
+            updateAPITable(data.apis);
+            updateStats(data.stats);
+            updateLastUpdated();
+        }
+    } catch (error) {
+        console.error('刷新失敗:', error);
+    } finally {
+        // 恢復按鈕狀態
+        refreshIcon.classList.remove('refresh-indicator');
+        refreshBtn.disabled = false;
+    }
+}
+
+// 更新API表格
+function updateAPITable(apis) {
+    const tbody = document.querySelector('#apisTable tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = apis.map(api => `
+        <tr class="api-row" data-api-name="${api.name.toLowerCase()}" data-api-status="${api.status}">
+            <td class="api-cell" style="width: 40%;">
+                <div class="api-name">${api.name}</div>
+                <div class="api-url">${api.url}</div>
+            </td>
+            <td class="api-cell" style="width: 15%;">
+                <span class="status-badge status-${api.status}">
+                    ${api.status === 'healthy' ? '健康' : api.status === 'unhealthy' ? '異常' : '未知'}
+                </span>
+            </td>
+            <td class="api-cell" style="width: 15%;">
+                <div class="response-time">
+                    ${api.response_time ? Math.round(api.response_time * 1000) + ' ms' : '-'}
                 </div>
             </td>
-        `;
-        
-        return row;
+            <td class="api-cell" style="width: 20%;">
+                <div class="last-checked">
+                    ${api.last_checked ? new Date(api.last_checked).toLocaleString('zh-TW', {month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}) : '未檢查'}
+                </div>
+            </td>
+            <td class="api-cell" style="width: 10%;">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown">
+                        操作
+                    </button>
+                    <ul class="dropdown-menu" style="background: #161B22; border: 1px solid #30363D;">
+                        <li><a class="dropdown-item" href="/stress-test/${api.id}" 
+                               style="color: #C9D1D9;">
+                            <i class="fas fa-bolt"></i> 壓力測試
+                        </a></li>
+                        <li><a class="dropdown-item" href="/admin/edit/${api.id}" 
+                               style="color: #C9D1D9;">
+                            <i class="fas fa-edit"></i> 編輯
+                        </a></li>
+                        <li><hr class="dropdown-divider" style="border-color: #30363D;"></li>
+                        <li><a class="dropdown-item text-danger" href="#" 
+                               onclick="deleteAPI('${api.id}', '${api.name}')">
+                            <i class="fas fa-trash"></i> 刪除
+                        </a></li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// 更新統計數據
+function updateStats(stats) {
+    const statCards = document.querySelectorAll('.stat-number');
+    if (statCards.length >= 4) {
+        statCards[0].textContent = stats.total;
+        statCards[1].textContent = stats.healthy;
+        statCards[2].textContent = stats.unhealthy;
+        statCards[3].textContent = stats.unknown;
+    }
+}
+
+// 更新最後更新時間
+function updateLastUpdated() {
+    const lastUpdatedSpan = document.getElementById('lastUpdated');
+    if (lastUpdatedSpan) {
+        lastUpdatedSpan.textContent = new Date().toLocaleString('zh-TW');
+    }
+}
+
+// 刪除API
+function deleteAPI(apiId, apiName) {
+    if (!confirm(`確定要刪除 API「${apiName}」嗎？\n\n此操作無法復原！`)) {
+        return;
     }
     
-    // 自動刷新控制
-    autoRefreshCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-            startAutoRefresh();
-        } else {
-            stopAutoRefresh();
-        }
-    });
-    
-    // 預設啟動自動刷新
-    if (autoRefreshCheckbox.checked) {
-        startAutoRefresh();
-    }
-    
-    // 頁面離開時清理定時器
-    window.addEventListener('beforeunload', function() {
-        stopAutoRefresh();
-    });
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/delete/${apiId}`;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// 頁面離開時清理自動刷新
+window.addEventListener('beforeunload', function() {
+    stopAutoRefresh();
 });
 </script>
 {% endblock %}

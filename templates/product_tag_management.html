@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+
+{% block title %}產品標籤管理 - API Monitor{% endblock %}
+{% block page_title %}產品標籤管理{% endblock %}
+{% block page_subtitle %}管理產品分類標籤{% endblock %}
+
+{% block extra_css %}
+.tag-card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.tag-card:hover {
+    transform: translateY(-2px);
+    border-color: #58a6ff;
+}
+
+.tag-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.tag-name {
+    color: #C9D1D9;
+    font-size: 1.2em;
+    font-weight: 600;
+    margin: 0;
+}
+
+.tag-description {
+    color: #8B949E;
+    margin-bottom: 10px;
+}
+
+.tag-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85em;
+    color: #8B949E;
+    border-top: 1px solid #30363D;
+    padding-top: 10px;
+}
+
+.tag-actions .btn {
+    margin-left: 5px;
+}
+
+.create-tag-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #238636;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 100;
+    transition: all 0.2s;
+}
+
+.create-tag-btn:hover {
+    background: #2ea043;
+    transform: scale(1.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8B949E;
+}
+
+.empty-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    color: #30363D;
+}
+
+.search-controls {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    background: #0D1117;
+    color: #C9D1D9;
+    border: 1px solid #30363D;
+    border-radius: 6px;
+    padding: 10px 15px;
+}
+
+.search-input:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    outline: none;
+    background: #0D1117;
+    color: #C9D1D9;
+}
+
+.stats-overview {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #58a6ff;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #8B949E;
+    font-size: 0.9em;
+}
+
+.usage-badge {
+    background: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+{% endblock %}
+
+{% block content %}
+<!-- 搜尋和統計 -->
+<div class="search-controls">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text" style="background: #0D1117; border-color: #30363D; color: #8B949E;">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control search-input" id="searchInput" 
+                       placeholder="搜尋產品標籤..." onkeyup="filterTags()">
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <button class="btn btn-outline-primary" onclick="loadTags(true)">
+                <i class="fas fa-sync-alt"></i> 重新載入
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 統計概覽 -->
+<div class="stats-overview">
+    <h5 style="color: #C9D1D9; margin-bottom: 15px;">標籤統計</h5>
+    <div class="stats-grid" id="statsOverview">
+        <!-- 統計資料將通過 JavaScript 載入 -->
+    </div>
+</div>
+
+<!-- 標籤列表 -->
+<div class="row" id="tagsContainer">
+    <!-- 標籤卡片將通過 JavaScript 載入 -->
+</div>
+
+<!-- 載入中提示 -->
+<div id="loadingIndicator" class="text-center py-5" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">載入中...</span>
+    </div>
+    <p class="mt-3" style="color: #8B949E;">載入產品標籤中...</p>
+</div>
+
+<!-- 空狀態 -->
+<div id="emptyState" class="empty-state" style="display: none;">
+    <div class="empty-icon">
+        <i class="fas fa-tags"></i>
+    </div>
+    <h4>尚無產品標籤</h4>
+    <p>點擊右下角的按鈕建立您的第一個產品標籤</p>
+</div>
+
+<!-- 新增標籤按鈕 -->
+<button class="create-tag-btn" onclick="showCreateTagModal()" title="新增產品標籤">
+    <i class="fas fa-plus"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allTags = [];
+let testCasesUsage = {};
+
+// 頁面載入完成時初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadTags();
+    loadTestCasesUsage();
+});
+
+// 載入產品標籤
+async function loadTags(showLoading = false) {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const tagsContainer = document.getElementById('tagsContainer');
+    const emptyState = document.getElementById('emptyState');
+    
+    try {
+        if (showLoading) {
+            loadingIndicator.style.display = 'block';
+            emptyState.style.display = 'none';
+        }
+        
+        const response = await fetch('/api/product-tags');
+        if (!response.ok) throw new Error('載入標籤失敗');
+        
+        allTags = await response.json();
+        
+        if (allTags.length === 0) {
+            emptyState.style.display = 'block';
+            tagsContainer.innerHTML = '';
+        } else {
+            renderTags(allTags);
+            updateStatsOverview();
+        }
+        
+    } catch (error) {
+        console.error('載入產品標籤失敗:', error);
+        tagsContainer.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> 載入產品標籤失敗
+                </div>
+            </div>
+        `;
+    } finally {
+        if (showLoading) {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+}
+
+// 載入測試案例使用情況
+async function loadTestCasesUsage() {
+    try {
+        const response = await fetch('/api/test-cases');
+        if (response.ok) {
+            const testCases = await response.json();
+            testCasesUsage = {};
+            
+            // 計算每個標籤被使用的次數
+            testCases.forEach(testCase => {
+                if (testCase.product_tags) {
+                    testCase.product_tags.forEach(tagId => {
+                        testCasesUsage[tagId] = (testCasesUsage[tagId] || 0) + 1;
+                    });
+                }
+            });
+        }
+    } catch (error) {
+        console.error('載入測試案例使用情況失敗:', error);
+    }
+}
+
+// 渲染標籤卡片
+function renderTags(tags) {
+    const tagsContainer = document.getElementById('tagsContainer');
+    
+    tagsContainer.innerHTML = tags.map(tag => {
+        const usageCount = testCasesUsage[tag.id] || 0;
+        
+        return `
+            <div class="col-lg-6 col-xl-4" data-tag-name="${tag.name.toLowerCase()}">
+                <div class="tag-card">
+                    <div class="tag-header">
+                        <h5 class="tag-name">${tag.name}</h5>
+                        <div class="tag-actions">
+                            <button class="btn btn-sm btn-outline-warning" 
+                                    onclick="editTag('${tag.id}')" title="編輯">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    onclick="deleteTag('${tag.id}', '${tag.name}', ${usageCount})" title="刪除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tag-description">
+                        ${tag.description || '無描述'}
+                    </div>
+                    
+                    <div class="tag-meta">
+                        <div>
+                            <small>建立時間: ${formatDate(tag.created_at)}</small>
+                        </div>
+                        <div>
+                            <span class="usage-badge">
+                                <i class="fas fa-link"></i> ${usageCount} 個測試案例
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 更新統計概覽
+function updateStatsOverview() {
+    const statsOverview = document.getElementById('statsOverview');
+    const totalTags = allTags.length;
+    const usedTags = allTags.filter(tag => testCasesUsage[tag.id] > 0).length;
+    const unusedTags = totalTags - usedTags;
+    const totalUsages = Object.values(testCasesUsage).reduce((sum, count) => sum + count, 0);
+    
+    statsOverview.innerHTML = `
+        <div class="stat-item">
+            <div class="stat-number">${totalTags}</div>
+            <div class="stat-label">總標籤數</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #238636;">${usedTags}</div>
+            <div class="stat-label">已使用</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #f85149;">${unusedTags}</div>
+            <div class="stat-label">未使用</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #d29922;">${totalUsages}</div>
+            <div class="stat-label">總使用次數</div>
+        </div>
+    `;
+}
+
+// 過濾標籤
+function filterTags() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const tagCards = document.querySelectorAll('[data-tag-name]');
+    
+    tagCards.forEach(card => {
+        const tagName = card.dataset.tagName;
+        const tagDescription = card.querySelector('.tag-description').textContent.toLowerCase();
+        const matches = tagName.includes(searchTerm) || tagDescription.includes(searchTerm);
+        card.style.display = matches ? 'block' : 'none';
+    });
+}
+
+// 顯示新增標籤模態框
+function showCreateTagModal() {
+    showTagModal();
+}
+
+// 編輯標籤
+async function editTag(tagId) {
+    try {
+        const tag = allTags.find(t => t.id === tagId);
+        if (tag) {
+            showTagModal(tag);
+        } else {
+            showAlert('找不到標籤資料', 'danger');
+        }
+    } catch (error) {
+        console.error('載入標籤失敗:', error);
+        showAlert('載入標籤資料失敗: ' + error.message, 'danger');
+    }
+}
+
+// 顯示標籤編輯模態框
+function showTagModal(tag = null) {
+    const isEdit = tag !== null;
+    const modalTitle = isEdit ? '編輯產品標籤' : '新增產品標籤';
+    
+    const modalHtml = `
+        <div class="modal fade" id="tagModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content" style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                    <div class="modal-header" style="background: #0D1117; border-bottom: 1px solid #30363D;">
+                        <h5 class="modal-title" style="color: #C9D1D9;">${modalTitle}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="tagForm">
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">標籤名稱 *</label>
+                                <input type="text" class="form-control" id="tagName" 
+                                       value="${tag?.name || ''}" required
+                                       style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
+                                       placeholder="輸入標籤名稱">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">描述</label>
+                                <textarea class="form-control" id="tagDescription" rows="3"
+                                          style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
+                                          placeholder="輸入標籤描述（選填）">${tag?.description || ''}</textarea>
+                            </div>
+                            ${isEdit && testCasesUsage[tag.id] > 0 ? `
+                                <div class="alert alert-info" style="background: rgba(88, 166, 255, 0.1); border-color: #58a6ff; color: #C9D1D9;">
+                                    <i class="fas fa-info-circle"></i> 
+                                    此標籤被 ${testCasesUsage[tag.id]} 個測試案例使用中
+                                </div>
+                            ` : ''}
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #30363D;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-success" onclick="saveTag(${isEdit ? `'${tag?.id}'` : 'null'})">
+                            ${isEdit ? '更新' : '建立'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除舊的模態框
+    const existingModal = document.getElementById('tagModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 添加新的模態框
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // 顯示模態框
+    const modal = new bootstrap.Modal(document.getElementById('tagModal'));
+    modal.show();
+}
+
+// 保存標籤
+async function saveTag(tagId = null) {
+    const isEdit = tagId !== null;
+    
+    // 收集表單資料
+    const formData = {
+        name: document.getElementById('tagName').value.trim(),
+        description: document.getElementById('tagDescription').value.trim() || null
+    };
+    
+    // 驗證
+    if (!formData.name) {
+        showAlert('請輸入標籤名稱', 'danger');
+        return;
+    }
+    
+    // 檢查名稱是否重複（編輯時排除自己）
+    const existingTag = allTags.find(tag => 
+        tag.name.toLowerCase() === formData.name.toLowerCase() && 
+        (!isEdit || tag.id !== tagId)
+    );
+    
+    if (existingTag) {
+        showAlert('標籤名稱已存在', 'danger');
+        return;
+    }
+    
+    try {
+        const url = isEdit ? `/api/product-tags/${tagId}` : '/api/product-tags';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            // 關閉模態框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('tagModal'));
+            modal.hide();
+            
+            // 重新載入標籤列表
+            await loadTags();
+            
+            // 顯示成功訊息
+            showAlert(isEdit ? '標籤更新成功！' : '標籤建立成功！', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || '保存失敗');
+        }
+    } catch (error) {
+        console.error('保存標籤失敗:', error);
+        showAlert('保存失敗: ' + error.message, 'danger');
+    }
+}
+
+// 刪除標籤
+async function deleteTag(tagId, tagName, usageCount) {
+    let confirmMessage = `確定要刪除標籤「${tagName}」嗎？\n\n此操作無法復原！`;
+    
+    if (usageCount > 0) {
+        confirmMessage = `確定要刪除標籤「${tagName}」嗎？\n\n此標籤被 ${usageCount} 個測試案例使用中，刪除後這些關聯將被移除。\n\n此操作無法復原！`;
+    }
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/product-tags/${tagId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            // 重新載入標籤列表和使用情況
+            await Promise.all([loadTags(), loadTestCasesUsage()]);
+            showAlert('標籤刪除成功', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || '刪除失敗');
+        }
+    } catch (error) {
+        console.error('刪除標籤失敗:', error);
+        showAlert('刪除失敗: ' + error.message, 'danger');
+    }
+}
+
+// 格式化日期
+function formatDate(dateString) {
+    if (!dateString) return '未知';
+    return new Date(dateString).toLocaleDateString('zh-TW');
+}
+
+// 顯示警告訊息
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}

@@ -5,184 +5,384 @@
 {% block page_subtitle %}管理和追蹤產品測試案例{% endblock %}
 
 {% block extra_css %}
-.editable-table {
-    font-size: 14px;
-}
-.editable-cell {
-    min-height: 40px;
-    border: 1px solid transparent;
-    cursor: text;
-}
-.editable-cell:hover {
-    border-color: #007bff;
-    background-color: #f8f9fa;
-}
-.editable-cell:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-.acceptance-criteria {
-    max-width: 300px;
-}
-.acceptance-criteria ul {
-    margin: 0;
-    padding-left: 20px;
-}
-.product-tags {
-    max-width: 200px;
-}
-.tag-badge {
-    display: inline-block;
-    margin: 2px;
-    padding: 2px 8px;
-    background-color: #007bff;
-    color: white;
-    border-radius: 12px;
-    font-size: 11px;
-}
-.tag-input {
-    border: none;
-    background: transparent;
-    width: 100%;
-}
-.actions-toolbar {
-    background: white;
-    padding: 20px;
+.test-case-card {
+    background: #161B22;
+    border: 1px solid #30363D;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.test-case-card:hover {
+    transform: translateY(-2px);
+    border-color: #58a6ff;
+}
+
+.test-case-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.test-case-title {
+    color: #C9D1D9;
+    font-size: 1.2em;
+    font-weight: 600;
+    margin: 0;
+}
+
+.test-case-id {
+    font-size: 0.8em;
+    color: #8B949E;
+    font-family: 'Courier New', monospace;
+    margin-top: 5px;
+}
+
+.test-case-meta {
+    color: #8B949E;
+    margin-bottom: 15px;
+}
+
+.user-role {
+    background: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.feature-description {
+    color: #C9D1D9;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #0D1117;
+    border-radius: 6px;
+    border-left: 3px solid #58a6ff;
+}
+
+.acceptance-criteria {
+    margin-bottom: 15px;
+}
+
+.criteria-title {
+    color: #C9D1D9;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+
+.criteria-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.criteria-item {
+    padding: 4px 0;
+    padding-left: 20px;
+    position: relative;
+    color: #C9D1D9;
+    font-size: 0.85em;
+}
+
+.criteria-item:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #238636;
+    font-weight: bold;
+}
+
+.test-notes {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 6px;
+    padding: 10px;
+    color: #8B949E;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+}
+
+.product-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 15px;
+}
+
+.tag-badge {
+    background: #30363D;
+    color: #8B949E;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.test-case-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid #30363D;
+    padding-top: 15px;
+}
+
+.test-case-actions .btn {
+    font-size: 0.85em;
+    padding: 6px 12px;
+}
+
+.create-test-case-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #238636;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 100;
+    transition: all 0.2s;
+}
+
+.create-test-case-btn:hover {
+    background: #2ea043;
+    transform: scale(1.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8B949E;
+}
+
+.empty-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    color: #30363D;
+}
+
+.search-controls {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
     margin-bottom: 20px;
 }
-.table-container {
-    background: white;
+
+.search-input, .filter-select {
+    background: #0D1117;
+    color: #C9D1D9;
+    border: 1px solid #30363D;
+    border-radius: 6px;
+    padding: 10px 15px;
+}
+
+.search-input:focus, .filter-select:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    outline: none;
+    background: #0D1117;
+    color: #C9D1D9;
+}
+
+.stats-overview {
+    background: #0D1117;
+    border: 1px solid #30363D;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-.table-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
     padding: 20px;
+    margin-bottom: 20px;
 }
-.table-title {
-    margin: 0;
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
 }
-.btn-group .btn {
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #58a6ff;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #8B949E;
+    font-size: 0.9em;
+}
+
+.bulk-actions {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.bulk-actions.active {
+    display: block;
+}
+
+.test-case-checkbox {
     margin-right: 10px;
 }
-.btn-group .btn:last-child {
-    margin-right: 0;
+
+.selected-count {
+    color: #58a6ff;
+    font-weight: bold;
 }
 {% endblock %}
 
 {% block content %}
-<!-- 工具列 -->
-<div class="actions-toolbar">
-    <div class="d-flex flex-wrap align-items-center justify-content-between">
-        <div class="btn-group" role="group">
-            <button class="btn btn-success" onclick="createNewTestCase()">
-                <i class="fas fa-plus"></i> 新增測試案例
-            </button>
-            <button class="btn btn-info" onclick="batchEdit()">
-                <i class="fas fa-edit"></i> 批量編輯
-            </button>
-            <button class="btn btn-warning" onclick="exportData()">
-                <i class="fas fa-download"></i> 匯出資料
-            </button>
+<!-- 搜尋和過濾控制 -->
+<div class="search-controls">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text" style="background: #0D1117; border-color: #30363D; color: #8B949E;">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control search-input" id="searchInput" 
+                       placeholder="搜尋測試案例..." onkeyup="filterTestCases()">
+            </div>
         </div>
-        
-        <div class="d-flex align-items-center">
-            <input type="text" class="form-control me-2" placeholder="搜尋測試案例..." 
-                   id="searchInput" style="width: 200px;">
-            <button class="btn btn-outline-primary" onclick="searchTestCases()">
-                <i class="fas fa-search"></i>
+        <div class="col-md-3">
+            <select class="form-select filter-select" id="tagFilter" onchange="filterTestCases()">
+                <option value="">所有標籤</option>
+                <!-- 標籤選項將通過 JavaScript 載入 -->
+            </select>
+        </div>
+        <div class="col-md-5 text-end">
+            <button class="btn btn-outline-secondary btn-sm me-2" onclick="toggleSelectAll()">
+                <i class="fas fa-check-square"></i> 全選/取消
+            </button>
+            <button class="btn btn-outline-primary btn-sm me-2" onclick="exportTestCases()">
+                <i class="fas fa-download"></i> 匯出
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="loadTestCases(true)">
+                <i class="fas fa-sync-alt"></i> 重新載入
             </button>
         </div>
     </div>
 </div>
 
-<!-- 測試案例表格 -->
-<div class="table-container">
-    <div class="table-header">
-        <h2 class="table-title"><i class="fas fa-list-check"></i> 測試案例列表</h2>
+<!-- 統計概覽 -->
+<div class="stats-overview">
+    <h5 style="color: #C9D1D9; margin-bottom: 15px;">測試案例統計</h5>
+    <div class="stats-grid" id="statsOverview">
+        <!-- 統計資料將通過 JavaScript 載入 -->
     </div>
-    
-    <div class="table-responsive">
-        <table class="table editable-table mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 40px;">
-                        <input type="checkbox" class="form-check-input" id="selectAll">
-                    </th>
-                    <th style="width: 150px;">產品標籤</th>
-                    <th style="width: 200px;">標題</th>
-                    <th style="width: 120px;">用戶角色</th>
-                    <th style="width: 250px;">功能描述</th>
-                    <th style="width: 200px;">目的</th>
-                    <th style="width: 300px;">驗收條件</th>
-                    <th style="width: 100px;">測試結果</th>
-                    <th style="width: 200px;">測試備註</th>
-                    <th style="width: 120px;">創建者</th>
-                    <th style="width: 120px;">更新時間</th>
-                    <th style="width: 100px;">操作</th>
-                </tr>
-            </thead>
-            <tbody id="testCasesTableBody">
-                <!-- 測試案例資料將通過 JavaScript 載入 -->
-            </tbody>
-        </table>
+</div>
+
+<!-- 批量操作 -->
+<div class="bulk-actions" id="bulkActions">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <span class="selected-count" id="selectedCount">已選擇 0 個測試案例</span>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-warning me-2" onclick="bulkEdit()">
+                <i class="fas fa-edit"></i> 批量編輯
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
+                <i class="fas fa-trash"></i> 批量刪除
+            </button>
+        </div>
     </div>
+</div>
+
+<!-- 測試案例列表 -->
+<div class="row" id="testCasesContainer">
+    <!-- 測試案例卡片將通過 JavaScript 載入 -->
 </div>
 
 <!-- 載入中提示 -->
-<div id="loadingIndicator" class="text-center py-4" style="display: none;">
+<div id="loadingIndicator" class="text-center py-5" style="display: none;">
     <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">載入中...</span>
     </div>
-    <p class="mt-2">載入測試案例中...</p>
+    <p class="mt-3" style="color: #8B949E;">載入測試案例中...</p>
 </div>
+
+<!-- 空狀態 -->
+<div id="emptyState" class="empty-state" style="display: none;">
+    <div class="empty-icon">
+        <i class="fas fa-list-check"></i>
+    </div>
+    <h4>尚無測試案例</h4>
+    <p>點擊右下角的按鈕建立您的第一個測試案例</p>
+</div>
+
+<!-- 新增測試案例按鈕 -->
+<button class="create-test-case-btn" onclick="showCreateTestCaseModal()" title="新增測試案例">
+    <i class="fas fa-plus"></i>
+</button>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// 全域變數
-let testCases = [];
-let productTags = [];
-let isEditMode = false;
-let selectedCases = new Set();
+let allTestCases = [];
+let availableProductTags = [];
+let selectedTestCases = new Set();
 
 // 頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', function() {
     loadTestCases();
     loadProductTags();
-    setupEventListeners();
 });
 
 // 載入測試案例
-async function loadTestCases() {
+async function loadTestCases(showLoading = false) {
     const loadingIndicator = document.getElementById('loadingIndicator');
-    const tableBody = document.getElementById('testCasesTableBody');
+    const testCasesContainer = document.getElementById('testCasesContainer');
+    const emptyState = document.getElementById('emptyState');
     
     try {
-        loadingIndicator.style.display = 'block';
+        if (showLoading) {
+            loadingIndicator.style.display = 'block';
+            emptyState.style.display = 'none';
+        }
         
         const response = await fetch('/api/test-cases');
-        if (!response.ok) throw new Error('載入失敗');
+        if (!response.ok) throw new Error('載入測試案例失敗');
         
-        testCases = await response.json();
-        renderTestCases();
+        allTestCases = await response.json();
+        
+        if (allTestCases.length === 0) {
+            emptyState.style.display = 'block';
+            testCasesContainer.innerHTML = '';
+        } else {
+            renderTestCases(allTestCases);
+            updateStatsOverview();
+        }
         
     } catch (error) {
         console.error('載入測試案例失敗:', error);
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="12" class="text-center text-danger py-4">
+        testCasesContainer.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger" role="alert">
                     <i class="fas fa-exclamation-triangle"></i> 載入測試案例失敗
-                </td>
-            </tr>
+                </div>
+            </div>
         `;
     } finally {
-        loadingIndicator.style.display = 'none';
+        if (showLoading) {
+            loadingIndicator.style.display = 'none';
+        }
     }
 }
 
@@ -191,195 +391,473 @@ async function loadProductTags() {
     try {
         const response = await fetch('/api/product-tags');
         if (response.ok) {
-            productTags = await response.json();
+            availableProductTags = await response.json();
+            updateTagFilter();
         }
     } catch (error) {
         console.error('載入產品標籤失敗:', error);
     }
 }
 
-// 渲染測試案例表格
-function renderTestCases() {
-    const tableBody = document.getElementById('testCasesTableBody');
+// 更新標籤篩選器
+function updateTagFilter() {
+    const tagFilter = document.getElementById('tagFilter');
+    tagFilter.innerHTML = '<option value="">所有標籤</option>';
     
-    if (testCases.length === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="12" class="text-center py-4 text-muted">
-                    <i class="fas fa-inbox fa-2x mb-3"></i>
-                    <br>尚無測試案例
-                    <br><small>點擊「新增測試案例」開始建立</small>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    tableBody.innerHTML = testCases.map(testCase => `
-        <tr data-id="${testCase.id}">
-            <td>
-                <input type="checkbox" class="form-check-input case-checkbox" 
-                       value="${testCase.id}" onchange="toggleCaseSelection('${testCase.id}')">
-            </td>
-            <td class="product-tags">
-                <div class="tag-container" onclick="editProductTags('${testCase.id}')">
-                    ${(testCase.product_tags || []).map(tag => 
-                        `<span class="tag-badge">${tag}</span>`
-                    ).join('')}
-                    <input type="text" class="tag-input" style="display: none;" 
-                           onblur="saveProductTags('${testCase.id}')" 
-                           onkeypress="handleTagKeypress(event, '${testCase.id}')"
-                           value="${(testCase.product_tags || []).join(', ')}">
-                </div>
-            </td>
-            <td class="editable-cell" onclick="editCell(this, '${testCase.id}', 'title')"
-                data-original="${testCase.title}">${testCase.title}</td>
-            <td class="editable-cell" onclick="editCell(this, '${testCase.id}', 'user_role')"
-                data-original="${testCase.user_role}">${testCase.user_role}</td>
-            <td class="editable-cell" onclick="editCell(this, '${testCase.id}', 'feature_description')"
-                data-original="${testCase.feature_description}">${testCase.feature_description}</td>
-            <td class="editable-cell" onclick="editCell(this, '${testCase.id}', 'purpose')"
-                data-original="${testCase.purpose}">${testCase.purpose}</td>
-            <td class="acceptance-criteria">
-                <ul>
-                    ${(testCase.acceptance_criteria || []).map(criteria => `<li>${criteria}</li>`).join('')}
-                </ul>
-                <button class="btn btn-sm btn-outline-primary mt-1" 
-                        onclick="editAcceptanceCriteria('${testCase.id}')">
-                    <i class="fas fa-edit"></i>
-                </button>
-            </td>
-            <td>
-                <select class="form-select form-select-sm" 
-                        onchange="updateTestResult('${testCase.id}', this.value)">
-                    <option value="Pending" ${testCase.test_result === 'Pending' ? 'selected' : ''}>待測試</option>
-                    <option value="Passed" ${testCase.test_result === 'Passed' ? 'selected' : ''}>通過</option>
-                    <option value="Failed" ${testCase.test_result === 'Failed' ? 'selected' : ''}>失敗</option>
-                    <option value="Blocked" ${testCase.test_result === 'Blocked' ? 'selected' : ''}>阻塞</option>
-                </select>
-            </td>
-            <td class="editable-cell" onclick="editCell(this, '${testCase.id}', 'test_notes')"
-                data-original="${testCase.test_notes || ''}">${testCase.test_notes || ''}</td>
-            <td><small>${testCase.created_by || 'Unknown'}</small></td>
-            <td><small>${formatDate(testCase.updated_at)}</small></td>
-            <td>
-                <div class="btn-group" role="group">
-                    <button class="btn btn-sm btn-outline-danger" 
-                            onclick="deleteTestCase('${testCase.id}')" title="刪除">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+    availableProductTags.forEach(tag => {
+        const option = document.createElement('option');
+        option.value = tag.id;
+        option.textContent = tag.name;
+        tagFilter.appendChild(option);
+    });
 }
 
-// 設置事件監聽器
-function setupEventListeners() {
-    // 全選功能
-    document.getElementById('selectAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.case-checkbox');
-        checkboxes.forEach(cb => {
-            cb.checked = this.checked;
-            toggleCaseSelection(cb.value);
+// 渲染測試案例
+function renderTestCases(testCases) {
+    const testCasesContainer = document.getElementById('testCasesContainer');
+    
+    testCasesContainer.innerHTML = testCases.map(testCase => {
+        const tagNames = testCase.product_tags.map(tagId => {
+            const tag = availableProductTags.find(t => t.id === tagId);
+            return tag ? tag.name : tagId;
         });
+        
+        return `
+            <div class="col-lg-6 col-xl-4" data-test-case-id="${testCase.id}">
+                <div class="test-case-card">
+                    <div class="test-case-header">
+                        <div>
+                            <input type="checkbox" class="test-case-checkbox" value="${testCase.id}" 
+                                   onchange="handleTestCaseSelection()">
+                            <h5 class="test-case-title">${testCase.title}</h5>
+                            <div class="test-case-id">ID: ${testCase.id}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="test-case-meta">
+                        <div class="user-role">${testCase.user_role}</div>
+                    </div>
+                    
+                    <div class="feature-description">
+                        ${testCase.feature_description}
+                    </div>
+                    
+                    ${testCase.acceptance_criteria && testCase.acceptance_criteria.length > 0 ? `
+                        <div class="acceptance-criteria">
+                            <div class="criteria-title">驗收條件:</div>
+                            <ul class="criteria-list">
+                                ${testCase.acceptance_criteria.map(criteria => 
+                                    `<li class="criteria-item">${criteria}</li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    ${testCase.test_notes ? `
+                        <div class="test-notes">
+                            <strong>測試備註:</strong> ${testCase.test_notes}
+                        </div>
+                    ` : ''}
+                    
+                    ${tagNames.length > 0 ? `
+                        <div class="product-tags">
+                            ${tagNames.map(tagName => 
+                                `<span class="tag-badge">${tagName}</span>`
+                            ).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="test-case-actions">
+                        <button class="btn btn-sm btn-outline-warning" 
+                                onclick="editTestCase('${testCase.id}')" title="編輯">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="deleteTestCase('${testCase.id}', '${testCase.title}')" title="刪除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 更新統計概覽
+function updateStatsOverview() {
+    const statsOverview = document.getElementById('statsOverview');
+    const totalCases = allTestCases.length;
+    const casesWithCriteria = allTestCases.filter(tc => tc.acceptance_criteria && tc.acceptance_criteria.length > 0).length;
+    const casesWithNotes = allTestCases.filter(tc => tc.test_notes && tc.test_notes.trim().length > 0).length;
+    const casesWithTags = allTestCases.filter(tc => tc.product_tags && tc.product_tags.length > 0).length;
+    
+    statsOverview.innerHTML = `
+        <div class="stat-item">
+            <div class="stat-number">${totalCases}</div>
+            <div class="stat-label">總測試案例</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #238636;">${casesWithCriteria}</div>
+            <div class="stat-label">含驗收條件</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #d29922;">${casesWithNotes}</div>
+            <div class="stat-label">含測試備註</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #f85149;">${casesWithTags}</div>
+            <div class="stat-label">含產品標籤</div>
+        </div>
+    `;
+}
+
+// 過濾測試案例
+function filterTestCases() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const selectedTagId = document.getElementById('tagFilter').value;
+    const testCaseCards = document.querySelectorAll('[data-test-case-id]');
+    
+    let visibleCount = 0;
+    testCaseCards.forEach(card => {
+        const testCaseId = card.dataset.testCaseId;
+        const testCase = allTestCases.find(tc => tc.id === testCaseId);
+        
+        if (!testCase) return;
+        
+        // 文字搜尋
+        const titleMatch = testCase.title.toLowerCase().includes(searchTerm);
+        const descriptionMatch = testCase.feature_description.toLowerCase().includes(searchTerm);
+        const roleMatch = testCase.user_role.toLowerCase().includes(searchTerm);
+        const textMatch = titleMatch || descriptionMatch || roleMatch;
+        
+        // 標籤篩選
+        const tagMatch = !selectedTagId || testCase.product_tags.includes(selectedTagId);
+        
+        const shouldShow = textMatch && tagMatch;
+        card.style.display = shouldShow ? 'block' : 'none';
+        
+        if (shouldShow) visibleCount++;
     });
     
-    // 搜尋功能
-    document.getElementById('searchInput').addEventListener('input', debounce(searchTestCases, 300));
-}
-
-// 其他功能函數（簡化版，實際功能需要更完整的實現）
-function createNewTestCase() {
-    // 實現新增測試案例邏輯
-    alert('新增測試案例功能');
-}
-
-function batchEdit() {
-    if (selectedCases.size === 0) {
-        alert('請先選擇要編輯的測試案例');
-        return;
-    }
-    // 實現批量編輯邏輯
-    alert(`批量編輯 ${selectedCases.size} 個測試案例`);
-}
-
-function exportData() {
-    // 實現匯出邏輯
-    alert('匯出資料功能');
-}
-
-function searchTestCases() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    if (!searchTerm.trim()) {
-        renderTestCases();
-        return;
-    }
-    
-    const filteredCases = testCases.filter(tc => 
-        tc.title.toLowerCase().includes(searchTerm) ||
-        tc.feature_description.toLowerCase().includes(searchTerm) ||
-        tc.user_role.toLowerCase().includes(searchTerm)
-    );
-    
-    // 暫時更新顯示
-    const originalTestCases = testCases;
-    testCases = filteredCases;
-    renderTestCases();
-    testCases = originalTestCases;
-}
-
-function toggleCaseSelection(caseId) {
-    if (selectedCases.has(caseId)) {
-        selectedCases.delete(caseId);
+    // 更新空狀態顯示
+    const emptyState = document.getElementById('emptyState');
+    if (visibleCount === 0 && allTestCases.length > 0) {
+        emptyState.style.display = 'block';
+        emptyState.innerHTML = `
+            <div class="empty-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h4>找不到符合條件的測試案例</h4>
+            <p>請嘗試調整搜尋條件</p>
+        `;
+    } else if (allTestCases.length === 0) {
+        emptyState.style.display = 'block';
+        emptyState.innerHTML = `
+            <div class="empty-icon">
+                <i class="fas fa-list-check"></i>
+            </div>
+            <h4>尚無測試案例</h4>
+            <p>點擊右下角的按鈕建立您的第一個測試案例</p>
+        `;
     } else {
-        selectedCases.add(caseId);
+        emptyState.style.display = 'none';
     }
 }
 
-function formatDate(dateString) {
-    if (!dateString) return '未知';
-    return new Date(dateString).toLocaleString('zh-TW');
+// 處理測試案例選擇
+function handleTestCaseSelection() {
+    const checkboxes = document.querySelectorAll('.test-case-checkbox');
+    selectedTestCases.clear();
+    
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            selectedTestCases.add(cb.value);
+        }
+    });
+    
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if (selectedTestCases.size > 0) {
+        bulkActions.classList.add('active');
+        selectedCount.textContent = `已選擇 ${selectedTestCases.size} 個測試案例`;
+    } else {
+        bulkActions.classList.remove('active');
+    }
 }
 
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+// 全選/取消全選
+function toggleSelectAll() {
+    const checkboxes = document.querySelectorAll('.test-case-checkbox:not([style*="display: none"])');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    
+    checkboxes.forEach(cb => {
+        cb.checked = !allChecked;
+    });
+    
+    handleTestCaseSelection();
+}
+
+// 顯示新增測試案例模態框
+function showCreateTestCaseModal() {
+    showTestCaseModal();
+}
+
+// 編輯測試案例
+function editTestCase(testCaseId) {
+    const testCase = allTestCases.find(tc => tc.id === testCaseId);
+    if (testCase) {
+        showTestCaseModal(testCase);
+    }
+}
+
+// 顯示測試案例模態框
+function showTestCaseModal(testCase = null) {
+    const isEdit = testCase !== null;
+    const modalTitle = isEdit ? '編輯測試案例' : '新增測試案例';
+    
+    const modalHtml = `
+        <div class="modal fade" id="testCaseModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                    <div class="modal-header" style="background: #0D1117; border-bottom: 1px solid #30363D;">
+                        <h5 class="modal-title" style="color: #C9D1D9;">${modalTitle}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="testCaseForm">
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">標題 *</label>
+                                <input type="text" class="form-control" id="testCaseTitle" 
+                                       value="${testCase?.title || ''}" required
+                                       style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">用戶角色 *</label>
+                                <input type="text" class="form-control" id="userRole" 
+                                       value="${testCase?.user_role || ''}" required
+                                       style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
+                                       placeholder="例如：作為一位註冊用戶">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">功能描述 *</label>
+                                <textarea class="form-control" id="featureDescription" rows="3" required
+                                          style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
+                                          placeholder="我希望能夠...">${testCase?.feature_description || ''}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">驗收條件</label>
+                                <div id="criteriaContainer">
+                                    ${(testCase?.acceptance_criteria || ['']).map((criteria, index) => `
+                                        <div class="input-group mb-2">
+                                            <input type="text" class="form-control criteria-input" 
+                                                   value="${criteria}" placeholder="輸入驗收條件"
+                                                   style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCriteria(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addCriteria()">
+                                    <i class="fas fa-plus"></i> 新增條件
+                                </button>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">測試備註</label>
+                                <textarea class="form-control" id="testNotes" rows="2"
+                                          style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
+                                          placeholder="測試相關的備註資訊">${testCase?.test_notes || ''}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">產品標籤</label>
+                                <div class="row">
+                                    ${availableProductTags.map(tag => `
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input tag-checkbox" type="checkbox" 
+                                                       value="${tag.id}" id="tag_${tag.id}"
+                                                       ${testCase?.product_tags?.includes(tag.id) ? 'checked' : ''}>
+                                                <label class="form-check-label" for="tag_${tag.id}" style="color: #C9D1D9;">
+                                                    ${tag.name}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #30363D;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-success" onclick="saveTestCase(${isEdit ? `'${testCase?.id}'` : 'null'})">
+                            ${isEdit ? '更新' : '建立'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除舊的模態框
+    const existingModal = document.getElementById('testCaseModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 添加新的模態框
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // 顯示模態框
+    const modal = new bootstrap.Modal(document.getElementById('testCaseModal'));
+    modal.show();
+}
+
+// 新增驗收條件
+function addCriteria() {
+    const container = document.getElementById('criteriaContainer');
+    const newCriteria = `
+        <div class="input-group mb-2">
+            <input type="text" class="form-control criteria-input" 
+                   placeholder="輸入驗收條件"
+                   style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCriteria(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', newCriteria);
+}
+
+// 移除驗收條件
+function removeCriteria(button) {
+    button.closest('.input-group').remove();
+}
+
+// 保存測試案例
+async function saveTestCase(testCaseId = null) {
+    const isEdit = testCaseId !== null;
+    
+    // 收集表單資料
+    const formData = {
+        title: document.getElementById('testCaseTitle').value.trim(),
+        user_role: document.getElementById('userRole').value.trim(),
+        feature_description: document.getElementById('featureDescription').value.trim(),
+        test_notes: document.getElementById('testNotes').value.trim() || null
     };
-}
-
-// 其他編輯功能（需要完整實現）
-function editCell(cell, caseId, field) {
-    // 實現單元格編輯
-    console.log('編輯:', caseId, field);
-}
-
-function editProductTags(caseId) {
-    // 實現產品標籤編輯
-    console.log('編輯產品標籤:', caseId);
-}
-
-function editAcceptanceCriteria(caseId) {
-    // 實現驗收條件編輯
-    console.log('編輯驗收條件:', caseId);
-}
-
-function updateTestResult(caseId, result) {
-    // 實現測試結果更新
-    console.log('更新測試結果:', caseId, result);
-}
-
-function deleteTestCase(caseId) {
-    if (confirm('確定要刪除這個測試案例嗎？')) {
-        // 實現刪除邏輯
-        console.log('刪除測試案例:', caseId);
+    
+    // 收集驗收條件
+    const criteriaInputs = document.querySelectorAll('.criteria-input');
+    formData.acceptance_criteria = Array.from(criteriaInputs)
+        .map(input => input.value.trim())
+        .filter(criteria => criteria.length > 0);
+    
+    // 收集產品標籤
+    const tagCheckboxes = document.querySelectorAll('.tag-checkbox:checked');
+    formData.product_tags = Array.from(tagCheckboxes).map(cb => cb.value);
+    
+    // 驗證
+    if (!formData.title || !formData.user_role || !formData.feature_description) {
+        showAlert('請填寫所有必填欄位', 'danger');
+        return;
     }
+    
+    try {
+        const url = isEdit ? `/api/test-cases/${testCaseId}` : '/api/test-cases';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            // 關閉模態框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('testCaseModal'));
+            modal.hide();
+            
+            // 重新載入測試案例列表
+            await loadTestCases();
+            
+            // 顯示成功訊息
+            showAlert(isEdit ? '測試案例更新成功！' : '測試案例建立成功！', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || '保存失敗');
+        }
+    } catch (error) {
+        console.error('保存測試案例失敗:', error);
+        showAlert('保存失敗: ' + error.message, 'danger');
+    }
+}
+
+// 刪除測試案例
+async function deleteTestCase(testCaseId, testCaseTitle) {
+    if (!confirm(`確定要刪除測試案例「${testCaseTitle}」嗎？\n\n此操作無法復原！`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/test-cases/${testCaseId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            // 重新載入測試案例列表
+            await loadTestCases();
+            showAlert('測試案例刪除成功', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || '刪除失敗');
+        }
+    } catch (error) {
+        console.error('刪除測試案例失敗:', error);
+        showAlert('刪除失敗: ' + error.message, 'danger');
+    }
+}
+
+// 批量操作
+function bulkEdit() {
+    showAlert('批量編輯功能開發中...', 'info');
+}
+
+function bulkDelete() {
+    if (selectedTestCases.size === 0) return;
+    
+    if (!confirm(`確定要刪除 ${selectedTestCases.size} 個測試案例嗎？\n\n此操作無法復原！`)) {
+        return;
+    }
+    
+    // 實作批量刪除邏輯
+    showAlert('批量刪除功能開發中...', 'info');
+}
+
+// 匯出測試案例
+function exportTestCases() {
+    showAlert('匯出功能開發中...', 'info');
+}
+
+// 顯示警告訊息
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
 }
 </script>
 {% endblock %}

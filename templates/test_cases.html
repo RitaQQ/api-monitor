@@ -1,721 +1,456 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>測試案例管理 - API 監控系統</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            display: flex;
-        }
-        
-        /* 使用與 index.html 相同的側邊欄樣式 */
-        .sidebar {
-            width: 250px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-            transition: transform 0.3s ease;
-        }
-        
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            text-align: center;
-        }
-        
-        .sidebar-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin: 0;
-        }
-        
-        .sidebar-subtitle {
-            font-size: 0.9em;
-            opacity: 0.8;
-            margin: 5px 0 0 0;
-        }
-        
-        .user-info {
-            padding: 15px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .user-welcome {
-            font-size: 0.9em;
-            opacity: 0.9;
-            margin: 0;
-        }
-        
-        .user-name {
-            font-size: 1.1em;
-            font-weight: bold;
-            margin: 5px 0 0 0;
-        }
-        
-        .sidebar-menu {
-            padding: 20px 0;
-        }
-        
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 15px 25px;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-size: 1em;
-            cursor: pointer;
-            box-sizing: border-box;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        
-        .menu-item span {
-            margin-right: 10px;
-            flex-shrink: 0;
-        }
-        
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.2);
-            padding-left: 35px;
-        }
-        
-        .menu-item.active {
-            background: rgba(255, 255, 255, 0.3);
-            border-right: 4px solid #ffd700;
-            padding-right: 21px; /* 補償 border 寬度 */
-        }
-        
-        /* 主要內容區域 */
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-            width: calc(100% - 250px);
-            min-height: 100vh;
-        }
+{% extends "base.html" %}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-        
-        .pass { color: #28a745; }
-        .fail { color: #dc3545; }
-        .pending { color: #ffc107; }
-        .total { color: #007bff; }
-        
-        .controls {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
-        }
-        
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-        
-        .story-list {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .story-item {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .story-item:last-child {
-            border-bottom: none;
-        }
-        
-        .story-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-        
-        .story-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-            margin: 0;
-        }
-        
-        .story-id {
-            font-size: 0.8em;
-            color: #666;
-            background: #f8f9fa;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .story-content {
-            margin-bottom: 15px;
-        }
-        
-        .story-description {
-            font-size: 1.1em;
-            color: #444;
-            margin-bottom: 10px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #007bff;
-        }
-        
-        .story-role {
-            font-weight: bold;
-            color: #6f42c1;
-        }
-        
-        .acceptance-criteria {
-            margin: 15px 0;
-        }
-        
-        .acceptance-title {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        
-        .criteria-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .criteria-item {
-            padding: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .criteria-item:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #28a745;
-            font-weight: bold;
-        }
-        
-        .test-status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        .status-badge {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        
-        .status-pass {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-fail {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .test-notes {
-            color: #666;
-            font-style: italic;
-            margin-top: 10px;
-        }
-        
-        .story-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .story-meta {
-            font-size: 0.85em;
-            color: #666;
-            margin-top: 10px;
-        }
-        
-        .no-stories {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-        
-        .no-stories h3 {
-            margin: 0 0 15px 0;
-            font-size: 1.5em;
-        }
-        
-        /* 專案統計樣式 */
-        .projects-overview {
-            margin-bottom: 30px;
-        }
-        
-        .project-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .project-stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-left: 4px solid #007bff;
-        }
-        
-        .project-name {
-            margin: 0 0 15px 0;
-            color: #333;
-            font-size: 1.2em;
-        }
-        
-        .project-metrics {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .metric {
-            text-align: center;
-        }
-        
-        .metric-value {
-            display: block;
-            font-size: 1.8em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .metric-label {
-            font-size: 0.85em;
-            color: #666;
-        }
-        
-        .pass-rate {
-            text-align: center;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-            color: #666;
-        }
-        
-        .project-actions {
-            text-align: center;
-            padding-top: 10px;
-            margin-top: 10px;
-            border-top: 1px solid #eee;
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 0.8em;
-        }
-        
-        /* 專案分組樣式 */
-        .project-section {
-            margin-bottom: 40px;
-        }
-        
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 10px 10px 0 0;
-            margin-bottom: 0;
-        }
-        
-        .project-title {
-            margin: 0;
-            font-size: 1.3em;
-        }
-        
-        .project-summary {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        
-        .project-section .story-list {
-            border-radius: 0 0 10px 10px;
-            margin-top: 0;
-        }
-        
-        .project-section .story-item:first-child {
-            border-top: none;
-        }
-        
-        /* 響應式設計 */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-            }
-            
-            .story-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .test-status {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
-            
-            .story-actions {
-                width: 100%;
-                justify-content: flex-start;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- 左側選單 -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h2 class="sidebar-title">🔍 API 監控</h2>
-            <p class="sidebar-subtitle">管理控制台</p>
+{% block title %}測試案例總覽 - API Monitor{% endblock %}
+{% block page_title %}測試案例總覽{% endblock %}
+{% block page_subtitle %}查看所有測試案例和項目統計{% endblock %}
+
+{% block extra_css %}
+.stat-card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #8B949E;
+    font-size: 0.9em;
+}
+
+.pass { color: #238636; }
+.fail { color: #f85149; }
+.pending { color: #d29922; }
+.total { color: #58a6ff; }
+
+.project-section {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.project-header {
+    background: #0D1117;
+    padding: 20px;
+    border-bottom: 1px solid #30363D;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.project-title {
+    margin: 0;
+    color: #C9D1D9;
+    font-size: 1.3em;
+}
+
+.project-summary {
+    color: #8B949E;
+    font-size: 0.9em;
+}
+
+.story-item {
+    padding: 20px;
+    border-bottom: 1px solid #30363D;
+}
+
+.story-item:last-child {
+    border-bottom: none;
+}
+
+.story-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.story-title {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #C9D1D9;
+    margin: 0;
+}
+
+.story-id {
+    font-size: 0.8em;
+    color: #8B949E;
+    background: #0D1117;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.story-description {
+    font-size: 1.1em;
+    color: #C9D1D9;
+    margin-bottom: 10px;
+    padding: 15px;
+    background: #0D1117;
+    border-radius: 8px;
+    border-left: 4px solid #58a6ff;
+}
+
+.story-role {
+    font-weight: bold;
+    color: #a5a5ff;
+}
+
+.acceptance-criteria {
+    margin: 15px 0;
+}
+
+.acceptance-title {
+    font-weight: bold;
+    color: #C9D1D9;
+    margin-bottom: 8px;
+}
+
+.criteria-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.criteria-item {
+    padding: 8px 0;
+    padding-left: 20px;
+    position: relative;
+    color: #C9D1D9;
+}
+
+.criteria-item:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #238636;
+    font-weight: bold;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-pass {
+    background: rgba(35, 134, 54, 0.2);
+    color: #238636;
+}
+
+.status-fail {
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
+}
+
+.status-pending {
+    background: rgba(210, 153, 34, 0.2);
+    color: #d29922;
+}
+
+.test-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #30363D;
+}
+
+.story-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.test-notes {
+    color: #8B949E;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+.story-meta {
+    font-size: 0.85em;
+    color: #8B949E;
+    margin-top: 10px;
+}
+
+.no-stories {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8B949E;
+}
+
+.no-stories h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.5em;
+    color: #C9D1D9;
+}
+
+.project-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.project-stat-card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid #58a6ff;
+}
+
+.project-name {
+    margin: 0 0 15px 0;
+    color: #C9D1D9;
+    font-size: 1.2em;
+}
+
+.project-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.metric {
+    text-align: center;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.8em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.metric-label {
+    font-size: 0.85em;
+    color: #8B949E;
+}
+
+.pass-rate {
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid #30363D;
+    color: #8B949E;
+}
+
+.project-actions {
+    text-align: center;
+    padding-top: 10px;
+    margin-top: 10px;
+    border-top: 1px solid #30363D;
+}
+
+.controls {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+}
+{% endblock %}
+
+{% block content %}
+<!-- 統計資料 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number pass">{{ stats.pass }}</div>
+            <div class="stat-label">通過測試</div>
         </div>
-        
-        <div class="user-info">
-            <p class="user-welcome">歡迎回來</p>
-            <p class="user-name">{{ current_user.username if current_user else '用戶' }}</p>
-        </div>
-        
-        <nav class="sidebar-menu">
-            <a href="/" class="menu-item">
-                <span>📊</span> 監控儀表板
-            </a>
-            <a href="/test-case-management" class="menu-item">
-                <span>📝</span> 測試案例管理
-            </a>
-            {% if current_user and current_user.role == 'admin' %}
-            <a href="/admin" class="menu-item">
-                <span>⚙️</span> API 管理
-            </a>
-            <a href="/user-management" class="menu-item">
-                <span>👥</span> 用戶管理
-            </a>
-            {% endif %}
-            <a href="/logout" class="menu-item" onclick="return confirm('確定要登出嗎？')">
-                <span>🚪</span> 登出
-            </a>
-        </nav>
     </div>
-    
-    <!-- 主要內容區域 -->
-    <div class="main-content">
-        <div class="container">
-            <div class="header">
-                <h1>📋 User Story 測試案例管理</h1>
-                <p>管理和追蹤測試案例的執行狀態</p>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number fail">{{ stats.fail }}</div>
+            <div class="stat-label">測試失敗</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number pending">{{ stats.pending }}</div>
+            <div class="stat-label">待測試</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number total">{{ stats.total }}</div>
+            <div class="stat-label">總計案例</div>
+        </div>
+    </div>
+</div>
+
+<!-- 專案統計 -->
+{% if projects_overview %}
+<div class="projects-overview mb-4">
+    <h2 style="margin-bottom: 20px; color: #C9D1D9;">📊 專案統計概覽</h2>
+    <div class="project-stats-grid">
+        {% for project_data in projects_overview %}
+        <div class="project-stat-card">
+            <h3 class="project-name">{{ project_data.project_name }}</h3>
+            <div class="project-metrics">
+                <div class="metric">
+                    <span class="metric-value total">{{ project_data.stats.total }}</span>
+                    <span class="metric-label">總案例</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value pass">{{ project_data.stats.pass }}</span>
+                    <span class="metric-label">通過</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value fail">{{ project_data.stats.fail }}</span>
+                    <span class="metric-label">失敗</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value pending">{{ project_data.stats.pending }}</span>
+                    <span class="metric-label">待測</span>
+                </div>
             </div>
-            
-            <!-- 統計資料 -->
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-number pass">{{ stats.pass }}</div>
-                    <div class="stat-label">通過測試</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number fail">{{ stats.fail }}</div>
-                    <div class="stat-label">測試失敗</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number pending">{{ stats.pending }}</div>
-                    <div class="stat-label">待測試</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number total">{{ stats.total }}</div>
-                    <div class="stat-label">總計案例</div>
-                </div>
+            {% if project_data.stats.tested > 0 %}
+            <div class="pass-rate">
+                通過率: <strong>{{ project_data.stats.pass_rate }}%</strong>
             </div>
-            
-            <!-- 專案統計 -->
-            {% if projects_overview %}
-            <div class="projects-overview">
-                <h2 style="margin-bottom: 20px; color: #333;">📊 專案統計概覽</h2>
-                <div class="project-stats-grid">
-                    {% for project_data in projects_overview %}
-                    <div class="project-stat-card">
-                        <h3 class="project-name">{{ project_data.project_name }}</h3>
-                        <div class="project-metrics">
-                            <div class="metric">
-                                <span class="metric-value total">{{ project_data.stats.total }}</span>
-                                <span class="metric-label">總案例</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value pass">{{ project_data.stats.pass }}</span>
-                                <span class="metric-label">通過</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value fail">{{ project_data.stats.fail }}</span>
-                                <span class="metric-label">失敗</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value pending">{{ project_data.stats.pending }}</span>
-                                <span class="metric-label">待測</span>
-                            </div>
+            {% endif %}
+            <div class="project-actions">
+                <form method="POST" action="/projects/delete/{{ project_data.project_name }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger btn-sm" 
+                            onclick="return confirmDeleteProject('{{ project_data.project_name }}', {{ project_data.stats.total }})">
+                        🗑️ 刪除專案
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- 控制按鈕 -->
+<div class="controls">
+    <div>
+        <a href="/test-case-management" class="btn btn-success">➕ 新增測試案例</a>
+        <a href="/test-case-management" class="btn btn-primary">📋 管理測試案例</a>
+    </div>
+</div>
+
+<!-- 按專案分組的測試案例列表 -->
+{% if projects_overview %}
+    {% for project_data in projects_overview %}
+    <div class="project-section">
+        <div class="project-header">
+            <h2 class="project-title">🗂️ {{ project_data.project_name }}</h2>
+            <span class="project-summary">{{ project_data.stats.total }} 個案例</span>
+        </div>
+        
+        <div class="project-content">
+            {% set project_stories = user_stories | selectattr("project_name", "equalto", project_data.project_name) | list %}
+            {% if project_stories %}
+                {% for story in project_stories %}
+                <div class="story-item">
+                    <div class="story-header">
+                        <h3 class="story-title">{{ story.title }}</h3>
+                        <span class="story-id">ID: {{ story.id[:8] }}...</span>
+                    </div>
+                    
+                    <div class="story-content">
+                        <div class="story-description">
+                            作為一位<span class="story-role">{{ story.user_role }}</span>，{{ story.feature_description }}，{{ story.purpose }}。
                         </div>
-                        {% if project_data.stats.tested > 0 %}
-                        <div class="pass-rate">
-                            通過率: <strong>{{ project_data.stats.pass_rate }}%</strong>
+                        
+                        {% if story.acceptance_criteria %}
+                        <div class="acceptance-criteria">
+                            <div class="acceptance-title">驗收條件：</div>
+                            <ul class="criteria-list">
+                                {% for criterion in story.acceptance_criteria %}
+                                <li class="criteria-item">{{ criterion }}</li>
+                                {% endfor %}
+                            </ul>
                         </div>
                         {% endif %}
-                        <div class="project-actions">
-                            <form method="POST" action="/projects/delete/{{ project_data.project_name }}" style="display: inline;">
+                        
+                        {% if story.test_notes %}
+                        <div class="test-notes">
+                            <strong>測試備註：</strong>{{ story.test_notes }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="test-status">
+                        <div>
+                            <span class="status-badge status-{{ story.test_result.lower() }}">
+                                {% if story.test_result == 'Pass' %}
+                                    ✅ 通過
+                                {% elif story.test_result == 'Fail' %}
+                                    ❌ 失敗
+                                {% else %}
+                                    ⏳ 待測試
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="story-actions">
+                            <a href="/test-case-management" class="btn btn-warning btn-sm">✏️ 編輯</a>
+                            <form method="POST" action="/test-case-management" style="display: inline;">
                                 <button type="submit" class="btn btn-danger btn-sm" 
-                                        onclick="return confirmDeleteProject('{{ project_data.project_name }}', {{ project_data.stats.total }})">
-                                    🗑️ 刪除專案
+                                        onclick="return confirm('確定要刪除這個測試案例嗎？')">
+                                    🗑️ 刪除
                                 </button>
                             </form>
                         </div>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- 控制按鈕 -->
-            <div class="controls">
-                <div>
-                    <a href="/test-case-management" class="btn btn-primary">➕ 新增測試案例</a>
-                </div>
-            </div>
-            
-            <!-- 按專案分組的測試案例列表 -->
-            {% if projects_overview %}
-                {% for project_data in projects_overview %}
-                <div class="project-section">
-                    <div class="project-header">
-                        <h2 class="project-title">🗂️ {{ project_data.project_name }}</h2>
-                        <span class="project-summary">{{ project_data.stats.total }} 個案例</span>
-                    </div>
                     
-                    <div class="story-list">
-                        {% set project_stories = user_stories | selectattr("project_name", "equalto", project_data.project_name) | list %}
-                        {% if project_stories %}
-                            {% for story in project_stories %}
-                            <div class="story-item">
-                                <div class="story-header">
-                                    <h3 class="story-title">{{ story.title }}</h3>
-                                    <span class="story-id">ID: {{ story.id[:8] }}...</span>
-                                </div>
-                                
-                                <div class="story-content">
-                                    <div class="story-description">
-                                        作為一位<span class="story-role">{{ story.user_role }}</span>，{{ story.feature_description }}，{{ story.purpose }}。
-                                    </div>
-                                    
-                                    {% if story.acceptance_criteria %}
-                                    <div class="acceptance-criteria">
-                                        <div class="acceptance-title">驗收條件：</div>
-                                        <ul class="criteria-list">
-                                            {% for criterion in story.acceptance_criteria %}
-                                            <li class="criteria-item">{{ criterion }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                    {% endif %}
-                                    
-                                    {% if story.test_notes %}
-                                    <div class="test-notes">
-                                        <strong>測試備註：</strong>{{ story.test_notes }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="test-status">
-                                    <div>
-                                        <span class="status-badge status-{{ story.test_result.lower() }}">
-                                            {% if story.test_result == 'Pass' %}
-                                                ✅ 通過
-                                            {% elif story.test_result == 'Fail' %}
-                                                ❌ 失敗
-                                            {% else %}
-                                                ⏳ 待測試
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="story-actions">
-                                        <a href="/test-case-management" class="btn btn-warning">✏️ 編輯</a>
-                                        <form method="POST" action="/test-case-management" style="display: inline;">
-                                            <button type="submit" class="btn btn-danger" 
-                                                    onclick="return confirm('確定要刪除這個測試案例嗎？')">
-                                                🗑️ 刪除
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                                
-                                <div class="story-meta">
-                                    建立者：{{ story.created_by }} | 
-                                    建立時間：{{ story.created_at[:19].replace('T', ' ') }} |
-                                    更新時間：{{ story.updated_at[:19].replace('T', ' ') }}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="no-stories">
-                                <p>此專案暫無測試案例</p>
-                            </div>
-                        {% endif %}
+                    <div class="story-meta">
+                        建立者：{{ story.created_by }} | 
+                        建立時間：{{ story.created_at[:19].replace('T', ' ') }} |
+                        更新時間：{{ story.updated_at[:19].replace('T', ' ') }}
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <div class="story-list">
-                    <div class="no-stories">
-                        <h3>🔍 尚未添加任何測試案例</h3>
-                        <p>開始創建您的第一個 User Story 測試案例</p>
-                        <a href="/test-case-management" class="btn btn-primary">➕ 新增測試案例</a>
-                    </div>
+                <div class="no-stories">
+                    <p>此專案暫無測試案例</p>
                 </div>
             {% endif %}
         </div>
     </div>
+    {% endfor %}
+{% else %}
+    <div class="project-section">
+        <div class="no-stories">
+            <h3>🔍 尚未添加任何測試案例</h3>
+            <p>開始創建您的第一個 User Story 測試案例</p>
+            <a href="/test-case-management" class="btn btn-success">➕ 新增測試案例</a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 專案刪除確認函數
+function confirmDeleteProject(projectName, testCasesCount) {
+    let message = `確定要刪除專案「${projectName}」嗎？`;
     
-    <script>
-        // 專案刪除確認函數
-        function confirmDeleteProject(projectName, testCasesCount) {
-            let message = `確定要刪除專案「${projectName}」嗎？`;
-            
-            if (testCasesCount > 0) {
-                message += `\n\n此操作將會：\n• 從 ${testCasesCount} 個測試案例中移除此專案的關聯\n• 如果測試案例沒有其他專案關聯，將保留但不屬於任何專案`;
-            }
-            
-            message += '\n\n此操作無法復原！';
-            
-            return confirm(message);
-        }
-        
-        // 設置當前頁面的選單項目為活躍狀態
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentPath = window.location.pathname;
-            const menuItems = document.querySelectorAll('.menu-item');
-            
-            menuItems.forEach(item => {
-                item.classList.remove('active');
-                if (item.getAttribute('href') === currentPath) {
-                    item.classList.add('active');
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+    if (testCasesCount > 0) {
+        message += `\n\n此操作將會：\n• 從 ${testCasesCount} 個測試案例中移除此專案的關聯\n• 如果測試案例沒有其他專案關聯，將保留但不屬於任何專案`;
+    }
+    
+    message += '\n\n此操作無法復原！';
+    
+    return confirm(message);
+}
+</script>
+{% endblock %}

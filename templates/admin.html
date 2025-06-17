@@ -6,17 +6,24 @@
 
 {% block extra_css %}
 .form-card {
-    background: white;
+    background: #161B22;
+    border: 1px solid #30363D;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin-bottom: 30px;
 }
 
 .form-header {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
+    background: #0D1117;
+    color: #C9D1D9;
     padding: 20px;
     border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid #30363D;
+}
+
+.form-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    font-weight: 600;
 }
 
 .form-body {
@@ -38,49 +45,73 @@
     display: block;
     margin-bottom: 8px;
     font-weight: 600;
-    color: #333;
+    color: #C9D1D9;
 }
 
 .form-control {
     width: 100%;
     padding: 12px;
-    border: 2px solid #e9ecef;
+    background: #0D1117;
+    border: 1px solid #30363D;
     border-radius: 8px;
     font-size: 14px;
+    color: #C9D1D9;
     transition: border-color 0.3s;
 }
 
 .form-control:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    background: #0D1117;
+    color: #C9D1D9;
+}
+
+.form-control::placeholder {
+    color: #8B949E;
+}
+
+.form-select {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    color: #C9D1D9;
+}
+
+.form-select:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    background: #0D1117;
+    color: #C9D1D9;
 }
 
 .api-list {
-    background: white;
+    background: #161B22;
+    border: 1px solid #30363D;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
 }
 
 .list-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #0D1117;
+    color: #C9D1D9;
     padding: 20px;
+    border-bottom: 1px solid #30363D;
 }
 
 .list-title {
     margin: 0;
+    font-size: 1.3em;
+    font-weight: 600;
 }
 
 .api-item {
     padding: 20px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid #30363D;
     transition: background-color 0.2s;
 }
 
 .api-item:hover {
-    background-color: #f8f9fa;
+    background-color: #0D1117;
 }
 
 .api-item:last-child {
@@ -89,7 +120,7 @@
 
 .api-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 15px;
 }
@@ -97,15 +128,15 @@
 .api-name {
     font-size: 1.2em;
     font-weight: bold;
-    color: #333;
-    margin: 0;
+    color: #C9D1D9;
+    margin-bottom: 5px;
 }
 
 .api-url {
-    color: #6c757d;
-    font-family: 'Courier New', monospace;
     font-size: 0.9em;
-    margin: 5px 0;
+    color: #8B949E;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
 }
 
 .api-details {
@@ -116,89 +147,98 @@
 }
 
 .detail-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    text-align: center;
+    padding: 10px;
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 6px;
 }
 
 .detail-label {
-    font-weight: 500;
-    color: #495057;
+    font-size: 0.8em;
+    color: #8B949E;
+    margin-bottom: 5px;
 }
 
 .detail-value {
-    color: #6c757d;
+    font-weight: 600;
+    color: #C9D1D9;
 }
 
-.api-actions {
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-healthy {
+    background: rgba(35, 134, 54, 0.2);
+    color: #238636;
+}
+
+.status-unhealthy {
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
+}
+
+.status-unknown {
+    background: rgba(210, 153, 34, 0.2);
+    color: #d29922;
+}
+
+.action-buttons {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
 }
 
-.stress-test-config {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 10px;
-}
-
-.stress-test-title {
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #495057;
-}
-
-.config-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-}
-
-.config-item {
-    text-align: center;
-}
-
-.config-value {
-    font-weight: bold;
-    color: #667eea;
-    font-size: 1.1em;
-}
-
-.config-label {
-    font-size: 0.85em;
-    color: #6c757d;
-}
-
 .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: #6c757d;
+    color: #8B949E;
 }
 
 .empty-icon {
     font-size: 4em;
     margin-bottom: 20px;
-    color: #dee2e6;
+    color: #30363D;
 }
 
-@media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .api-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .api-actions {
-        margin-top: 15px;
-    }
-    
-    .config-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.advanced-options {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.advanced-options h4 {
+    color: #C9D1D9;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.help-text {
+    font-size: 0.85em;
+    color: #8B949E;
+    margin-top: 5px;
+}
+
+.form-section {
+    margin-bottom: 30px;
+}
+
+.form-section h4 {
+    color: #C9D1D9;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #30363D;
+}
+
+.required {
+    color: #f85149;
 }
 {% endblock %}
 
@@ -206,76 +246,87 @@
 <!-- 新增 API 表單 -->
 <div class="form-card">
     <div class="form-header">
-        <h2><i class="fas fa-plus-circle"></i> 新增 API 監控</h2>
+        <h3><i class="fas fa-plus-circle"></i> 新增 API 監控</h3>
     </div>
     <div class="form-body">
-        <form method="POST" action="{{ url_for('add_api') }}">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="name">API 名稱 *</label>
-                    <input type="text" id="name" name="name" class="form-control" 
-                           placeholder="例：用戶登入 API" required>
+        <form action="{{ url_for('add_api') }}" method="POST">
+            <div class="form-section">
+                <h4>基本設定</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name">API 名稱 <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="例如：用戶登入API" required>
+                        <div class="help-text">為這個API取一個容易識別的名稱</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="url">API URL <span class="required">*</span></label>
+                        <input type="url" class="form-control" id="url" name="url" 
+                               placeholder="https://api.example.com/login" required>
+                        <div class="help-text">完整的API端點URL</div>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="type">API 類型</label>
+                        <select class="form-select" id="type" name="type">
+                            <option value="REST">REST API</option>
+                            <option value="GraphQL">GraphQL</option>
+                            <option value="SOAP">SOAP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="method">HTTP 方法</label>
+                        <select class="form-select" id="method" name="method">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="PATCH">PATCH</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="url">API URL *</label>
-                    <input type="url" id="url" name="url" class="form-control" 
-                           placeholder="https://api.example.com/login" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="type">API 類型</label>
-                    <select id="type" name="type" class="form-control">
-                        <option value="REST">REST API</option>
-                        <option value="GraphQL">GraphQL</option>
-                        <option value="SOAP">SOAP</option>
-                        <option value="WebSocket">WebSocket</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="method">HTTP 方法</label>
-                    <select id="method" name="method" class="form-control">
-                        <option value="GET">GET</option>
-                        <option value="POST">POST</option>
-                        <option value="PUT">PUT</option>
-                        <option value="DELETE">DELETE</option>
-                    </select>
+                    <label for="request_body">請求內容 (JSON)</label>
+                    <textarea class="form-control" id="request_body" name="request_body" rows="4"
+                              placeholder='{"username": "test", "password": "{{timestamp}}"}'></textarea>
+                    <div class="help-text">
+                        支援動態變數：{{timestamp}} 將被替換為當前時間戳
+                    </div>
                 </div>
             </div>
-            
-            <div class="form-group">
-                <label for="request_body">Request Body (JSON)</label>
-                <textarea id="request_body" name="request_body" class="form-control" rows="4" 
-                         placeholder='{"key": "value", "timestamp": "{{timestamp}}"}'></textarea>
-                <small class="text-muted">支援 {{timestamp}} 動態時間戳</small>
-            </div>
-            
-            <!-- 壓力測試配置 -->
-            <h5><i class="fas fa-bolt"></i> 壓力測試配置</h5>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="concurrent_requests">併發請求數</label>
-                    <input type="number" id="concurrent_requests" name="concurrent_requests" 
-                           class="form-control" value="1" min="1" max="100">
+
+            <div class="advanced-options">
+                <h4><i class="fas fa-cog"></i> 壓力測試設定</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="concurrent_requests">併發請求數</label>
+                        <input type="number" class="form-control" id="concurrent_requests" 
+                               name="concurrent_requests" value="1" min="1" max="100">
+                        <div class="help-text">同時發送的請求數量 (1-100)</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="duration_seconds">測試持續時間 (秒)</label>
+                        <input type="number" class="form-control" id="duration_seconds" 
+                               name="duration_seconds" value="10" min="5" max="300">
+                        <div class="help-text">壓力測試執行時間 (5-300秒)</div>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="duration_seconds">持續時間 (秒)</label>
-                    <input type="number" id="duration_seconds" name="duration_seconds" 
-                           class="form-control" value="10" min="5" max="300">
-                </div>
-                
                 <div class="form-group">
                     <label for="interval_seconds">請求間隔 (秒)</label>
-                    <input type="number" id="interval_seconds" name="interval_seconds" 
-                           class="form-control" value="1.0" min="0.1" max="10" step="0.1">
+                    <input type="number" class="form-control" id="interval_seconds" 
+                           name="interval_seconds" value="1.0" min="0.1" max="10" step="0.1">
+                    <div class="help-text">請求之間的間隔時間 (0.1-10秒)</div>
                 </div>
             </div>
-            
-            <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-plus"></i> 新增 API
-            </button>
+
+            <div class="text-end mt-4">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus"></i> 新增 API 監控
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -283,93 +334,90 @@
 <!-- API 列表 -->
 <div class="api-list">
     <div class="list-header">
-        <h2 class="list-title"><i class="fas fa-list"></i> 現有 API 列表</h2>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="list-title"><i class="fas fa-list"></i> 現有 API 列表</h3>
+            <span class="badge bg-secondary">{{ apis|length }} 個 API</span>
+        </div>
     </div>
-    
+
     {% if apis %}
         {% for api in apis %}
         <div class="api-item">
             <div class="api-header">
-                <div style="flex: 1;">
-                    <h3 class="api-name">{{ api.name }}</h3>
+                <div>
+                    <div class="api-name">{{ api.name }}</div>
                     <div class="api-url">{{ api.url }}</div>
                 </div>
-                <div class="api-actions">
-                    <a href="{{ url_for('edit_api', api_id=api.id) }}" 
-                       class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-edit"></i> 編輯
-                    </a>
-                    <form method="POST" action="{{ url_for('delete_api', api_id=api.id) }}" 
-                          style="display: inline;" 
-                          onsubmit="return confirm('確定要刪除這個 API 嗎？')">
-                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                            <i class="fas fa-trash"></i> 刪除
-                        </button>
-                    </form>
-                </div>
+                <span class="status-badge status-{{ api.status }}">
+                    {% if api.status == 'healthy' %}健康
+                    {% elif api.status == 'unhealthy' %}異常
+                    {% else %}未知{% endif %}
+                </span>
             </div>
             
             <div class="api-details">
                 <div class="detail-item">
-                    <span class="detail-label">類型：</span>
-                    <span class="badge bg-info">{{ api.type }}</span>
+                    <div class="detail-label">類型</div>
+                    <div class="detail-value">{{ api.type or 'REST' }}</div>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">方法：</span>
-                    <span class="badge bg-secondary">{{ api.method }}</span>
+                    <div class="detail-label">方法</div>
+                    <div class="detail-value">{{ api.method or 'GET' }}</div>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">狀態：</span>
-                    {% if api.status == 'healthy' %}
-                        <span class="badge bg-success">健康</span>
-                    {% elif api.status == 'unhealthy' %}
-                        <span class="badge bg-danger">異常</span>
-                    {% else %}
-                        <span class="badge bg-warning">未知</span>
-                    {% endif %}
+                    <div class="detail-label">回應時間</div>
+                    <div class="detail-value">
+                        {% if api.response_time %}
+                            {{ "%.0f"|format(api.response_time * 1000) }} ms
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">最後檢查：</span>
-                    <span class="detail-value">{{ api.last_checked or '從未檢查' }}</span>
+                    <div class="detail-label">最後檢查</div>
+                    <div class="detail-value">
+                        {% if api.last_checked %}
+                            {{ api.last_checked.strftime('%m/%d %H:%M') }}
+                        {% else %}
+                            未檢查
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">併發數</div>
+                    <div class="detail-value">{{ api.concurrent_requests or 1 }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">測試時長</div>
+                    <div class="detail-value">{{ api.duration_seconds or 10 }}s</div>
                 </div>
             </div>
             
-            {% if api.stress_test %}
-            <div class="stress-test-config">
-                <div class="stress-test-title">
-                    <i class="fas fa-bolt"></i> 壓力測試配置
-                </div>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <div class="config-value">{{ api.stress_test.concurrent_requests }}</div>
-                        <div class="config-label">併發請求</div>
-                    </div>
-                    <div class="config-item">
-                        <div class="config-value">{{ api.stress_test.duration_seconds }}s</div>
-                        <div class="config-label">持續時間</div>
-                    </div>
-                    <div class="config-item">
-                        <div class="config-value">{{ api.stress_test.interval_seconds }}s</div>
-                        <div class="config-label">請求間隔</div>
-                    </div>
-                    {% if api.stress_test.results %}
-                    <div class="config-item">
-                        <div class="config-value">{{ api.stress_test.results|length }}</div>
-                        <div class="config-label">測試記錄</div>
-                    </div>
-                    {% endif %}
-                </div>
+            <div class="action-buttons">
+                <a href="{{ url_for('start_stress_test', api_id=api.id) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-bolt"></i> 壓力測試
+                </a>
+                <a href="{{ url_for('edit_api', api_id=api.id) }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> 編輯
+                </a>
+                <form method="POST" action="{{ url_for('delete_api', api_id=api.id) }}" 
+                      style="display: inline;" 
+                      onsubmit="return confirm('確定要刪除 API「{{ api.name }}」嗎？此操作無法復原！')">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i> 刪除
+                    </button>
+                </form>
             </div>
-            {% endif %}
         </div>
         {% endfor %}
     {% else %}
         <div class="empty-state">
             <div class="empty-icon">
-                <i class="fas fa-inbox"></i>
+                <i class="fas fa-server"></i>
             </div>
-            <h4>尚未新增任何 API</h4>
-            <p>使用上方表單新增您的第一個 API 監控服務</p>
+            <h4>尚無 API 監控項目</h4>
+            <p>使用上方表單新增您的第一個 API 監控項目</p>
         </div>
     {% endif %}
 </div>
@@ -377,68 +425,62 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 表單驗證
-    const form = document.querySelector('form');
-    const requestBodyTextarea = document.getElementById('request_body');
-    const methodSelect = document.getElementById('method');
+// 根據HTTP方法切換請求內容欄位的可見性
+document.getElementById('method').addEventListener('change', function() {
+    const method = this.value;
+    const requestBodyGroup = document.getElementById('request_body').closest('.form-group');
     
-    // 根據 HTTP 方法顯示/隱藏 Request Body
-    function toggleRequestBody() {
-        const method = methodSelect.value;
-        const showBody = ['POST', 'PUT', 'PATCH'].includes(method);
-        requestBodyTextarea.closest('.form-group').style.display = showBody ? 'block' : 'none';
+    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+        requestBodyGroup.style.display = 'block';
+    } else {
+        requestBodyGroup.style.display = 'none';
+    }
+});
+
+// 初始化時檢查方法
+document.addEventListener('DOMContentLoaded', function() {
+    const event = new Event('change');
+    document.getElementById('method').dispatchEvent(event);
+});
+
+// 表單驗證增強
+document.querySelector('form').addEventListener('submit', function(e) {
+    const url = document.getElementById('url').value;
+    const method = document.getElementById('method').value;
+    const requestBody = document.getElementById('request_body').value;
+    
+    // 驗證URL格式
+    try {
+        new URL(url);
+    } catch (e) {
+        alert('請輸入有效的URL格式');
+        return false;
     }
     
-    methodSelect.addEventListener('change', toggleRequestBody);
-    toggleRequestBody(); // 初始化
-    
-    // JSON 語法驗證
-    requestBodyTextarea.addEventListener('blur', function() {
-        const value = this.value.trim();
-        if (value && methodSelect.value !== 'GET') {
-            try {
-                JSON.parse(value);
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            } catch (e) {
-                this.classList.remove('is-valid');
-                this.classList.add('is-invalid');
-            }
-        } else {
-            this.classList.remove('is-invalid', 'is-valid');
+    // 驗證JSON格式
+    if (['POST', 'PUT', 'PATCH'].includes(method) && requestBody.trim()) {
+        try {
+            JSON.parse(requestBody);
+        } catch (e) {
+            alert('請求內容必須是有效的JSON格式');
+            return false;
         }
-    });
+    }
     
-    // 表單提交驗證
-    form.addEventListener('submit', function(e) {
-        const requestBody = requestBodyTextarea.value.trim();
-        const method = methodSelect.value;
-        
-        if (requestBody && ['POST', 'PUT', 'PATCH'].includes(method)) {
-            try {
-                JSON.parse(requestBody);
-            } catch (error) {
-                e.preventDefault();
-                alert('Request Body 必須是有效的 JSON 格式');
-                requestBodyTextarea.focus();
-                return false;
-            }
+    return true;
+});
+
+// 自動格式化JSON
+document.getElementById('request_body').addEventListener('blur', function() {
+    const value = this.value.trim();
+    if (value) {
+        try {
+            const formatted = JSON.stringify(JSON.parse(value), null, 2);
+            this.value = formatted;
+        } catch (e) {
+            // 格式化失敗，保持原樣
         }
-    });
-    
-    // 數值輸入驗證
-    const numberInputs = document.querySelectorAll('input[type="number"]');
-    numberInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            const min = parseFloat(this.min);
-            const max = parseFloat(this.max);
-            const value = parseFloat(this.value);
-            
-            if (value < min) this.value = min;
-            if (value > max) this.value = max;
-        });
-    });
+    }
 });
 </script>
 {% endblock %}

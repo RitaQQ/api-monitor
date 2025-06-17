@@ -13,16 +13,17 @@
 }
 
 .stat-card {
-    background: white;
+    background: #161B22;
+    border: 1px solid #30363D;
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     text-align: center;
-    transition: transform 0.2s;
+    transition: transform 0.2s, border-color 0.2s;
 }
 
 .stat-card:hover {
     transform: translateY(-2px);
+    border-color: #58a6ff;
 }
 
 .stat-number {
@@ -33,25 +34,32 @@
 
 .stat-label {
     font-size: 1em;
-    color: #666;
+    color: #8B949E;
 }
 
-.stat-admin { color: #dc3545; }
-.stat-user { color: #007bff; }
-.stat-total { color: #28a745; }
+.stat-admin { color: #f85149; }
+.stat-user { color: #58a6ff; }
+.stat-total { color: #238636; }
 
 .user-form-card {
-    background: white;
+    background: #161B22;
+    border: 1px solid #30363D;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin-bottom: 30px;
 }
 
 .form-header {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    color: white;
+    background: #0D1117;
+    color: #C9D1D9;
     padding: 20px;
     border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid #30363D;
+}
+
+.form-header h2 {
+    margin: 0;
+    font-size: 1.3em;
+    font-weight: 600;
 }
 
 .form-body {
@@ -73,47 +81,100 @@
     display: block;
     margin-bottom: 8px;
     font-weight: 600;
-    color: #333;
+    color: #C9D1D9;
 }
 
 .form-control {
     width: 100%;
     padding: 12px;
-    border: 2px solid #e9ecef;
+    background: #0D1117;
+    border: 1px solid #30363D;
     border-radius: 8px;
     font-size: 14px;
+    color: #C9D1D9;
     transition: border-color 0.3s;
 }
 
 .form-control:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    background: #0D1117;
+    color: #C9D1D9;
+}
+
+.form-control::placeholder {
+    color: #8B949E;
+}
+
+.form-control.is-valid {
+    border-color: #238636;
+    background: #0D1117;
+    color: #C9D1D9;
+}
+
+.form-control.is-invalid {
+    border-color: #f85149;
+    background: #0D1117;
+    color: #C9D1D9;
 }
 
 .users-table {
-    background: white;
+    background: #161B22;
+    border: 1px solid #30363D;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
 }
 
 .table-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #0D1117;
+    color: #C9D1D9;
     padding: 20px;
+    border-bottom: 1px solid #30363D;
 }
 
 .table-title {
     margin: 0;
     font-size: 1.3em;
+    font-weight: 600;
+}
+
+.table-responsive {
+    background: #161B22;
+}
+
+.table {
+    background: transparent;
+    margin: 0;
+}
+
+.table thead th {
+    background: #0D1117;
+    color: #C9D1D9;
+    border-bottom: 1px solid #30363D;
+    border-top: none;
+    padding: 15px 20px;
+    font-weight: 600;
+}
+
+.table tbody td {
+    background: #161B22;
+    color: #C9D1D9;
+    border-bottom: 1px solid #30363D;
+    border-top: none;
+    padding: 15px 20px;
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover td {
+    background: #0D1117;
 }
 
 .user-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #58a6ff 0%, #30363D 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -124,20 +185,20 @@
 
 .role-badge {
     padding: 6px 12px;
-    border-radius: 20px;
+    border-radius: 12px;
     font-size: 0.8em;
     font-weight: bold;
     text-transform: uppercase;
 }
 
 .role-admin {
-    background-color: #f8d7da;
-    color: #721c24;
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
 }
 
 .role-user {
-    background-color: #d1ecf1;
-    color: #0c5460;
+    background: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
 }
 
 .user-info {
@@ -149,11 +210,11 @@
 .user-details h6 {
     margin: 0;
     font-weight: bold;
-    color: #333;
+    color: #C9D1D9;
 }
 
 .user-details small {
-    color: #6c757d;
+    color: #8B949E;
 }
 
 .action-buttons {
@@ -164,13 +225,47 @@
 .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: #6c757d;
+    color: #8B949E;
 }
 
 .empty-icon {
     font-size: 4em;
     margin-bottom: 20px;
-    color: #dee2e6;
+    color: #30363D;
+}
+
+.search-controls {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.search-input, .filter-select {
+    background: #0D1117;
+    color: #C9D1D9;
+    border: 1px solid #30363D;
+    border-radius: 6px;
+    padding: 10px 15px;
+}
+
+.search-input:focus, .filter-select:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    outline: none;
+    background: #0D1117;
+    color: #C9D1D9;
+}
+
+.required {
+    color: #f85149;
+}
+
+.help-text {
+    font-size: 0.85em;
+    color: #8B949E;
+    margin-top: 5px;
 }
 
 @media (max-width: 768px) {
@@ -195,6 +290,36 @@
 {% endblock %}
 
 {% block content %}
+<!-- 搜尋和統計控制 -->
+<div class="search-controls">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text" style="background: #0D1117; border-color: #30363D; color: #8B949E;">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control search-input" id="searchInput" 
+                       placeholder="搜尋用戶..." onkeyup="filterUsers()">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select filter-select" id="roleFilter" onchange="filterUsers()">
+                <option value="">所有角色</option>
+                <option value="admin">管理員</option>
+                <option value="user">一般用戶</option>
+            </select>
+        </div>
+        <div class="col-md-5 text-end">
+            <button class="btn btn-outline-primary btn-sm me-2" onclick="exportUsers()">
+                <i class="fas fa-download"></i> 匯出
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="refreshUsers()">
+                <i class="fas fa-sync-alt"></i> 重新載入
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- 統計概覽 -->
 <div class="stats-overview">
     <div class="stat-card">
@@ -220,22 +345,25 @@
         <form method="POST" action="{{ url_for('add_user') }}">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="username">用戶名 *</label>
+                    <label for="username">用戶名 <span class="required">*</span></label>
                     <input type="text" id="username" name="username" class="form-control" 
                            placeholder="輸入用戶名" required pattern="[a-zA-Z0-9_]{3,20}" 
                            title="用戶名必須是3-20個字符，只能包含字母、數字和底線">
+                    <div class="help-text">3-20個字符，只能包含字母、數字和底線</div>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">電子郵件</label>
                     <input type="email" id="email" name="email" class="form-control" 
                            placeholder="user@example.com">
+                    <div class="help-text">可選欄位，用於通知和密碼重設</div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">密碼 *</label>
+                    <label for="password">密碼 <span class="required">*</span></label>
                     <input type="password" id="password" name="password" class="form-control" 
                            placeholder="輸入密碼" required minlength="6">
+                    <div class="help-text">至少6個字符</div>
                 </div>
                 
                 <div class="form-group">
@@ -244,10 +372,11 @@
                         <option value="user">一般用戶</option>
                         <option value="admin">管理員</option>
                     </select>
+                    <div class="help-text">管理員具有完整系統權限</div>
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-info btn-lg">
+            <button type="submit" class="btn btn-success btn-lg">
                 <i class="fas fa-user-plus"></i> 新增用戶
             </button>
         </form>
@@ -257,13 +386,16 @@
 <!-- 用戶列表 -->
 <div class="users-table">
     <div class="table-header">
-        <h2 class="table-title"><i class="fas fa-users"></i> 用戶列表</h2>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="table-title"><i class="fas fa-users"></i> 用戶列表</h2>
+            <span class="badge bg-secondary">{{ users|length }} 個用戶</span>
+        </div>
     </div>
     
     {% if users %}
     <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
+        <table class="table table-hover mb-0" id="usersTable">
+            <thead>
                 <tr>
                     <th style="width: 40%;">用戶</th>
                     <th style="width: 20%;">角色</th>
@@ -273,7 +405,7 @@
             </thead>
             <tbody>
                 {% for user in users %}
-                <tr>
+                <tr class="user-row" data-username="{{ user.username.lower() }}" data-role="{{ user.role }}">
                     <td>
                         <div class="user-info">
                             <div class="user-avatar">
@@ -284,7 +416,7 @@
                                 {% if user.email %}
                                     <small>{{ user.email }}</small>
                                 {% else %}
-                                    <small class="text-muted">未設定電子郵件</small>
+                                    <small style="color: #8B949E;">未設定電子郵件</small>
                                 {% endif %}
                             </div>
                         </div>
@@ -298,26 +430,31 @@
                             {% endif %}
                         </span>
                     </td>
-                    <td>
+                    <td style="color: #8B949E;">
                         {% if user.created_at %}
                             {{ user.created_at }}
                         {% else %}
-                            <span class="text-muted">未知</span>
+                            未知
                         {% endif %}
                     </td>
                     <td>
                         <div class="action-buttons">
                             {% if user.id != current_user.id %}
+                                <button class="btn btn-outline-warning btn-sm me-1" 
+                                        onclick="editUser('{{ user.id }}', '{{ user.username }}', '{{ user.email or '' }}', '{{ user.role }}')" 
+                                        title="編輯用戶">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" 
                                       style="display: inline;" 
-                                      onsubmit="return confirm('確定要刪除用戶「{{ user.username }}」嗎？')">
+                                      onsubmit="return confirm('確定要刪除用戶「{{ user.username }}」嗎？\\n\\n此操作無法復原！')">
                                     <button type="submit" class="btn btn-outline-danger btn-sm" 
                                             title="刪除用戶">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             {% else %}
-                                <span class="badge bg-secondary">當前用戶</span>
+                                <span class="badge" style="background: rgba(88, 166, 255, 0.2); color: #58a6ff;">當前用戶</span>
                             {% endif %}
                         </div>
                     </td>
@@ -408,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 驗證用戶名
         if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
             e.preventDefault();
-            alert('用戶名必須是3-20個字符，只能包含字母、數字和底線');
+            showAlert('用戶名必須是3-20個字符，只能包含字母、數字和底線', 'danger');
             usernameInput.focus();
             return false;
         }
@@ -416,7 +553,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 驗證密碼
         if (password.length < 6) {
             e.preventDefault();
-            alert('密碼長度至少需要6個字符');
+            showAlert('密碼長度至少需要6個字符', 'danger');
             passwordInput.focus();
             return false;
         }
@@ -424,23 +561,76 @@ document.addEventListener('DOMContentLoaded', function() {
         // 驗證電子郵件（如果有填寫）
         if (email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             e.preventDefault();
-            alert('請輸入有效的電子郵件地址');
+            showAlert('請輸入有效的電子郵件地址', 'danger');
             emailInput.focus();
             return false;
         }
     });
-    
-    // 刪除確認增強
-    const deleteButtons = document.querySelectorAll('form[action*="delete"]');
-    deleteButtons.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const username = this.action.split('/').pop();
-            if (!confirm(`確定要刪除用戶嗎？此操作無法撤銷。`)) {
-                e.preventDefault();
-                return false;
-            }
-        });
-    });
 });
+
+// 過濾用戶
+function filterUsers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const selectedRole = document.getElementById('roleFilter').value;
+    const userRows = document.querySelectorAll('.user-row');
+    
+    let visibleCount = 0;
+    userRows.forEach(row => {
+        const username = row.dataset.username;
+        const userRole = row.dataset.role;
+        
+        // 文字搜尋
+        const nameMatch = username.includes(searchTerm);
+        
+        // 角色篩選
+        const roleMatch = !selectedRole || userRole === selectedRole;
+        
+        const shouldShow = nameMatch && roleMatch;
+        row.style.display = shouldShow ? '' : 'none';
+        
+        if (shouldShow) visibleCount++;
+    });
+    
+    // 更新用戶計數
+    const badge = document.querySelector('.table-header .badge');
+    if (badge) {
+        badge.textContent = `${visibleCount} 個用戶`;
+    }
+}
+
+// 編輯用戶（預留功能）
+function editUser(userId, username, email, role) {
+    showAlert('編輯用戶功能開發中...', 'info');
+}
+
+// 匯出用戶
+function exportUsers() {
+    showAlert('匯出功能開發中...', 'info');
+}
+
+// 重新載入用戶
+function refreshUsers() {
+    window.location.reload();
+}
+
+// 顯示警告訊息
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
+}
 </script>
 {% endblock %}

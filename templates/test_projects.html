@@ -7,27 +7,28 @@
 {% block extra_css %}
 .project-card {
     transition: transform 0.2s, box-shadow 0.2s;
-    background: white;
+    background: #161B22;
+    border: 1px solid #30363D;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin-bottom: 20px;
 }
 
 .project-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: #58a6ff;
 }
 
 .project-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #0D1117;
+    color: #C9D1D9;
     padding: 20px;
     border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid #30363D;
 }
 
 .project-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 15px;
     padding: 20px;
 }
@@ -35,20 +36,48 @@
 .stat-item {
     text-align: center;
     padding: 15px;
-    background: #f8f9fa;
+    background: #0D1117;
+    border: 1px solid #30363D;
     border-radius: 8px;
 }
 
 .stat-number {
     font-size: 1.5em;
     font-weight: bold;
-    color: #667eea;
+    color: #58a6ff;
 }
+
+.stat-number.pass { color: #238636; }
+.stat-number.fail { color: #f85149; }
+.stat-number.pending { color: #d29922; }
 
 .stat-label {
     font-size: 0.9em;
-    color: #6c757d;
+    color: #8B949E;
     margin-top: 5px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-draft {
+    background: rgba(210, 153, 34, 0.2);
+    color: #d29922;
+}
+
+.status-in_progress {
+    background: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
+}
+
+.status-completed {
+    background: rgba(35, 134, 54, 0.2);
+    color: #238636;
 }
 
 .create-project-btn {
@@ -58,28 +87,185 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #238636;
     border: none;
     color: white;
     font-size: 1.5em;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     z-index: 100;
+    transition: all 0.2s;
+}
+
+.create-project-btn:hover {
+    background: #2ea043;
+    transform: scale(1.1);
 }
 
 .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: #6c757d;
+    color: #8B949E;
 }
 
 .empty-icon {
     font-size: 4em;
     margin-bottom: 20px;
-    color: #dee2e6;
+    color: #30363D;
+}
+
+.project-meta {
+    border-top: 1px solid #30363D;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.project-meta-info {
+    font-size: 0.85em;
+    color: #8B949E;
+}
+
+.project-actions .btn {
+    margin-left: 5px;
+}
+
+.test-case-item {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.test-case-title {
+    color: #C9D1D9;
+    font-weight: 500;
+    margin: 0;
+}
+
+.test-case-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.tag-badge {
+    background: #30363D;
+    color: #8B949E;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7em;
+}
+
+.test-case-status {
+    font-size: 0.8em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.status-not_tested {
+    background: rgba(210, 153, 34, 0.2);
+    color: #d29922;
+}
+
+.user-select {
+    background: #161B22;
+    color: #C9D1D9;
+    border: 1px solid #30363D;
+}
+
+.user-select:focus {
+    background: #161B22;
+    color: #C9D1D9;
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+}
+
+.search-controls {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.search-input, .filter-select {
+    background: #0D1117;
+    color: #C9D1D9;
+    border: 1px solid #30363D;
+    border-radius: 6px;
+    padding: 10px 15px;
+}
+
+.search-input:focus, .filter-select:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+    outline: none;
+    background: #0D1117;
+    color: #C9D1D9;
+}
+
+.stats-overview {
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
 }
 {% endblock %}
 
 {% block content %}
+<!-- 搜尋和過濾控制 -->
+<div class="search-controls">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text" style="background: #0D1117; border-color: #30363D; color: #8B949E;">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control search-input" id="searchInput" 
+                       placeholder="搜尋測試專案..." onkeyup="filterProjects()">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select filter-select" id="statusFilter" onchange="filterProjects()">
+                <option value="">所有狀態</option>
+                <option value="draft">草稿</option>
+                <option value="in_progress">進行中</option>
+                <option value="completed">已完成</option>
+            </select>
+        </div>
+        <div class="col-md-5 text-end">
+            <button class="btn btn-outline-primary btn-sm me-2" onclick="exportProjects()">
+                <i class="fas fa-download"></i> 匯出
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="loadProjects(true)">
+                <i class="fas fa-sync-alt"></i> 重新載入
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 統計概覽 -->
+<div class="stats-overview">
+    <h5 style="color: #C9D1D9; margin-bottom: 15px;">專案統計</h5>
+    <div class="stats-grid" id="statsOverview">
+        <!-- 統計資料將通過 JavaScript 載入 -->
+    </div>
+</div>
+
 <!-- 專案概覽 -->
 <div class="row" id="projectsContainer">
     <!-- 專案卡片將通過 JavaScript 載入 -->
@@ -116,25 +302,37 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 載入專案資料
-async function loadProjects() {
+async function loadProjects(showLoading = false) {
     const loadingIndicator = document.getElementById('loadingIndicator');
     const projectsContainer = document.getElementById('projectsContainer');
     const emptyState = document.getElementById('emptyState');
     
     try {
-        loadingIndicator.style.display = 'block';
-        emptyState.style.display = 'none';
+        if (showLoading) {
+            loadingIndicator.style.display = 'block';
+            emptyState.style.display = 'none';
+        }
         
-        const response = await fetch('/api/test-projects');
-        if (!response.ok) throw new Error('載入失敗');
+        // 同時載入專案和用戶資料
+        const [projectsResponse, usersResponse] = await Promise.all([
+            fetch('/api/test-projects'),
+            fetch('/api/users')
+        ]);
         
-        const projects = await response.json();
+        if (!projectsResponse.ok) throw new Error('載入專案失敗');
         
-        if (projects.length === 0) {
+        allProjects = await projectsResponse.json();
+        
+        if (usersResponse.ok) {
+            availableUsers = await usersResponse.json();
+        }
+        
+        if (allProjects.length === 0) {
             emptyState.style.display = 'block';
             projectsContainer.innerHTML = '';
         } else {
-            renderProjects(projects);
+            renderProjects(allProjects);
+            updateStatsOverview();
         }
         
     } catch (error) {
@@ -147,7 +345,9 @@ async function loadProjects() {
             </div>
         `;
     } finally {
-        loadingIndicator.style.display = 'none';
+        if (showLoading) {
+            loadingIndicator.style.display = 'none';
+        }
     }
 }
 
@@ -155,42 +355,69 @@ async function loadProjects() {
 function renderProjects(projects) {
     const projectsContainer = document.getElementById('projectsContainer');
     
-    projectsContainer.innerHTML = projects.map(project => `
-        <div class="col-lg-6 col-xl-4">
-            <div class="project-card">
-                <div class="project-header">
-                    <h5 class="mb-0">${project.name}</h5>
-                    <small>建立時間: ${formatDate(project.created_at)}</small>
-                </div>
-                
-                <div class="project-stats">
-                    <div class="stat-item">
-                        <div class="stat-number">${project.test_cases_count || 0}</div>
-                        <div class="stat-label">測試案例</div>
+    projectsContainer.innerHTML = projects.map(project => {
+        const testCasesCount = project.selected_test_cases ? project.selected_test_cases.length : 0;
+        const testResults = project.test_results || {};
+        const passedCount = Object.values(testResults).filter(r => r.status === 'pass').length;
+        const failedCount = Object.values(testResults).filter(r => r.status === 'fail').length;
+        const pendingCount = testCasesCount - passedCount - failedCount;
+        
+        const statusText = {
+            'draft': '草稿',
+            'in_progress': '進行中',
+            'completed': '已完成'
+        };
+        
+        return `
+            <div class="col-lg-6 col-xl-4" data-project-name="${project.name.toLowerCase()}" data-project-status="${project.status}">
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="mb-2">${project.name}</h5>
+                                <span class="status-badge status-${project.status}">
+                                    ${statusText[project.status] || project.status}
+                                </span>
+                            </div>
+                            <div class="text-end">
+                                <small style="color: #8B949E;">測試日期</small><br>
+                                <small style="color: #C9D1D9;">${formatDate(project.test_date)}</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">${project.passed_count || 0}</div>
-                        <div class="stat-label">通過</div>
+                    
+                    <div class="project-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">${testCasesCount}</div>
+                            <div class="stat-label">測試案例</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number pass">${passedCount}</div>
+                            <div class="stat-label">通過</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number fail">${failedCount}</div>
+                            <div class="stat-label">失敗</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number pending">${pendingCount}</div>
+                            <div class="stat-label">待測試</div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">${project.failed_count || 0}</div>
-                        <div class="stat-label">失敗</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">${project.pending_count || 0}</div>
-                        <div class="stat-label">待測試</div>
-                    </div>
-                </div>
-                
-                <div class="p-3 border-top">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            建立者: ${project.created_by || 'Unknown'}
-                        </small>
-                        <div class="btn-group" role="group">
+                    
+                    <div class="project-meta">
+                        <div class="project-meta-info">
+                            <div>負責人: ${getUserDisplayInfo(project.responsible_user).displayName}</div>
+                            <div>建立時間: ${formatDate(project.created_at)}</div>
+                        </div>
+                        <div class="project-actions">
                             <button class="btn btn-sm btn-outline-primary" 
-                                    onclick="viewProject('${project.id}')" title="檢視">
+                                    onclick="viewProject('${project.id}')" title="檢視詳情">
                                 <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" 
+                                    onclick="editProject('${project.id}')" title="編輯">
+                                <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-danger" 
                                     onclick="deleteProject('${project.id}', '${project.name}')" title="刪除">
@@ -200,8 +427,8 @@ function renderProjects(projects) {
                     </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // 格式化日期
@@ -210,9 +437,300 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('zh-TW');
 }
 
+// 全域變數
+let availableTestCases = [];
+let availableUsers = [];
+let allProjects = [];
+
 // 功能函數
 function showCreateProjectModal() {
-    alert('新增專案功能（需要實現）');
+    showProjectModal();
+}
+
+function editProject(projectId) {
+    // 載入專案資料並顯示編輯模態框
+    loadProjectForEdit(projectId);
+}
+
+async function loadProjectForEdit(projectId) {
+    try {
+        const response = await fetch(`/api/test-projects/${projectId}`);
+        if (response.ok) {
+            const project = await response.json();
+            showProjectModal(project);
+        } else {
+            showAlert('載入專案資料失敗', 'danger');
+        }
+    } catch (error) {
+        console.error('載入專案失敗:', error);
+        showAlert('載入專案資料失敗: ' + error.message, 'danger');
+    }
+}
+
+// 顯示專案編輯模態框
+async function showProjectModal(project = null) {
+    const isEdit = project !== null;
+    const modalTitle = isEdit ? '編輯測試專案' : '新增測試專案';
+    
+    // 載入測試案例和用戶資料
+    await loadTestCasesAndUsers();
+    
+    const modalHtml = `
+        <div class="modal fade" id="projectModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content" style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                    <div class="modal-header" style="background: #0D1117; border-bottom: 1px solid #30363D;">
+                        <h5 class="modal-title" style="color: #C9D1D9;">${modalTitle}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="projectForm">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="color: #C9D1D9;">專案名稱 *</label>
+                                        <input type="text" class="form-control" id="projectName" 
+                                               value="${project?.name || ''}" required
+                                               style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="color: #C9D1D9;">專案狀態</label>
+                                        <select class="form-select" id="projectStatus"
+                                                style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                                            <option value="draft" ${project?.status === 'draft' ? 'selected' : ''}>草稿</option>
+                                            <option value="in_progress" ${project?.status === 'in_progress' ? 'selected' : ''}>進行中</option>
+                                            <option value="completed" ${project?.status === 'completed' ? 'selected' : ''}>已完成</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="color: #C9D1D9;">測試日期 *</label>
+                                        <input type="date" class="form-control" id="testDate" 
+                                               value="${project?.test_date ? project.test_date.split('T')[0] : ''}" required
+                                               style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="color: #C9D1D9;">負責人 *</label>
+                                        <select class="form-select user-select" id="responsibleUser" required>
+                                            <option value="">請選擇負責人</option>
+                                            ${availableUsers.map(user => `
+                                                <option value="${user.username}" ${project?.responsible_user === user.username ? 'selected' : ''}>
+                                                    ${user.display_name || user.username}
+                                                </option>
+                                            `).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">選擇測試案例</label>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="testCaseSearch" placeholder="搜尋測試案例..."
+                                                   style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAllTestCases">
+                                            <label class="form-check-label" for="selectAllTestCases" style="color: #C9D1D9;">
+                                                全選/全不選
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #30363D; border-radius: 6px; padding: 10px;">
+                                            <div id="testCasesList">
+                                                ${renderTestCasesList(project?.selected_test_cases || [])}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #30363D;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-success" onclick="saveProject(${isEdit ? `'${project?.id}'` : 'null'})">
+                            ${isEdit ? '更新' : '建立'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除舊的模態框
+    const existingModal = document.getElementById('projectModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 添加新的模態框
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // 設置事件監聽器
+    setupModalEventListeners();
+    
+    // 顯示模態框
+    const modal = new bootstrap.Modal(document.getElementById('projectModal'));
+    modal.show();
+}
+
+// 載入測試案例和用戶資料
+async function loadTestCasesAndUsers() {
+    try {
+        const [testCasesResponse, usersResponse] = await Promise.all([
+            fetch('/api/test-cases'),
+            fetch('/api/users')
+        ]);
+        
+        if (testCasesResponse.ok) {
+            availableTestCases = await testCasesResponse.json();
+        }
+        
+        if (usersResponse.ok) {
+            availableUsers = await usersResponse.json();
+        }
+    } catch (error) {
+        console.error('載入資料失敗:', error);
+    }
+}
+
+// 根據用戶名獲取用戶顯示信息
+function getUserDisplayInfo(username) {
+    const user = availableUsers.find(u => u.username === username);
+    if (user) {
+        return {
+            displayName: user.display_name,
+            role: user.role,
+            email: user.email
+        };
+    }
+    return {
+        displayName: username,
+        role: 'unknown',
+        email: ''
+    };
+}
+
+// 渲染測試案例列表
+function renderTestCasesList(selectedCases = []) {
+    return availableTestCases.map(testCase => {
+        const isSelected = selectedCases.includes(testCase.id);
+        return `
+            <div class="test-case-item">
+                <div>
+                    <div class="form-check">
+                        <input class="form-check-input test-case-checkbox" type="checkbox" 
+                               value="${testCase.id}" id="case_${testCase.id}" ${isSelected ? 'checked' : ''}>
+                        <label class="form-check-label test-case-title" for="case_${testCase.id}">
+                            ${testCase.title}
+                        </label>
+                    </div>
+                    <div class="test-case-tags">
+                        ${(testCase.product_tags || []).map(tagId => {
+                            const tag = availableTestCases.find(c => c.product_tags?.includes(tagId));
+                            return `<span class="tag-badge">${tagId}</span>`;
+                        }).join('')}
+                    </div>
+                </div>
+                <div class="test-case-status status-not_tested">
+                    待測試
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 設置模態框事件監聽器
+function setupModalEventListeners() {
+    // 搜尋功能
+    document.getElementById('testCaseSearch').addEventListener('input', function() {
+        filterTestCases(this.value);
+    });
+    
+    // 全選功能
+    document.getElementById('selectAllTestCases').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.test-case-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = this.checked;
+        });
+    });
+}
+
+// 過濾測試案例
+function filterTestCases(searchTerm) {
+    const items = document.querySelectorAll('.test-case-item');
+    items.forEach(item => {
+        const title = item.querySelector('.test-case-title').textContent.toLowerCase();
+        const matches = title.includes(searchTerm.toLowerCase());
+        item.style.display = matches ? 'flex' : 'none';
+    });
+}
+
+// 保存專案
+async function saveProject(projectId = null) {
+    const isEdit = projectId !== null;
+    
+    // 收集表單資料
+    const formData = {
+        name: document.getElementById('projectName').value.trim(),
+        test_date: document.getElementById('testDate').value,
+        responsible_user: document.getElementById('responsibleUser').value,
+        status: document.getElementById('projectStatus').value
+    };
+    
+    // 收集選中的測試案例
+    const selectedTestCases = Array.from(document.querySelectorAll('.test-case-checkbox:checked'))
+        .map(cb => cb.value);
+    formData.selected_test_cases = selectedTestCases;
+    
+    // 驗證
+    if (!formData.name || !formData.test_date || !formData.responsible_user) {
+        showAlert('請填寫所有必填欄位', 'danger');
+        return;
+    }
+    
+    try {
+        const url = isEdit ? `/api/test-projects/${projectId}` : '/api/test-projects';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            // 關閉模態框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('projectModal'));
+            modal.hide();
+            
+            // 重新載入專案列表
+            await loadProjects();
+            
+            // 顯示成功訊息
+            showAlert(isEdit ? '專案更新成功！' : '專案建立成功！', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || '保存失敗');
+        }
+    } catch (error) {
+        console.error('保存專案失敗:', error);
+        showAlert('保存失敗: ' + error.message, 'danger');
+    }
 }
 
 function viewProject(projectId) {
@@ -220,12 +738,129 @@ function viewProject(projectId) {
     window.location.href = `/test-projects/${projectId}`;
 }
 
-function deleteProject(projectId, projectName) {
-    if (confirm(`確定要刪除專案「${projectName}」嗎？這將刪除所有相關的測試案例。`)) {
-        // 實現刪除邏輯
-        console.log('刪除專案:', projectId);
-        // 這裡應該調用 API 刪除專案
+async function deleteProject(projectId, projectName) {
+    if (!confirm(`確定要刪除專案「${projectName}」嗎？\n\n此操作無法復原！`)) {
+        return;
     }
+    
+    try {
+        const response = await fetch(`/api/test-projects/${projectId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            // 重新載入專案列表
+            await loadProjects();
+            showAlert('專案刪除成功', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || '刪除失敗');
+        }
+    } catch (error) {
+        console.error('刪除專案失敗:', error);
+        showAlert('刪除失敗: ' + error.message, 'danger');
+    }
+}
+
+// 更新統計概覽
+function updateStatsOverview() {
+    const statsOverview = document.getElementById('statsOverview');
+    const totalProjects = allProjects.length;
+    const draftProjects = allProjects.filter(p => p.status === 'draft').length;
+    const inProgressProjects = allProjects.filter(p => p.status === 'in_progress').length;
+    const completedProjects = allProjects.filter(p => p.status === 'completed').length;
+    
+    statsOverview.innerHTML = `
+        <div class="stat-item">
+            <div class="stat-number" style="color: #58a6ff;">${totalProjects}</div>
+            <div class="stat-label">總專案數</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #d29922;">${draftProjects}</div>
+            <div class="stat-label">草稿</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #58a6ff;">${inProgressProjects}</div>
+            <div class="stat-label">進行中</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #238636;">${completedProjects}</div>
+            <div class="stat-label">已完成</div>
+        </div>
+    `;
+}
+
+// 過濾專案
+function filterProjects() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const selectedStatus = document.getElementById('statusFilter').value;
+    const projectCards = document.querySelectorAll('[data-project-name]');
+    
+    let visibleCount = 0;
+    projectCards.forEach(card => {
+        const projectName = card.dataset.projectName;
+        const projectStatus = card.dataset.projectStatus;
+        
+        // 文字搜尋
+        const nameMatch = projectName.includes(searchTerm);
+        
+        // 狀態篩選
+        const statusMatch = !selectedStatus || projectStatus === selectedStatus;
+        
+        const shouldShow = nameMatch && statusMatch;
+        card.style.display = shouldShow ? 'block' : 'none';
+        
+        if (shouldShow) visibleCount++;
+    });
+    
+    // 更新空狀態顯示
+    const emptyState = document.getElementById('emptyState');
+    if (visibleCount === 0 && allProjects.length > 0) {
+        emptyState.style.display = 'block';
+        emptyState.innerHTML = `
+            <div class="empty-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h4>找不到符合條件的專案</h4>
+            <p>請嘗試調整搜尋條件</p>
+        `;
+    } else if (allProjects.length === 0) {
+        emptyState.style.display = 'block';
+        emptyState.innerHTML = `
+            <div class="empty-icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <h4>尚無測試專案</h4>
+            <p>點擊右下角的按鈕建立您的第一個測試專案</p>
+        `;
+    } else {
+        emptyState.style.display = 'none';
+    }
+}
+
+// 匯出專案
+function exportProjects() {
+    showAlert('匯出功能開發中...', 'info');
+}
+
+// 顯示警告訊息
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
 }
 </script>
 {% endblock %}
