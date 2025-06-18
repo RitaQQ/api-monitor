@@ -100,57 +100,6 @@
             position: absolute;
         }
 
-        .user-info {
-            padding: 15px 20px;
-            border-bottom: 1px solid #30363D;  /* 邊框 */
-            transition: all var(--transition-speed);
-            position: relative;
-            background: #0D1117;  /* 標題列背景 */
-        }
-
-        .sidebar.collapsed .user-info {
-            padding: 15px 12px;
-            text-align: center;
-        }
-
-        .user-details {
-            transition: all var(--transition-speed);
-        }
-
-        .sidebar.collapsed .user-details {
-            opacity: 0;
-            visibility: hidden;
-            position: absolute;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #30363D;  /* 邊框 */
-            display: none;
-            align-items: center;
-            justify-content: center;
-            color: #C9D1D9;  /* 主文字色 */
-            font-weight: bold;
-            font-size: 14px;
-            margin: 0 auto;
-        }
-
-        .sidebar.collapsed .user-avatar {
-            display: flex;
-        }
-
-        .user-name {
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        .user-role {
-            font-size: 0.8em;
-            opacity: 0.8;
-            white-space: nowrap;
-        }
 
         .nav-menu {
             padding: 20px 0;
@@ -212,6 +161,12 @@
         }
 
         .sidebar.collapsed .nav-text {
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+        }
+        
+        .sidebar.collapsed .sidebar-user-name {
             opacity: 0;
             visibility: hidden;
             position: absolute;
@@ -553,17 +508,6 @@
             </button>
         </div>
         
-        {% if current_user %}
-        <div class="user-info">
-            <div class="user-avatar">
-                {{ (current_user.username or session.username or 'U')[0].upper() }}
-            </div>
-            <div class="user-details">
-                <div class="user-name">{{ current_user.username or session.username }}</div>
-                <div class="user-role">{{ current_user.role or session.role }}</div>
-            </div>
-        </div>
-        {% endif %}
         
         <div class="nav-menu">
             <div class="nav-item">
@@ -612,6 +556,14 @@
         </div>
         
         <div class="logout-section">
+            {% if current_user %}
+            <div class="logout-user-info" style="padding: 10px 20px; border-bottom: 1px solid #30363D; font-size: 0.85em; color: #8B949E;">
+                <div class="sidebar-user-name" style="opacity: 1; transition: all var(--transition-speed);">
+                    <i class="fas fa-user" style="margin-right: 8px;"></i>
+                    {{ current_user.username or session.username }}
+                </div>
+            </div>
+            {% endif %}
             <a href="{{ url_for('logout') }}" class="nav-link tooltip-custom" data-tooltip="登出">
                 <i class="nav-icon fas fa-sign-out-alt"></i>
                 <span class="nav-text">登出</span>

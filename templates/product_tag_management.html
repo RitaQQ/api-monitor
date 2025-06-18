@@ -109,35 +109,6 @@
     color: #C9D1D9;
 }
 
-.stats-overview {
-    background: #0D1117;
-    border: 1px solid #30363D;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px;
-}
-
-.stat-item {
-    text-align: center;
-}
-
-.stat-number {
-    font-size: 2em;
-    font-weight: bold;
-    color: #58a6ff;
-    margin-bottom: 5px;
-}
-
-.stat-label {
-    color: #8B949E;
-    font-size: 0.9em;
-}
 
 .usage-badge {
     background: rgba(88, 166, 255, 0.2);
@@ -170,13 +141,6 @@
     </div>
 </div>
 
-<!-- 統計概覽 -->
-<div class="stats-overview">
-    <h5 style="color: #C9D1D9; margin-bottom: 15px;">標籤統計</h5>
-    <div class="stats-grid" id="statsOverview">
-        <!-- 統計資料將通過 JavaScript 載入 -->
-    </div>
-</div>
 
 <!-- 標籤列表 -->
 <div class="row" id="tagsContainer">
@@ -239,7 +203,6 @@ async function loadTags(showLoading = false) {
             tagsContainer.innerHTML = '';
         } else {
             renderTags(allTags);
-            updateStatsOverview();
         }
         
     } catch (error) {
@@ -324,33 +287,6 @@ function renderTags(tags) {
     }).join('');
 }
 
-// 更新統計概覽
-function updateStatsOverview() {
-    const statsOverview = document.getElementById('statsOverview');
-    const totalTags = allTags.length;
-    const usedTags = allTags.filter(tag => testCasesUsage[tag.id] > 0).length;
-    const unusedTags = totalTags - usedTags;
-    const totalUsages = Object.values(testCasesUsage).reduce((sum, count) => sum + count, 0);
-    
-    statsOverview.innerHTML = `
-        <div class="stat-item">
-            <div class="stat-number">${totalTags}</div>
-            <div class="stat-label">總標籤數</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #238636;">${usedTags}</div>
-            <div class="stat-label">已使用</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #f85149;">${unusedTags}</div>
-            <div class="stat-label">未使用</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" style="color: #d29922;">${totalUsages}</div>
-            <div class="stat-label">總使用次數</div>
-        </div>
-    `;
-}
 
 // 過濾標籤
 function filterTags() {

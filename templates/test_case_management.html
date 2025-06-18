@@ -390,7 +390,8 @@
                 <th width="100">測項ID</th>
                 <th>標題</th>
                 <th>功能描述</th>
-                <th width="200">產品標籤</th>
+                <th width="200">驗收條件</th>
+                <th width="150">產品標籤</th>
                 <th width="120">操作</th>
             </tr>
         </thead>
@@ -528,6 +529,14 @@ function renderTestCases(testCases) {
                 <td class="test-case-id-cell">${tcId}</td>
                 <td class="test-case-title-cell">${testCase.title}</td>
                 <td class="test-case-description-cell">${testCase.feature_description}</td>
+                <td class="test-case-criteria-cell">
+                    ${testCase.acceptance_criteria && testCase.acceptance_criteria.length > 0 ? 
+                        testCase.acceptance_criteria.map(criterion => 
+                            `<div class="criteria-item">• ${criterion}</div>`
+                        ).join('') : 
+                        '<span style="color: #8B949E;">無驗收條件</span>'
+                    }
+                </td>
                 <td class="test-case-tags-cell">
                     ${tagNames.length > 0 ? 
                         tagNames.map(tagName => 
@@ -697,9 +706,20 @@ function showTestCaseModal(testCase = null) {
                                           style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
                                           placeholder="描述這個測試項目的功能...">${testCase?.feature_description || ''}</textarea>
                             </div>
-                            <!-- 隱藏用戶角色和驗收條件，但保留在後端數據中 -->
-                            <input type="hidden" id="userRole" value="${testCase?.user_role || '系統用戶'}">
-                            <input type="hidden" id="acceptanceCriteria" value="${JSON.stringify(testCase?.acceptance_criteria || []).replace(/"/g, '&quot;')}">
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">用戶角色 *</label>
+                                <input type="text" class="form-control" id="userRole" 
+                                       value="${testCase?.user_role || ''}" required
+                                       style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
+                                       placeholder="例如：一般用戶、管理者、訪客">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #C9D1D9;">驗收條件</label>
+                                <textarea class="form-control" id="acceptanceCriteria" rows="4"
+                                          style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
+                                          placeholder="每行一個驗收條件，例如：\n能夠成功登入系統\n顯示正確的用戶資訊\n登入失敗時顯示錯誤訊息">${testCase?.acceptance_criteria ? testCase.acceptance_criteria.join('\n') : ''}</textarea>
+                                <div class="form-text" style="color: #8B949E;">每行一個驗收條件，列出此功能需要滿足的具體要求</div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label" style="color: #C9D1D9;">測試備註</label>
                                 <textarea class="form-control" id="testNotes" rows="2"
@@ -764,20 +784,17 @@ async function saveTestCase(testCaseId = null) {
         test_notes: document.getElementById('testNotes').value.trim() || null
     };
     
-    // 收集隱藏的驗收條件
-    try {
-        const criteriaValue = document.getElementById('acceptanceCriteria').value;
-        formData.acceptance_criteria = criteriaValue ? JSON.parse(criteriaValue) : [];
-    } catch (e) {
-        formData.acceptance_criteria = [];
-    }
+    // 收集驗收條件（從 textarea 轉換為陣列）
+    const criteriaText = document.getElementById('acceptanceCriteria').value.trim();
+    formData.acceptance_criteria = criteriaText ? 
+        criteriaText.split('\n').map(line => line.trim()).filter(line => line) : [];
     
     // 收集產品標籤
     const tagCheckboxes = document.querySelectorAll('.tag-checkbox:checked');
     formData.product_tags = Array.from(tagCheckboxes).map(cb => cb.value);
     
     // 驗證
-    if (!formData.title || !formData.feature_description) {
+    if (!formData.title || !formData.user_role || !formData.feature_description) {
         showAlert('請填寫所有必填欄位', 'danger');
         return;
     }

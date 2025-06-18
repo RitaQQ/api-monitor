@@ -27,6 +27,15 @@ user_story_manager = UserStoryManager()
 test_case_manager = init_test_case_data()
 create_test_case_routes(app, test_case_manager)
 
+# 模板上下文處理器
+@app.context_processor
+def inject_user():
+    """注入用戶信息到所有模板"""
+    current_user = None
+    if 'user_id' in session:
+        current_user = user_manager.get_user_by_id(session['user_id'])
+    return dict(current_user=current_user)
+
 # 認證裝飾器
 def login_required(f):
     @wraps(f)

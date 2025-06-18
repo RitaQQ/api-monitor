@@ -170,18 +170,6 @@
     background: #0D1117;
 }
 
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #58a6ff 0%, #30363D 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 1.2em;
-}
 
 .role-badge {
     padding: 6px 12px;
@@ -203,8 +191,9 @@
 
 .user-info {
     display: flex;
-    align-items: center;
-    gap: 15px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .user-details h6 {
@@ -278,9 +267,8 @@
     }
     
     .user-info {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
+        text-align: left;
+        gap: 4px;
     }
     
     .action-buttons {
@@ -408,9 +396,6 @@
                 <tr class="user-row" data-username="{{ user.username.lower() }}" data-role="{{ user.role }}">
                     <td>
                         <div class="user-info">
-                            <div class="user-avatar">
-                                {{ user.username[0].upper() }}
-                            </div>
                             <div class="user-details">
                                 <h6>{{ user.username }}</h6>
                                 {% if user.email %}
