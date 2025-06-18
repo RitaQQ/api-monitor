@@ -339,7 +339,11 @@
 <!-- 專案概覽 -->
 <div class="projects-table" id="projectsTableContainer">
     <div class="d-flex justify-content-between align-items-center" style="padding: 15px 15px 0 15px;">
-        <div></div>
+        <div>
+            <button class="btn btn-outline-success btn-sm" onclick="exportProjectsToCSV()" title="匯出所有專案資料為CSV檔案">
+                <i class="fas fa-file-csv"></i> 匯出CSV
+            </button>
+        </div>
         <small class="text-muted" id="projectCount" style="color: #8B949E; font-size: 0.8em;">
             <!-- 總數顯示 -->
         </small>
@@ -349,8 +353,9 @@
             <tr>
                 <th>專案名稱</th>
                 <th width="100">狀態</th>
-                <th width="120">測試日期</th>
-                <th width="120">負責人</th>
+                <th width="130">開始日期</th>
+                <th width="130">結束日期</th>
+                <th width="100">負責人</th>
                 <th width="80">測試案例</th>
                 <th width="60">通過</th>
                 <th width="60">失敗</th>
@@ -382,14 +387,19 @@
     <p>點擊右下角的按鈕建立您的第一個測試專案</p>
 </div>
 
-<!-- 新增專案按鈕 -->
+<!-- 新增專案按鈕 (只有管理員可見) -->
+{% if user_role == 'admin' %}
 <button class="create-project-btn" onclick="showCreateProjectModal()" title="新增專案">
     <i class="fas fa-plus"></i>
 </button>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// 全域變數 - 用戶角色
+const userRole = '{{ user_role }}';
+
 // 頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', function() {
     loadProjects();
@@ -471,8 +481,9 @@ function renderProjects(projects) {
                         ${statusText[project.status] || project.status}
                     </span>
                 </td>
-                <td class="project-date-cell">${formatDate(project.test_date)}</td>
-                <td class="project-user-cell">${getUserDisplayInfo(project.responsible_user).displayName}</td>
+                <td class="project-time-cell">${formatDate(project.start_time)}</td>
+                <td class="project-time-cell">${formatDate(project.end_time)}</td>
+                <td class="project-user-cell">${project.responsible_user}</td>
                 <td class="project-stat-cell stat-total">${testCasesCount}</td>
                 <td class="project-stat-cell stat-pass">${passedCount}</td>
                 <td class="project-stat-cell stat-fail">${failedCount}</td>
@@ -483,6 +494,7 @@ function renderProjects(projects) {
                             onclick="viewProject('${project.id}')" title="檢視詳情">
                         <i class="fas fa-eye"></i>
                     </button>
+                    ${userRole === 'admin' ? `
                     <button class="btn btn-sm btn-outline-warning me-1" 
                             onclick="editProject('${project.id}')" title="編輯">
                         <i class="fas fa-edit"></i>
@@ -491,6 +503,7 @@ function renderProjects(projects) {
                             onclick="deleteProject('${project.id}', '${project.name}')" title="刪除">
                         <i class="fas fa-trash"></i>
                     </button>
+                    ` : ''}
                 </td>
             </tr>
         `;
@@ -509,9 +522,23 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('zh-TW');
 }
 
+// 格式化日期時間
+function formatDateTime(dateTimeString) {
+    if (!dateTimeString) return '-';
+    const date = new Date(dateTimeString);
+    return date.toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
 // 全域變數
 let availableTestCases = [];
 let availableUsers = [];
+let availableProductTags = [];
 let allProjects = [];
 
 // 功能函數
@@ -582,20 +609,31 @@ async function showProjectModal(project = null) {
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label" style="color: #C9D1D9;">測試日期 *</label>
-                                        <input type="date" class="form-control" id="testDate" 
-                                               value="${project?.test_date ? project.test_date.split('T')[0] : ''}" required
+                                        <label class="form-label" style="color: #C9D1D9;">開始測試日期</label>
+                                        <input type="date" class="form-control" id="startDate" 
+                                               value="${project?.start_time ? project.start_time.split('T')[0] : ''}" 
                                                style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="color: #C9D1D9;">結束測試日期</label>
+                                        <input type="date" class="form-control" id="endDate" 
+                                               value="${project?.end_time ? project.end_time.split('T')[0] : ''}" 
+                                               style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label" style="color: #C9D1D9;">負責人 *</label>
                                         <select class="form-select user-select" id="responsibleUser" required>
                                             <option value="">請選擇負責人</option>
                                             ${availableUsers.map(user => `
                                                 <option value="${user.username}" ${project?.responsible_user === user.username ? 'selected' : ''}>
-                                                    ${user.display_name || user.username}
+                                                    ${user.username}
                                                 </option>
                                             `).join('')}
                                         </select>
@@ -661,9 +699,10 @@ async function showProjectModal(project = null) {
 // 載入測試案例和用戶資料
 async function loadTestCasesAndUsers() {
     try {
-        const [testCasesResponse, usersResponse] = await Promise.all([
+        const [testCasesResponse, usersResponse, tagsResponse] = await Promise.all([
             fetch('/api/test-cases'),
-            fetch('/api/users')
+            fetch('/api/users'),
+            fetch('/api/product-tags')
         ]);
         
         if (testCasesResponse.ok) {
@@ -672,6 +711,10 @@ async function loadTestCasesAndUsers() {
         
         if (usersResponse.ok) {
             availableUsers = await usersResponse.json();
+        }
+        
+        if (tagsResponse.ok) {
+            availableProductTags = await tagsResponse.json();
         }
     } catch (error) {
         console.error('載入資料失敗:', error);
@@ -711,8 +754,8 @@ function renderTestCasesList(selectedCases = []) {
                     </div>
                     <div class="test-case-tags">
                         ${(testCase.product_tags || []).map(tagId => {
-                            const tag = availableTestCases.find(c => c.product_tags?.includes(tagId));
-                            return `<span class="tag-badge">${tagId}</span>`;
+                            const tag = availableProductTags.find(t => t.id === tagId);
+                            return `<span class="tag-badge">${tag ? tag.name : tagId}</span>`;
                         }).join('')}
                     </div>
                 </div>
@@ -757,7 +800,8 @@ async function saveProject(projectId = null) {
     // 收集表單資料
     const formData = {
         name: document.getElementById('projectName').value.trim(),
-        test_date: document.getElementById('testDate').value,
+        start_time: document.getElementById('startDate').value,
+        end_time: document.getElementById('endDate').value,
         responsible_user: document.getElementById('responsibleUser').value,
         status: document.getElementById('projectStatus').value
     };
@@ -768,7 +812,7 @@ async function saveProject(projectId = null) {
     formData.selected_test_cases = selectedTestCases;
     
     // 驗證
-    if (!formData.name || !formData.test_date || !formData.responsible_user) {
+    if (!formData.name || !formData.responsible_user) {
         showAlert('請填寫所有必填欄位', 'danger');
         return;
     }
@@ -891,9 +935,62 @@ function filterProjects() {
     updateProjectCount(visibleCount);
 }
 
-// 匯出專案
-function exportProjects() {
-    showAlert('匯出功能開發中...', 'info');
+// 匯出專案為CSV
+async function exportProjectsToCSV() {
+    // 在函數開始處宣告變數，確保在 finally 區塊中能夠存取
+    const button = event.target.closest('button');
+    const originalText = button.innerHTML;
+    
+    try {
+        // 顯示載入中狀態
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 匯出中...';
+        button.disabled = true;
+        
+        // 調用匯出API
+        const response = await fetch('/api/test-projects/export-csv');
+        
+        if (response.ok) {
+            // 獲取檔案blob
+            const blob = await response.blob();
+            
+            // 從response headers獲取檔案名稱
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = '測試專案匯出.csv';
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (filenameMatch) {
+                    filename = filenameMatch[1];
+                }
+            }
+            
+            // 建立下載連結
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            
+            // 觸發下載
+            document.body.appendChild(a);
+            a.click();
+            
+            // 清理
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showAlert('CSV檔案匯出成功！', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || '匯出失敗');
+        }
+    } catch (error) {
+        console.error('匯出CSV失敗:', error);
+        showAlert('匯出失敗: ' + error.message, 'danger');
+    } finally {
+        // 恢復按鈕狀態
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
 }
 
 // 顯示警告訊息

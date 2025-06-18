@@ -300,6 +300,20 @@
     display: inline-block;
 }
 
+.test-case-criteria-cell {
+    color: #C9D1D9;
+    max-width: 250px;
+    font-size: 0.85em;
+}
+
+.criteria-item {
+    margin-bottom: 4px;
+    color: #C9D1D9;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .table-checkbox {
     margin: 0;
 }
@@ -376,6 +390,7 @@
                 <th width="100">測項ID</th>
                 <th>標題</th>
                 <th>功能描述</th>
+                <th width="200">驗收條件</th>
                 <th width="200">產品標籤</th>
                 <th width="120">操作</th>
             </tr>
@@ -514,6 +529,14 @@ function renderTestCases(testCases) {
                 <td class="test-case-id-cell">${tcId}</td>
                 <td class="test-case-title-cell">${testCase.title}</td>
                 <td class="test-case-description-cell">${testCase.feature_description}</td>
+                <td class="test-case-criteria-cell">
+                    ${testCase.acceptance_criteria && testCase.acceptance_criteria.length > 0 ? 
+                        testCase.acceptance_criteria.map((criteria, i) => 
+                            `<div class="criteria-item">${i + 1}. ${criteria}</div>`
+                        ).join('') : 
+                        '<span style="color: #8B949E;">無驗收條件</span>'
+                    }
+                </td>
                 <td class="test-case-tags-cell">
                     ${tagNames.length > 0 ? 
                         tagNames.map(tagName => 

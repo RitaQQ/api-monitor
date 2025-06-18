@@ -7,7 +7,7 @@
       "role": "admin",
       "email": "admin@api-monitor.com",
       "created_at": "2025-06-15T13:02:12.313331",
-      "last_login": "2025-06-17T21:34:24.908370",
+      "last_login": "2025-06-17T23:43:32.959903",
       "is_active": true
     },
     {
@@ -17,7 +17,7 @@
       "role": "user",
       "email": "test1@ccc.ccc",
       "created_at": "2025-06-17T21:55:20.022500",
-      "last_login": null,
+      "last_login": "2025-06-17T23:43:05.843136",
       "is_active": true
     },
     {
@@ -33,5 +33,5 @@
   ],
   "created_at": "2025-06-15T13:02:12.313338",
   "version": "1.0",
-  "updated_at": "2025-06-17T21:55:31.306416"
+  "updated_at": "2025-06-17T23:43:32.960096"
 }

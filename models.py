@@ -116,9 +116,10 @@ class TestProject:
     """測試專案"""
     id: str
     name: str
-    test_date: datetime
     responsible_user: str  # 負責人用戶名
     selected_test_cases: List[str]  # 選擇的測試案例ID列表
+    start_time: Optional[datetime] = None  # 開始測試時間
+    end_time: Optional[datetime] = None  # 結束測試時間
     test_results: Dict[str, TestResult] = field(default_factory=dict)  # test_case_id -> TestResult
     status: ProjectStatus = ProjectStatus.DRAFT
     created_at: datetime = field(default_factory=datetime.now)
@@ -128,7 +129,8 @@ class TestProject:
         return {
             'id': self.id,
             'name': self.name,
-            'test_date': self.test_date.isoformat() if self.test_date else None,
+            'start_time': self.start_time.isoformat() if self.start_time else None,
+            'end_time': self.end_time.isoformat() if self.end_time else None,
             'responsible_user': self.responsible_user,
             'selected_test_cases': self.selected_test_cases,
             'test_results': {k: v.to_dict() for k, v in self.test_results.items()},
@@ -139,10 +141,23 @@ class TestProject:
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'TestProject':
+        # 向後相容性處理：如果有舊的test_date但沒有新的start_time，將test_date作為start_time
+        start_time = None
+        end_time = None
+        
+        if data.get('start_time'):
+            start_time = datetime.fromisoformat(data['start_time'])
+        elif data.get('test_date'):  # 向後相容
+            start_time = datetime.fromisoformat(data['test_date'])
+            
+        if data.get('end_time'):
+            end_time = datetime.fromisoformat(data['end_time'])
+        
         return cls(
             id=data['id'],
             name=data['name'],
-            test_date=datetime.fromisoformat(data['test_date']) if data.get('test_date') else datetime.now(),
+            start_time=start_time,
+            end_time=end_time,
             responsible_user=data['responsible_user'],
             selected_test_cases=data.get('selected_test_cases', []),
             test_results={k: TestResult.from_dict(v) for k, v in data.get('test_results', {}).items()},

@@ -1,24 +1,44 @@
 [
   {
     "id": "48896000-3659-4f53-b2a7-dcf42f61e2a1",
-    "name": "test111",
+    "name": "test1116666",
     "test_date": "2025-06-20T00:00:00",
     "responsible_user": "test1",
     "selected_test_cases": [
-      "b5574c6c-9def-402c-a4b2-b89b2a33b0a7"
+      "b5574c6c-9def-402c-a4b2-b89b2a33b0a7",
+      "18dab187-04ef-45cd-b8b3-224c23a6afb0",
+      "20366bb9-b4a4-4b0d-bb52-d4f6cac48e1f"
     ],
     "test_results": {
       "b5574c6c-9def-402c-a4b2-b89b2a33b0a7": {
         "test_case_id": "b5574c6c-9def-402c-a4b2-b89b2a33b0a7",
+        "status": "blocked",
+        "notes": "",
+        "known_issues": "",
+        "blocked_reason": "55555",
+        "tested_at": "2025-06-17T23:27:21.584356"
+      },
+      "18dab187-04ef-45cd-b8b3-224c23a6afb0": {
+        "test_case_id": "18dab187-04ef-45cd-b8b3-224c23a6afb0",
         "status": "fail",
         "notes": "",
         "known_issues": "",
         "blocked_reason": "",
-        "tested_at": "2025-06-17T21:56:55.247772"
+        "tested_at": "2025-06-17T23:33:05.285640"
+      },
+      "20366bb9-b4a4-4b0d-bb52-d4f6cac48e1f": {
+        "test_case_id": "20366bb9-b4a4-4b0d-bb52-d4f6cac48e1f",
+        "status": "pass",
+        "notes": "",
+        "known_issues": "",
+        "blocked_reason": "",
+        "tested_at": "2025-06-17T23:33:07.018501"
       }
     },
-    "status": "draft",
+    "status": "in_progress",
     "created_at": "2025-06-17T21:56:49.992762",
-    "updated_at": "2025-06-17T21:56:55.247791"
+    "updated_at": "2025-06-17T23:42:21.270268",
+    "start_time": "2025-06-17T00:00:00",
+    "end_time": "2025-06-20T00:00:00"
   }
 ]

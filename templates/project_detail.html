@@ -97,6 +97,22 @@
     font-family: 'Courier New', monospace;
 }
 
+.test-case-tags {
+    margin-top: 8px;
+}
+
+.tag-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+    margin-right: 6px;
+    margin-bottom: 4px;
+}
+
 .test-case-body {
     padding: 20px;
 }
@@ -351,14 +367,6 @@
             <h2 id="projectName" style="color: #C9D1D9; margin-bottom: 10px;">載入中...</h2>
             <span id="projectStatus" class="status-badge">載入中</span>
         </div>
-        <div class="text-end">
-            <button class="btn btn-outline-primary btn-sm me-2" onclick="editCurrentProject()">
-                <i class="fas fa-edit"></i> 編輯專案
-            </button>
-            <button class="btn btn-outline-success btn-sm" onclick="updateProjectStatus()">
-                <i class="fas fa-check-circle"></i> 更新狀態
-            </button>
-        </div>
     </div>
     
     <div class="project-meta" id="projectMeta">
@@ -445,6 +453,7 @@
 let currentProject = null;
 let testCases = [];
 let currentFilter = 'all';
+let availableProductTags = [];
 
 // 頁面載入時初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -468,10 +477,11 @@ function getProjectIdFromUrl() {
 // 載入專案詳情
 async function loadProjectDetail(projectId) {
     try {
-        const [projectResponse, testCasesResponse, usersResponse] = await Promise.all([
+        const [projectResponse, testCasesResponse, usersResponse, tagsResponse] = await Promise.all([
             fetch(`/api/test-projects/${projectId}`),
             fetch('/api/test-cases'),
-            fetch('/api/users')
+            fetch('/api/users'),
+            fetch('/api/product-tags')
         ]);
         
         if (projectResponse.ok && testCasesResponse.ok) {
@@ -482,6 +492,11 @@ async function loadProjectDetail(projectId) {
             if (usersResponse.ok) {
                 const users = await usersResponse.json();
                 window.availableUsers = users;
+            }
+            
+            // 載入產品標籤資料
+            if (tagsResponse.ok) {
+                availableProductTags = await tagsResponse.json();
             }
             
             // 只保留專案中選擇的測試案例
@@ -541,8 +556,12 @@ function renderProjectDetail() {
             <div class="meta-value">${currentProject.responsible_user}</div>
         </div>
         <div class="meta-item">
-            <div class="meta-label">測試日期</div>
-            <div class="meta-value">${formatDate(currentProject.test_date)}</div>
+            <div class="meta-label">開始日期</div>
+            <div class="meta-value">${formatDate(currentProject.start_time)}</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">結束日期</div>
+            <div class="meta-value">${formatDate(currentProject.end_time)}</div>
         </div>
         <div class="meta-item">
             <div class="meta-label">測試案例數</div>
@@ -631,7 +650,14 @@ function renderTestCases() {
                 <div class="test-case-header">
                     <div>
                         <h5 class="test-case-title">${testCase.title}</h5>
-                        <div class="test-case-id">ID: ${testCase.id}</div>
+                        ${testCase.product_tags && testCase.product_tags.length > 0 ? `
+                            <div class="test-case-tags">
+                                ${testCase.product_tags.map(tagId => {
+                                    const tag = availableProductTags.find(t => t.id === tagId);
+                                    return `<span class="tag-badge">${tag ? tag.name : tagId}</span>`;
+                                }).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
                 
@@ -1033,47 +1059,23 @@ async function saveAllResults() {
     }
 }
 
-// 其他功能函數
-function editCurrentProject() {
-    window.location.href = `/test-projects?edit=${currentProject.id}`;
-}
-
-function updateProjectStatus() {
-    // 簡單的狀態更新，可以擴展為模態框
-    const newStatus = prompt('請輸入新的專案狀態 (draft/in_progress/completed):', currentProject.status);
-    if (newStatus && ['draft', 'in_progress', 'completed'].includes(newStatus)) {
-        updateProject({ status: newStatus });
-    }
-}
-
-async function updateProject(updates) {
-    try {
-        const response = await fetch(`/api/test-projects/${currentProject.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updates)
-        });
-        
-        if (response.ok) {
-            const updatedProject = await response.json();
-            currentProject = updatedProject;
-            renderProjectDetail();
-            showAlert('專案更新成功！', 'success');
-        } else {
-            throw new Error('更新失敗');
-        }
-    } catch (error) {
-        console.error('更新專案失敗:', error);
-        showAlert('更新失敗: ' + error.message, 'danger');
-    }
-}
 
 // 工具函數
 function formatDate(dateString) {
     if (!dateString) return '未知';
     return new Date(dateString).toLocaleDateString('zh-TW');
+}
+
+function formatDateTime(dateTimeString) {
+    if (!dateTimeString) return '-';
+    const date = new Date(dateTimeString);
+    return date.toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
 function showAlert(message, type) {

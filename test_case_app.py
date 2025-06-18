@@ -1,14 +1,15 @@
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template, send_file, session
 from datetime import datetime
 import json
 import os
+import csv
+import io
+import tempfile
 from models import TestCase, ProductTag, TestProject, TestResult, TestStatus, ProjectStatus, generate_id
 from test_case_manager import TestCaseManager
 from report_generator import ReportGenerator
 from pdf_exporter import PDFExporter
 from user_manager import UserManager
-import io
-import tempfile
 
 def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     """建立測試案例相關的路由"""
@@ -16,6 +17,17 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     report_generator = ReportGenerator(test_case_manager)
     pdf_exporter = PDFExporter()
     user_manager = UserManager()
+    
+    # 輔助函數：獲取當前用戶信息
+    def get_current_user():
+        if 'user_id' in session:
+            return user_manager.get_user_by_id(session['user_id'])
+        return None
+    
+    # 檢查是否為管理員
+    def is_admin():
+        user = get_current_user()
+        return user and user.get('role') == 'admin'
     
     # ========== 頁面路由 ==========
     
@@ -27,7 +39,9 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     @app.route('/test-projects')
     def test_projects():
         """測試專案管理頁面"""
-        return render_template('test_projects.html')
+        current_user = get_current_user()
+        user_role = current_user.get('role') if current_user else 'guest'
+        return render_template('test_projects.html', current_user=current_user, user_role=user_role)
     
     @app.route('/test-projects/<project_id>')
     def project_detail(project_id):
@@ -196,13 +210,23 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """建立測試專案"""
         try:
             data = request.get_json()
-            test_date = datetime.fromisoformat(data['test_date']) if isinstance(data['test_date'], str) else data['test_date']
+            
+            # 解析開始和結束時間
+            start_time = None
+            end_time = None
+            
+            if data.get('start_time'):
+                start_time = datetime.fromisoformat(data['start_time']) if isinstance(data['start_time'], str) else data['start_time']
+            
+            if data.get('end_time'):
+                end_time = datetime.fromisoformat(data['end_time']) if isinstance(data['end_time'], str) else data['end_time']
             
             project = test_case_manager.create_test_project(
                 name=data['name'],
-                test_date=test_date,
                 responsible_user=data['responsible_user'],
-                selected_test_cases=data['selected_test_cases']
+                selected_test_cases=data['selected_test_cases'],
+                start_time=start_time,
+                end_time=end_time
             )
             return jsonify(project.to_dict()), 201
         except Exception as e:
@@ -215,8 +239,11 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             data = request.get_json()
             
             # 處理日期格式
-            if 'test_date' in data and isinstance(data['test_date'], str):
-                data['test_date'] = datetime.fromisoformat(data['test_date'])
+            if 'start_time' in data and isinstance(data['start_time'], str):
+                data['start_time'] = datetime.fromisoformat(data['start_time'])
+            
+            if 'end_time' in data and isinstance(data['end_time'], str):
+                data['end_time'] = datetime.fromisoformat(data['end_time'])
             
             # 處理狀態
             if 'status' in data and isinstance(data['status'], str):
@@ -308,6 +335,90 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             return send_file(
                 io.BytesIO(pdf_data),
                 mimetype='application/pdf',
+                as_attachment=True,
+                download_name=filename
+            )
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/test-projects/export-csv', methods=['GET'])
+    def export_projects_csv():
+        """匯出所有測試專案為CSV"""
+        try:
+            # 獲取所有專案
+            projects = test_case_manager.get_test_projects()
+            # 獲取所有測試案例以便查找名稱
+            test_cases = test_case_manager.get_test_cases()
+            
+            # 建立測試案例ID到名稱的映射
+            test_case_map = {tc.id: tc.title for tc in test_cases}
+            
+            # 建立CSV內容
+            csv_buffer = io.StringIO()
+            csv_writer = csv.writer(csv_buffer)
+            
+            # CSV標題行
+            headers = [
+                '專案ID', '專案名稱', '狀態', '開始日期', '結束日期', '負責人', 
+                '建立時間', '更新時間', '測試案例ID', '測試案例名稱', 
+                '測試狀態', '測試備註', '已知問題', '阻擋原因', '測試時間'
+            ]
+            csv_writer.writerow(headers)
+            
+            # 寫入專案和測試結果數據
+            for project in projects:
+                base_row = [
+                    project.id,
+                    project.name,
+                    project.status.value,
+                    project.start_time.strftime('%Y-%m-%d') if project.start_time else '',
+                    project.end_time.strftime('%Y-%m-%d') if project.end_time else '',
+                    project.responsible_user,
+                    project.created_at.strftime('%Y-%m-%d %H:%M:%S') if project.created_at else '',
+                    project.updated_at.strftime('%Y-%m-%d %H:%M:%S') if project.updated_at else ''
+                ]
+                
+                # 如果專案有測試案例，為每個測試案例寫一行
+                if project.selected_test_cases:
+                    for test_case_id in project.selected_test_cases:
+                        test_case_name = test_case_map.get(test_case_id, '未知測試案例')
+                        test_result = project.test_results.get(test_case_id)
+                        
+                        if test_result:
+                            result_row = base_row + [
+                                test_case_id,
+                                test_case_name,
+                                test_result.status.value,
+                                test_result.notes or '',
+                                test_result.known_issues or '',
+                                test_result.blocked_reason or '',
+                                test_result.tested_at.strftime('%Y-%m-%d %H:%M:%S') if test_result.tested_at else ''
+                            ]
+                        else:
+                            result_row = base_row + [
+                                test_case_id,
+                                test_case_name,
+                                '未測試',
+                                '', '', '', ''
+                            ]
+                        csv_writer.writerow(result_row)
+                else:
+                    # 如果沒有測試案例，只寫專案基本信息
+                    empty_row = base_row + ['', '', '', '', '', '', '']
+                    csv_writer.writerow(empty_row)
+            
+            # 準備檔案下載
+            csv_content = csv_buffer.getvalue()
+            csv_buffer.close()
+            
+            # 建立檔案名稱
+            filename = f"測試專案匯出_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            
+            # 返回CSV檔案
+            return send_file(
+                io.BytesIO(csv_content.encode('utf-8-sig')),  # 使用UTF-8 BOM以支援Excel
+                mimetype='text/csv',
                 as_attachment=True,
                 download_name=filename
             )

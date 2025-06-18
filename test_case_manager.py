@@ -217,15 +217,17 @@ class TestCaseManager:
                 return TestProject.from_dict(item)
         return None
     
-    def create_test_project(self, name: str, test_date: datetime, responsible_user: str,
-                           selected_test_cases: List[str]) -> TestProject:
+    def create_test_project(self, name: str, responsible_user: str,
+                           selected_test_cases: List[str], start_time: Optional[datetime] = None,
+                           end_time: Optional[datetime] = None) -> TestProject:
         """建立測試專案"""
         project = TestProject(
             id=generate_id(),
             name=name,
-            test_date=test_date,
             responsible_user=responsible_user,
-            selected_test_cases=selected_test_cases
+            selected_test_cases=selected_test_cases,
+            start_time=start_time,
+            end_time=end_time
         )
         
         projects = self._load_json(self.test_projects_file)
@@ -241,12 +243,12 @@ class TestCaseManager:
         for i, project_data in enumerate(projects):
             if project_data['id'] == project_id:
                 # 更新允許的欄位
-                allowed_fields = ['name', 'test_date', 'responsible_user', 
+                allowed_fields = ['name', 'start_time', 'end_time', 'responsible_user', 
                                 'selected_test_cases', 'status']
                 
                 for field, value in kwargs.items():
                     if field in allowed_fields and value is not None:
-                        if field == 'test_date' and isinstance(value, datetime):
+                        if field in ['start_time', 'end_time'] and isinstance(value, datetime):
                             project_data[field] = value.isoformat()
                         elif field == 'status' and isinstance(value, ProjectStatus):
                             project_data[field] = value.value
