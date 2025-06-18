@@ -80,9 +80,12 @@ pkill -f simple_app.py
 - `templates/base.html` - Unified base template with GitHub-style dark theme
 - Template inheritance structure using Jinja2 `{% extends "base.html" %}`
 - Responsive collapsible sidebar navigation system
+- **Simplified sidebar design**: User name displayed only in logout section
 - Dark theme color scheme: header `#0D1117`, content `#161B22`, text `#C9D1D9`/#8B949E`
 
 **Key UI Features:**
+- **Streamlined sidebar**: User avatar and user info section removed for cleaner design
+- **User identification**: Username displayed in logout section only
 - Collapsible sidebar with desktop/mobile responsive design
 - State persistence using localStorage
 - Bootstrap 5 + Font Awesome integration
@@ -103,9 +106,10 @@ pkill -f simple_app.py
 - Real-time dashboard with auto-refresh
 - Admin panel for API management with collapsible sections
 - Stress testing interface with live results
-- Comprehensive test case management system with CSV import/export
+- **Enhanced test case management**: Full acceptance criteria display and editing
+- **Simplified product tag management**: Statistics overview removed
+- **Clean user management**: Avatar-free vertical layout
 - Test project management with table-based views
-- Product tag management for categorization
 
 ## Configuration
 
@@ -153,16 +157,17 @@ All functional pages should extend `base.html` to maintain unified sidebar navig
 - Responsive design with mobile overlay
 - Tooltip support for collapsed state
 - Active page highlighting
-- User avatar display in collapsed mode
+- **Clean layout**: User info moved to logout section only
 
 ## Test Case Management Features
 
 **Test Case System:**
 - TC format IDs (TC00001, TC00002, etc.) for easy identification
 - Table-based horizontal layout for efficient data viewing
-- CSV import/export functionality for bulk operations
+- **Full acceptance criteria support**: Visible in table and editable in forms
+- CSV import/export functionality for bulk operations (including acceptance criteria)
 - Product tag integration for categorization
-- Simplified form interface (hidden user roles and acceptance criteria)
+- **Complete form interface**: User roles and acceptance criteria fully accessible
 
 **CSV Import/Export:**
 - Template file generation with example data
@@ -180,9 +185,12 @@ All functional pages should extend `base.html` to maintain unified sidebar navig
 
 **UI Improvements:**
 - Collapsible sections in admin panel for cleaner interface
-- Dynamic count displays instead of large statistical blocks
+- **Simplified management interfaces**: Statistics overview removed from product tag management
+- **Avatar-free user management**: Clean vertical layout without user avatars
+- **Streamlined sidebar**: User info consolidated to logout section
 - Horizontal table layouts for better information density
 - Consistent dark theme across all management interfaces
+- **Global user context**: Template context processor ensures consistent user access
 
 ## Dependencies
 
@@ -190,3 +198,18 @@ Critical version constraints:
 - `numpy<2` - Required for matplotlib compatibility
 - `Flask==2.3.3` - Core framework
 - `APScheduler==3.10.4` - Background task scheduling
+
+## Recent Updates (June 18, 2025)
+
+### Interface Redesign
+- **Restored acceptance criteria functionality**: Full display and editing in test case management
+- **Simplified product tag management**: Removed statistics overview for cleaner interface
+- **User management cleanup**: Removed user avatars, implemented vertical layout
+- **Sidebar optimization**: User name displayed only in logout section
+- **Global user context**: Added template context processor for consistent user access across all pages
+
+### Technical Improvements
+- Added `@app.context_processor` in `simple_app.py` for global user access
+- Updated base template to remove redundant user info sections
+- Enhanced test case table to include acceptance criteria column
+- Fixed user role validation in test case forms
