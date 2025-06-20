@@ -309,11 +309,13 @@ function showCreateTagModal() {
 // 編輯標籤
 async function editTag(tagId) {
     try {
-        const tag = allTags.find(t => t.id === tagId);
+        // 修復類型比較問題：統一轉換為字符串比較
+        const tag = allTags.find(t => String(t.id) === String(tagId));
         if (tag) {
             showTagModal(tag);
         } else {
-            showAlert('找不到標籤資料', 'danger');
+            console.log('查找標籤失敗，tagId:', tagId, 'allTags:', allTags.map(t => ({id: t.id, name: t.name})));
+            showAlert(`找不到標籤資料 (ID: ${tagId})`, 'danger');
         }
     } catch (error) {
         console.error('載入標籤失敗:', error);
@@ -359,7 +361,7 @@ function showTagModal(tag = null) {
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #30363D;">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-success" onclick="saveTag(${isEdit ? `'${tag?.id}'` : 'null'})">
+                        <button type="button" class="btn btn-success" onclick="saveTag(${isEdit ? tag.id : null})">
                             ${isEdit ? '更新' : '建立'}
                         </button>
                     </div>

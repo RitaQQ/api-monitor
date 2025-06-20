@@ -483,7 +483,7 @@ function renderProjects(projects) {
                 </td>
                 <td class="project-time-cell">${formatDate(project.start_time)}</td>
                 <td class="project-time-cell">${formatDate(project.end_time)}</td>
-                <td class="project-user-cell">${project.responsible_user}</td>
+                <td class="project-user-cell">${project.responsible_user_name || project.responsible_user || '未指定'}</td>
                 <td class="project-stat-cell stat-total">${testCasesCount}</td>
                 <td class="project-stat-cell stat-pass">${passedCount}</td>
                 <td class="project-stat-cell stat-fail">${failedCount}</td>
@@ -533,6 +533,18 @@ function formatDateTime(dateTimeString) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+// 格式化日期為輸入框格式 (YYYY-MM-DD)
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    } catch (error) {
+        console.error('日期格式化錯誤:', error);
+        return '';
+    }
 }
 
 // 全域變數
@@ -611,7 +623,7 @@ async function showProjectModal(project = null) {
                                     <div class="mb-3">
                                         <label class="form-label" style="color: #C9D1D9;">開始測試日期</label>
                                         <input type="date" class="form-control" id="startDate" 
-                                               value="${project?.start_time ? project.start_time.split('T')[0] : ''}" 
+                                               value="${formatDateForInput(project?.start_time)}" 
                                                style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
                                     </div>
                                 </div>
@@ -619,7 +631,7 @@ async function showProjectModal(project = null) {
                                     <div class="mb-3">
                                         <label class="form-label" style="color: #C9D1D9;">結束測試日期</label>
                                         <input type="date" class="form-control" id="endDate" 
-                                               value="${project?.end_time ? project.end_time.split('T')[0] : ''}" 
+                                               value="${formatDateForInput(project?.end_time)}" 
                                                style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
                                     </div>
                                 </div>
@@ -632,8 +644,8 @@ async function showProjectModal(project = null) {
                                         <select class="form-select user-select" id="responsibleUser" required>
                                             <option value="">請選擇負責人</option>
                                             ${availableUsers.map(user => `
-                                                <option value="${user.username}" ${project?.responsible_user === user.username ? 'selected' : ''}>
-                                                    ${user.username}
+                                                <option value="${user.id}" ${(project?.responsible_user_id == user.id || project?.responsible_user == user.id) ? 'selected' : ''}>
+                                                    ${user.display_name}
                                                 </option>
                                             `).join('')}
                                         </select>
@@ -670,7 +682,7 @@ async function showProjectModal(project = null) {
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #30363D;">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-success" onclick="saveProject(${isEdit ? `'${project?.id}'` : 'null'})">
+                        <button type="button" class="btn btn-success" onclick="saveProject(${isEdit ? `'${project.id}'` : 'null'})">
                             ${isEdit ? '更新' : '建立'}
                         </button>
                     </div>
@@ -802,7 +814,7 @@ async function saveProject(projectId = null) {
         name: document.getElementById('projectName').value.trim(),
         start_time: document.getElementById('startDate').value,
         end_time: document.getElementById('endDate').value,
-        responsible_user: document.getElementById('responsibleUser').value,
+        responsible_user_id: document.getElementById('responsibleUser').value,
         status: document.getElementById('projectStatus').value
     };
     
@@ -812,7 +824,7 @@ async function saveProject(projectId = null) {
     formData.selected_test_cases = selectedTestCases;
     
     // 驗證
-    if (!formData.name || !formData.responsible_user) {
+    if (!formData.name || !formData.responsible_user_id) {
         showAlert('請填寫所有必填欄位', 'danger');
         return;
     }

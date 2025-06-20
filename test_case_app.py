@@ -61,10 +61,14 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         try:
             tags = test_case_manager.get_product_tags()
             # 處理兩種情況：字典列表或物件列表
-            if tags and hasattr(tags[0], 'to_dict'):
-                return jsonify([tag.to_dict() for tag in tags])
+            if tags:
+                # 檢查所有元素是否都有 to_dict 方法
+                if all(hasattr(tag, 'to_dict') for tag in tags):
+                    return jsonify([tag.to_dict() for tag in tags])
+                else:
+                    return jsonify(tags)
             else:
-                return jsonify(tags)
+                return jsonify([])
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -91,20 +95,42 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/api/product-tags/<tag_id>', methods=['GET'])
+    def get_product_tag(tag_id):
+        """取得特定產品標籤"""
+        try:
+            tag = test_case_manager.get_product_tag_by_id(int(tag_id))
+            if tag:
+                # 處理兩種情況：字典或物件
+                if hasattr(tag, 'to_dict'):
+                    return jsonify(tag.to_dict())
+                else:
+                    return jsonify(tag)
+            else:
+                return jsonify({'error': '標籤不存在'}), 404
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
     @app.route('/api/product-tags/<tag_id>', methods=['PUT'])
     def update_product_tag(tag_id):
         """更新產品標籤"""
         try:
             data = request.get_json()
-            tag = test_case_manager.update_product_tag(
-                tag_id=tag_id,
+            success = test_case_manager.update_product_tag(
+                tag_id=int(tag_id),
                 name=data.get('name'),
-                description=data.get('description')
+                description=data.get('description'),
+                color=data.get('color')
             )
-            if tag:
-                return jsonify(tag.to_dict())
+            if success:
+                # 更新成功，返回更新後的標籤
+                updated_tag = test_case_manager.get_product_tag_by_id(int(tag_id))
+                if hasattr(updated_tag, 'to_dict'):
+                    return jsonify(updated_tag.to_dict())
+                else:
+                    return jsonify(updated_tag)
             else:
-                return jsonify({'error': '標籤不存在'}), 404
+                return jsonify({'error': '更新失敗'}), 400
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -127,7 +153,11 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """取得所有測試案例"""
         try:
             cases = test_case_manager.get_test_cases()
-            return jsonify([case.to_dict() for case in cases])
+            # 處理兩種情況：字典列表或物件列表
+            if cases and hasattr(cases[0], 'to_dict'):
+                return jsonify([case.to_dict() for case in cases])
+            else:
+                return jsonify(cases)
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -137,7 +167,11 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         try:
             case = test_case_manager.get_test_case(case_id)
             if case:
-                return jsonify(case.to_dict())
+                # 處理兩種情況：字典或物件
+                if hasattr(case, 'to_dict'):
+                    return jsonify(case.to_dict())
+                else:
+                    return jsonify(case)
             else:
                 return jsonify({'error': '測試案例不存在'}), 404
         except Exception as e:
@@ -156,7 +190,11 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                 test_notes=data.get('test_notes'),
                 product_tags=data.get('product_tags', [])
             )
-            return jsonify(case.to_dict()), 201
+            # 處理兩種情況：字典或物件
+            if hasattr(case, 'to_dict'):
+                return jsonify(case.to_dict()), 201
+            else:
+                return jsonify(case), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -167,7 +205,11 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             data = request.get_json()
             case = test_case_manager.update_test_case(case_id, **data)
             if case:
-                return jsonify(case.to_dict())
+                # 安全檢查：確認物件有 to_dict 方法
+                if hasattr(case, 'to_dict'):
+                    return jsonify(case.to_dict())
+                else:
+                    return jsonify(case)
             else:
                 return jsonify({'error': '測試案例不存在'}), 404
         except Exception as e:
@@ -192,7 +234,11 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             data = request.get_json()
             updates = data.get('updates', [])
             updated_cases = test_case_manager.batch_update_test_cases(updates)
-            return jsonify([case.to_dict() for case in updated_cases])
+            # 處理兩種情況：字典列表或物件列表
+            if updated_cases and hasattr(updated_cases[0], 'to_dict'):
+                return jsonify([case.to_dict() for case in updated_cases])
+            else:
+                return jsonify(updated_cases)
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -203,7 +249,15 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """取得所有測試專案"""
         try:
             projects = test_case_manager.get_test_projects()
-            return jsonify([project.to_dict() for project in projects])
+            # 處理兩種情況：字典列表或物件列表
+            if projects:
+                # 檢查所有元素是否都有 to_dict 方法
+                if all(hasattr(project, 'to_dict') for project in projects):
+                    return jsonify([project.to_dict() for project in projects])
+                else:
+                    return jsonify(projects)
+            else:
+                return jsonify([])
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -211,9 +265,13 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     def get_test_project(project_id):
         """取得特定測試專案"""
         try:
-            project = test_case_manager.get_test_project(project_id)
+            project = test_case_manager.get_test_project_by_id(int(project_id))
             if project:
-                return jsonify(project.to_dict())
+                # 安全檢查：確認物件有 to_dict 方法
+                if hasattr(project, 'to_dict'):
+                    return jsonify(project.to_dict())
+                else:
+                    return jsonify(project)
             else:
                 return jsonify({'error': '專案不存在'}), 404
         except Exception as e:
@@ -236,14 +294,24 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                 end_time = datetime.fromisoformat(data['end_time']) if isinstance(data['end_time'], str) else data['end_time']
             
             # 驗證負責人用戶是否存在
-            responsible_user_id = data.get('responsible_user')
-            if responsible_user_id:
-                # 檢查用戶是否存在
+            responsible_user_input = data.get('responsible_user_id') or data.get('responsible_user')
+            responsible_user_id = None
+            
+            if responsible_user_input:
                 from user_manager import UserManager
                 user_manager = UserManager()
-                user = user_manager.get_user_by_id(responsible_user_id)
-                if not user:
-                    return jsonify({'error': f"用戶 ID '{responsible_user_id}' 不存在"}), 400
+                
+                # 先嘗試用ID查詢，再嘗試用用戶名查詢
+                user = user_manager.get_user_by_id(responsible_user_input)
+                if user:
+                    responsible_user_id = responsible_user_input
+                else:
+                    # 嘗試用用戶名查詢
+                    user = user_manager.get_user_by_username(responsible_user_input)
+                    if user:
+                        responsible_user_id = user['id']
+                    else:
+                        return jsonify({'error': f"用戶 '{responsible_user_input}' 不存在"}), 400
             
             project = test_case_manager.create_test_project(
                 name=data['name'],
@@ -275,11 +343,16 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             if 'status' in data and isinstance(data['status'], str):
                 data['status'] = ProjectStatus(data['status'])
             
-            project = test_case_manager.update_test_project(project_id, **data)
-            if project:
-                return jsonify(project.to_dict())
+            success = test_case_manager.update_test_project(int(project_id), **data)
+            if success:
+                # 更新成功，返回更新後的專案
+                updated_project = test_case_manager.get_test_project_by_id(int(project_id))
+                if hasattr(updated_project, 'to_dict'):
+                    return jsonify(updated_project.to_dict())
+                else:
+                    return jsonify(updated_project)
             else:
-                return jsonify({'error': '專案不存在'}), 404
+                return jsonify({'error': '更新失敗'}), 400
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -299,7 +372,11 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             )
             
             if project:
-                return jsonify(project.to_dict())
+                # 安全檢查：確認物件有 to_dict 方法
+                if hasattr(project, 'to_dict'):
+                    return jsonify(project.to_dict())
+                else:
+                    return jsonify(project)
             else:
                 return jsonify({'error': '專案不存在'}), 404
         except Exception as e:
@@ -309,7 +386,7 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     def delete_test_project(project_id):
         """刪除測試專案"""
         try:
-            success = test_case_manager.delete_test_project(project_id)
+            success = test_case_manager.delete_test_project(int(project_id))
             if success:
                 return jsonify({'message': '刪除成功'})
             else:
@@ -323,9 +400,13 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     def get_project_statistics(project_id):
         """取得專案統計"""
         try:
-            statistics = test_case_manager.get_project_statistics(project_id)
+            statistics = test_case_manager.get_project_statistics(int(project_id))
             if statistics:
-                return jsonify(statistics.to_dict())
+                # 安全檢查：確認物件有 to_dict 方法
+                if hasattr(statistics, 'to_dict'):
+                    return jsonify(statistics.to_dict())
+                else:
+                    return jsonify(statistics)
             else:
                 return jsonify({'error': '專案不存在'}), 404
         except Exception as e:
@@ -476,6 +557,7 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                         display_name = f"👤 {display_name} (用戶)"
                     
                     active_users.append({
+                        'id': user['id'],  # 加入用戶ID
                         'username': user['username'],
                         'display_name': display_name,
                         'role': role,
