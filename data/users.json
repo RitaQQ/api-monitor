@@ -7,7 +7,7 @@
       "role": "admin",
       "email": "admin@api-monitor.com",
       "created_at": "2025-06-15T13:02:12.313331",
-      "last_login": "2025-06-18T09:50:45.252146",
+      "last_login": "2025-06-20T08:51:20.292004",
       "is_active": true
     },
     {
@@ -33,5 +33,5 @@
   ],
   "created_at": "2025-06-15T13:02:12.313338",
   "version": "1.0",
-  "updated_at": "2025-06-18T09:50:55.960840"
+  "updated_at": "2025-06-20T08:51:20.292094"
 }

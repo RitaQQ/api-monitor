@@ -490,7 +490,7 @@ def init_test_case_data():
                 "登入成功後會跳轉到首頁"
             ],
             "test_notes": "需要測試各種邊界條件和錯誤情況",
-            "product_tags": [web_tag.id, api_tag.id]
+            "product_tags": [web_tag['id'], api_tag['id']]
         },
         {
             "title": "商品搜尋功能",
@@ -502,7 +502,7 @@ def init_test_case_data():
                 "能夠使用篩選條件縮小搜尋範圍"
             ],
             "test_notes": "需要測試搜尋性能和準確度",
-            "product_tags": [web_tag.id, mobile_tag.id]
+            "product_tags": [web_tag['id'], mobile_tag['id']]
         },
         {
             "title": "訂單結帳流程",
@@ -514,7 +514,7 @@ def init_test_case_data():
                 "訂單確認後會收到確認郵件"
             ],
             "test_notes": "需要測試各種付款方式的整合",
-            "product_tags": [web_tag.id, api_tag.id, security_tag.id]
+            "product_tags": [web_tag['id'], api_tag['id'], security_tag['id']]
         },
         {
             "title": "用戶資料安全",
@@ -526,12 +526,22 @@ def init_test_case_data():
                 "需要防範SQL注入攻擊"
             ],
             "test_notes": "使用安全掃描工具進行測試",
-            "product_tags": [security_tag.id, api_tag.id]
+            "product_tags": [security_tag['id'], api_tag['id']]
         }
     ]
     
     for case_data in test_cases_data:
-        manager.create_test_case(**case_data)
+        # 提取並轉換 product_tags
+        product_tag_ids = case_data.pop('product_tags', [])
+        
+        # 創建測試案例，將驗收條件轉換為字串
+        test_case = manager.create_test_case(
+            title=case_data['title'],
+            description=f"用戶角色: {case_data['user_role']}\n功能描述: {case_data['feature_description']}",
+            acceptance_criteria='\n'.join(case_data['acceptance_criteria']),
+            test_project_id=project['id'],
+            product_tag_ids=product_tag_ids
+        )
     
     print("✅ 測試案例系統初始化完成")
     return manager

@@ -1,370 +1,435 @@
 import json
-import os
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
-from models import TestCase, ProductTag, TestProject, TestResult, TestStatistics, TestStatus, ProjectStatus, generate_id
+from database.db_manager import db_manager
 
 class TestCaseManager:
-    """測試案例管理器"""
+    """基於 SQLite 的測試案例管理器"""
     
     def __init__(self, data_dir: str = "data"):
-        self.data_dir = data_dir
-        self.test_cases_file = os.path.join(data_dir, "test_cases.json")
-        self.product_tags_file = os.path.join(data_dir, "product_tags.json")
-        self.test_projects_file = os.path.join(data_dir, "test_projects.json")
+        """
+        初始化測試案例管理器
         
-        # 確保資料目錄存在
-        os.makedirs(data_dir, exist_ok=True)
-        
-        # 初始化檔案
-        self._init_files()
-    
-    def _init_files(self):
-        """初始化資料檔案"""
-        for file_path in [self.test_cases_file, self.product_tags_file, self.test_projects_file]:
-            if not os.path.exists(file_path):
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    json.dump([], f, ensure_ascii=False, indent=2)
-    
-    def _load_json(self, file_path: str) -> List[Dict]:
-        """載入JSON檔案"""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            return []
-    
-    def _save_json(self, file_path: str, data: List[Dict]):
-        """儲存JSON檔案"""
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        Args:
+            data_dir: 為了向後兼容保留此參數，但實際使用 SQLite
+        """
+        # 向後兼容，但實際上使用 SQLite
+        pass
     
     # ========== Product Tags 管理 ==========
     
-    def get_product_tags(self) -> List[ProductTag]:
+    def get_product_tags(self) -> List[Dict]:
         """取得所有產品標籤"""
-        data = self._load_json(self.product_tags_file)
-        return [ProductTag.from_dict(item) for item in data]
+        query = """
+            SELECT id, name, description, color, created_at, updated_at
+            FROM product_tags 
+            ORDER BY name
+        """
+        return db_manager.execute_query(query)
     
-    def create_product_tag(self, name: str, description: Optional[str] = None) -> ProductTag:
+    def create_product_tag(self, name: str, description: Optional[str] = None, 
+                          color: str = '#007bff') -> Dict:
         """建立產品標籤"""
-        tag = ProductTag(
-            id=generate_id(),
-            name=name,
-            description=description
-        )
+        query = """
+            INSERT INTO product_tags (name, description, color)
+            VALUES (?, ?, ?)
+        """
+        tag_id = db_manager.execute_insert(query, (name, description, color))
         
-        tags = self._load_json(self.product_tags_file)
-        tags.append(tag.to_dict())
-        self._save_json(self.product_tags_file, tags)
-        
-        return tag
+        # 返回新創建的標籤
+        return self.get_product_tag_by_id(int(tag_id))
     
-    def update_product_tag(self, tag_id: str, name: Optional[str] = None, 
-                          description: Optional[str] = None) -> Optional[ProductTag]:
+    def get_product_tag_by_id(self, tag_id: int) -> Optional[Dict]:
+        """根據 ID 取得產品標籤"""
+        query = """
+            SELECT id, name, description, color, created_at, updated_at
+            FROM product_tags 
+            WHERE id = ?
+        """
+        results = db_manager.execute_query(query, (tag_id,))
+        return results[0] if results else None
+    
+    def get_product_tag_by_name(self, name: str) -> Optional[Dict]:
+        """根據名稱取得產品標籤"""
+        query = """
+            SELECT id, name, description, color, created_at, updated_at
+            FROM product_tags 
+            WHERE name = ?
+        """
+        results = db_manager.execute_query(query, (name,))
+        return results[0] if results else None
+    
+    def update_product_tag(self, tag_id: int, name: str = None, 
+                          description: str = None, color: str = None) -> bool:
         """更新產品標籤"""
-        tags = self._load_json(self.product_tags_file)
+        update_fields = []
+        params = []
         
-        for i, tag_data in enumerate(tags):
-            if tag_data['id'] == tag_id:
-                if name is not None:
-                    tag_data['name'] = name
-                if description is not None:
-                    tag_data['description'] = description
-                
-                tags[i] = tag_data
-                self._save_json(self.product_tags_file, tags)
-                return ProductTag.from_dict(tag_data)
+        if name is not None:
+            update_fields.append("name = ?")
+            params.append(name)
         
-        return None
+        if description is not None:
+            update_fields.append("description = ?")
+            params.append(description)
+        
+        if color is not None:
+            update_fields.append("color = ?")
+            params.append(color)
+        
+        if not update_fields:
+            return False
+        
+        params.append(tag_id)
+        query = f"UPDATE product_tags SET {', '.join(update_fields)} WHERE id = ?"
+        
+        rows_affected = db_manager.execute_update(query, tuple(params))
+        return rows_affected > 0
     
-    def delete_product_tag(self, tag_id: str) -> bool:
-        """刪除產品標籤（同時從測試案例中移除關聯）"""
-        tags = self._load_json(self.product_tags_file)
-        original_length = len(tags)
-        
-        tags = [tag for tag in tags if tag['id'] != tag_id]
-        
-        if len(tags) < original_length:
-            # 保存更新後的標籤列表
-            self._save_json(self.product_tags_file, tags)
-            
-            # 從所有測試案例中移除此標籤的關聯
-            test_cases = self._load_json(self.test_cases_file)
-            updated = False
-            for test_case in test_cases:
-                if 'product_tags' in test_case and tag_id in test_case['product_tags']:
-                    test_case['product_tags'].remove(tag_id)
-                    test_case['updated_at'] = datetime.now().isoformat()
-                    updated = True
-            
-            if updated:
-                self._save_json(self.test_cases_file, test_cases)
-            
-            return True
-        
-        return False
-    
-    # ========== Test Cases 管理 ==========
-    
-    def get_test_cases(self) -> List[TestCase]:
-        """取得所有測試案例"""
-        data = self._load_json(self.test_cases_file)
-        return [TestCase.from_dict(item) for item in data]
-    
-    def get_test_case(self, case_id: str) -> Optional[TestCase]:
-        """取得特定測試案例"""
-        data = self._load_json(self.test_cases_file)
-        for item in data:
-            if item['id'] == case_id:
-                return TestCase.from_dict(item)
-        return None
-    
-    def create_test_case(self, title: str, user_role: str, feature_description: str,
-                        acceptance_criteria: List[str], test_notes: Optional[str] = None,
-                        product_tags: Optional[List[str]] = None) -> TestCase:
-        """建立測試案例"""
-        test_case = TestCase(
-            id=generate_id(),
-            title=title,
-            user_role=user_role,
-            feature_description=feature_description,
-            acceptance_criteria=acceptance_criteria,
-            test_notes=test_notes,
-            product_tags=product_tags or []
-        )
-        
-        cases = self._load_json(self.test_cases_file)
-        cases.append(test_case.to_dict())
-        self._save_json(self.test_cases_file, cases)
-        
-        return test_case
-    
-    def update_test_case(self, case_id: str, **kwargs) -> Optional[TestCase]:
-        """更新測試案例"""
-        cases = self._load_json(self.test_cases_file)
-        
-        for i, case_data in enumerate(cases):
-            if case_data['id'] == case_id:
-                # 更新允許的欄位
-                allowed_fields = ['title', 'user_role', 'feature_description', 
-                                'acceptance_criteria', 'test_notes', 'product_tags']
-                
-                for field, value in kwargs.items():
-                    if field in allowed_fields and value is not None:
-                        case_data[field] = value
-                
-                case_data['updated_at'] = datetime.now().isoformat()
-                cases[i] = case_data
-                self._save_json(self.test_cases_file, cases)
-                return TestCase.from_dict(case_data)
-        
-        return None
-    
-    def delete_test_case(self, case_id: str) -> bool:
-        """刪除測試案例"""
-        cases = self._load_json(self.test_cases_file)
-        original_length = len(cases)
-        
-        cases = [case for case in cases if case['id'] != case_id]
-        
-        if len(cases) < original_length:
-            self._save_json(self.test_cases_file, cases)
-            return True
-        
-        return False
-    
-    def batch_update_test_cases(self, updates: List[Dict[str, Any]]) -> List[TestCase]:
-        """批量更新測試案例"""
-        cases = self._load_json(self.test_cases_file)
-        updated_cases = []
-        
-        for update in updates:
-            case_id = update.get('id')
-            if not case_id:
-                continue
-                
-            for i, case_data in enumerate(cases):
-                if case_data['id'] == case_id:
-                    # 更新允許的欄位
-                    allowed_fields = ['title', 'user_role', 'feature_description', 
-                                    'acceptance_criteria', 'test_notes', 'product_tags']
-                    
-                    for field, value in update.items():
-                        if field in allowed_fields and field != 'id':
-                            case_data[field] = value
-                    
-                    case_data['updated_at'] = datetime.now().isoformat()
-                    cases[i] = case_data
-                    updated_cases.append(TestCase.from_dict(case_data))
-                    break
-        
-        self._save_json(self.test_cases_file, cases)
-        return updated_cases
+    def delete_product_tag(self, tag_id: int) -> bool:
+        """刪除產品標籤"""
+        query = "DELETE FROM product_tags WHERE id = ?"
+        rows_affected = db_manager.execute_delete(query, (tag_id,))
+        return rows_affected > 0
     
     # ========== Test Projects 管理 ==========
     
-    def get_test_projects(self) -> List[TestProject]:
+    def get_test_projects(self) -> List[Dict]:
         """取得所有測試專案"""
-        data = self._load_json(self.test_projects_file)
-        return [TestProject.from_dict(item) for item in data]
+        query = """
+            SELECT 
+                tp.id, tp.name, tp.description, tp.status, tp.responsible_user_id,
+                tp.created_at, tp.updated_at,
+                u.username as responsible_user_name
+            FROM test_projects tp
+            LEFT JOIN users u ON tp.responsible_user_id = u.id
+            ORDER BY tp.created_at DESC
+        """
+        return db_manager.execute_query(query)
     
-    def get_test_project(self, project_id: str) -> Optional[TestProject]:
-        """取得特定測試專案"""
-        data = self._load_json(self.test_projects_file)
-        for item in data:
-            if item['id'] == project_id:
-                return TestProject.from_dict(item)
-        return None
-    
-    def create_test_project(self, name: str, responsible_user: str,
-                           selected_test_cases: List[str], start_time: Optional[datetime] = None,
-                           end_time: Optional[datetime] = None) -> TestProject:
+    def create_test_project(self, name: str, description: Optional[str] = None,
+                           responsible_user_id: Optional[str] = None) -> Dict:
         """建立測試專案"""
-        project = TestProject(
-            id=generate_id(),
-            name=name,
-            responsible_user=responsible_user,
-            selected_test_cases=selected_test_cases,
-            start_time=start_time,
-            end_time=end_time
-        )
+        query = """
+            INSERT INTO test_projects (name, description, responsible_user_id)
+            VALUES (?, ?, ?)
+        """
+        project_id = db_manager.execute_insert(query, (name, description, responsible_user_id))
         
-        projects = self._load_json(self.test_projects_file)
-        projects.append(project.to_dict())
-        self._save_json(self.test_projects_file, projects)
-        
-        return project
+        # 返回新創建的專案
+        return self.get_test_project_by_id(int(project_id))
     
-    def update_test_project(self, project_id: str, **kwargs) -> Optional[TestProject]:
+    def get_test_project_by_id(self, project_id: int) -> Optional[Dict]:
+        """根據 ID 取得測試專案"""
+        query = """
+            SELECT 
+                tp.id, tp.name, tp.description, tp.status, tp.responsible_user_id,
+                tp.created_at, tp.updated_at,
+                u.username as responsible_user_name
+            FROM test_projects tp
+            LEFT JOIN users u ON tp.responsible_user_id = u.id
+            WHERE tp.id = ?
+        """
+        results = db_manager.execute_query(query, (project_id,))
+        return results[0] if results else None
+    
+    def get_test_project_by_name(self, name: str) -> Optional[Dict]:
+        """根據名稱取得測試專案"""
+        query = """
+            SELECT 
+                tp.id, tp.name, tp.description, tp.status, tp.responsible_user_id,
+                tp.created_at, tp.updated_at,
+                u.username as responsible_user_name
+            FROM test_projects tp
+            LEFT JOIN users u ON tp.responsible_user_id = u.id
+            WHERE tp.name = ?
+        """
+        results = db_manager.execute_query(query, (name,))
+        return results[0] if results else None
+    
+    def update_test_project(self, project_id: int, name: str = None, 
+                           description: str = None, status: str = None,
+                           responsible_user_id: str = None) -> bool:
         """更新測試專案"""
-        projects = self._load_json(self.test_projects_file)
+        update_fields = []
+        params = []
         
-        for i, project_data in enumerate(projects):
-            if project_data['id'] == project_id:
-                # 更新允許的欄位
-                allowed_fields = ['name', 'start_time', 'end_time', 'responsible_user', 
-                                'selected_test_cases', 'status']
-                
-                for field, value in kwargs.items():
-                    if field in allowed_fields and value is not None:
-                        if field in ['start_time', 'end_time'] and isinstance(value, datetime):
-                            project_data[field] = value.isoformat()
-                        elif field == 'status' and isinstance(value, ProjectStatus):
-                            project_data[field] = value.value
-                        else:
-                            project_data[field] = value
-                
-                project_data['updated_at'] = datetime.now().isoformat()
-                projects[i] = project_data
-                self._save_json(self.test_projects_file, projects)
-                return TestProject.from_dict(project_data)
+        if name is not None:
+            update_fields.append("name = ?")
+            params.append(name)
         
-        return None
+        if description is not None:
+            update_fields.append("description = ?")
+            params.append(description)
+        
+        if status is not None:
+            update_fields.append("status = ?")
+            params.append(status)
+        
+        if responsible_user_id is not None:
+            update_fields.append("responsible_user_id = ?")
+            params.append(responsible_user_id)
+        
+        if not update_fields:
+            return False
+        
+        params.append(project_id)
+        query = f"UPDATE test_projects SET {', '.join(update_fields)} WHERE id = ?"
+        
+        rows_affected = db_manager.execute_update(query, tuple(params))
+        return rows_affected > 0
     
-    def update_test_result(self, project_id: str, test_case_id: str, 
-                          status: TestStatus, notes: Optional[str] = None,
-                          known_issues: Optional[str] = None,
-                          blocked_reason: Optional[str] = None) -> Optional[TestProject]:
-        """更新測試結果"""
-        projects = self._load_json(self.test_projects_file)
-        
-        for i, project_data in enumerate(projects):
-            if project_data['id'] == project_id:
-                test_result = TestResult(
-                    test_case_id=test_case_id,
-                    status=status,
-                    notes=notes,
-                    known_issues=known_issues,
-                    blocked_reason=blocked_reason
-                )
-                
-                if 'test_results' not in project_data:
-                    project_data['test_results'] = {}
-                
-                project_data['test_results'][test_case_id] = test_result.to_dict()
-                project_data['updated_at'] = datetime.now().isoformat()
-                
-                projects[i] = project_data
-                self._save_json(self.test_projects_file, projects)
-                return TestProject.from_dict(project_data)
-        
-        return None
-    
-    def delete_test_project(self, project_id: str) -> bool:
+    def delete_test_project(self, project_id: int) -> bool:
         """刪除測試專案"""
-        projects = self._load_json(self.test_projects_file)
-        original_length = len(projects)
-        
-        projects = [project for project in projects if project['id'] != project_id]
-        
-        if len(projects) < original_length:
-            self._save_json(self.test_projects_file, projects)
-            return True
-        
-        return False
+        query = "DELETE FROM test_projects WHERE id = ?"
+        rows_affected = db_manager.execute_delete(query, (project_id,))
+        return rows_affected > 0
     
-    # ========== 統計功能 ==========
+    # ========== Test Cases 管理 ==========
     
-    def get_project_statistics(self, project_id: str) -> Optional[TestStatistics]:
+    def get_test_cases(self, project_id: Optional[int] = None, 
+                      status: Optional[str] = None) -> List[Dict]:
+        """取得測試案例"""
+        query = """
+            SELECT 
+                tc.id, tc.tc_id, tc.title, tc.description, tc.acceptance_criteria,
+                tc.priority, tc.status, tc.test_project_id, tc.responsible_user_id,
+                tc.estimated_hours, tc.actual_hours, tc.created_at, tc.updated_at,
+                tp.name as project_name,
+                u.username as responsible_user_name
+            FROM test_cases tc
+            LEFT JOIN test_projects tp ON tc.test_project_id = tp.id
+            LEFT JOIN users u ON tc.responsible_user_id = u.id
+        """
+        
+        conditions = []
+        params = []
+        
+        if project_id is not None:
+            conditions.append("tc.test_project_id = ?")
+            params.append(project_id)
+        
+        if status is not None:
+            conditions.append("tc.status = ?")
+            params.append(status)
+        
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        
+        query += " ORDER BY tc.tc_id"
+        
+        test_cases = db_manager.execute_query(query, tuple(params))
+        
+        # 為每個測試案例添加標籤信息
+        for tc in test_cases:
+            tc['product_tags'] = self.get_test_case_tags(tc['id'])
+        
+        return test_cases
+    
+    def create_test_case(self, title: str, description: Optional[str] = None,
+                        acceptance_criteria: Optional[str] = None,
+                        priority: str = 'medium', status: str = 'draft',
+                        test_project_id: Optional[int] = None,
+                        responsible_user_id: Optional[str] = None,
+                        estimated_hours: float = 0,
+                        product_tag_ids: Optional[List[int]] = None) -> Dict:
+        """建立測試案例"""
+        # 生成 TC ID
+        tc_id = self._generate_tc_id()
+        
+        query = """
+            INSERT INTO test_cases (
+                tc_id, title, description, acceptance_criteria, priority, status,
+                test_project_id, responsible_user_id, estimated_hours
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        
+        test_case_id = db_manager.execute_insert(query, (
+            tc_id, title, description, acceptance_criteria, priority, status,
+            test_project_id, responsible_user_id, estimated_hours
+        ))
+        
+        # 添加產品標籤關聯
+        if product_tag_ids:
+            self._add_test_case_tags(int(test_case_id), product_tag_ids)
+        
+        # 返回新創建的測試案例
+        return self.get_test_case_by_id(int(test_case_id))
+    
+    def get_test_case_by_id(self, test_case_id: int) -> Optional[Dict]:
+        """根據 ID 取得測試案例"""
+        query = """
+            SELECT 
+                tc.id, tc.tc_id, tc.title, tc.description, tc.acceptance_criteria,
+                tc.priority, tc.status, tc.test_project_id, tc.responsible_user_id,
+                tc.estimated_hours, tc.actual_hours, tc.created_at, tc.updated_at,
+                tp.name as project_name,
+                u.username as responsible_user_name
+            FROM test_cases tc
+            LEFT JOIN test_projects tp ON tc.test_project_id = tp.id
+            LEFT JOIN users u ON tc.responsible_user_id = u.id
+            WHERE tc.id = ?
+        """
+        results = db_manager.execute_query(query, (test_case_id,))
+        
+        if results:
+            tc = results[0]
+            tc['product_tags'] = self.get_test_case_tags(tc['id'])
+            return tc
+        
+        return None
+    
+    def get_test_case_by_tc_id(self, tc_id: str) -> Optional[Dict]:
+        """根據 TC ID 取得測試案例"""
+        query = """
+            SELECT 
+                tc.id, tc.tc_id, tc.title, tc.description, tc.acceptance_criteria,
+                tc.priority, tc.status, tc.test_project_id, tc.responsible_user_id,
+                tc.estimated_hours, tc.actual_hours, tc.created_at, tc.updated_at,
+                tp.name as project_name,
+                u.username as responsible_user_name
+            FROM test_cases tc
+            LEFT JOIN test_projects tp ON tc.test_project_id = tp.id
+            LEFT JOIN users u ON tc.responsible_user_id = u.id
+            WHERE tc.tc_id = ?
+        """
+        results = db_manager.execute_query(query, (tc_id,))
+        
+        if results:
+            tc = results[0]
+            tc['product_tags'] = self.get_test_case_tags(tc['id'])
+            return tc
+        
+        return None
+    
+    def update_test_case(self, test_case_id: int, **kwargs) -> bool:
+        """更新測試案例"""
+        allowed_fields = [
+            'title', 'description', 'acceptance_criteria', 'priority', 'status',
+            'test_project_id', 'responsible_user_id', 'estimated_hours', 'actual_hours'
+        ]
+        
+        update_fields = []
+        params = []
+        
+        for field, value in kwargs.items():
+            if field in allowed_fields and value is not None:
+                update_fields.append(f"{field} = ?")
+                params.append(value)
+        
+        if not update_fields:
+            return False
+        
+        params.append(test_case_id)
+        query = f"UPDATE test_cases SET {', '.join(update_fields)} WHERE id = ?"
+        
+        rows_affected = db_manager.execute_update(query, tuple(params))
+        return rows_affected > 0
+    
+    def delete_test_case(self, test_case_id: int) -> bool:
+        """刪除測試案例"""
+        query = "DELETE FROM test_cases WHERE id = ?"
+        rows_affected = db_manager.execute_delete(query, (test_case_id,))
+        return rows_affected > 0
+    
+    def get_test_case_tags(self, test_case_id: int) -> List[Dict]:
+        """取得測試案例的標籤"""
+        query = """
+            SELECT pt.id, pt.name, pt.description, pt.color
+            FROM product_tags pt
+            INNER JOIN test_case_tags tct ON pt.id = tct.product_tag_id
+            WHERE tct.test_case_id = ?
+            ORDER BY pt.name
+        """
+        return db_manager.execute_query(query, (test_case_id,))
+    
+    def _add_test_case_tags(self, test_case_id: int, tag_ids: List[int]):
+        """添加測試案例標籤關聯"""
+        query = "INSERT INTO test_case_tags (test_case_id, product_tag_id) VALUES (?, ?)"
+        params_list = [(test_case_id, tag_id) for tag_id in tag_ids]
+        db_manager.execute_many(query, params_list)
+    
+    def _remove_test_case_tags(self, test_case_id: int, tag_ids: List[int] = None):
+        """移除測試案例標籤關聯"""
+        if tag_ids:
+            placeholders = ','.join(['?'] * len(tag_ids))
+            query = f"DELETE FROM test_case_tags WHERE test_case_id = ? AND product_tag_id IN ({placeholders})"
+            params = [test_case_id] + tag_ids
+        else:
+            query = "DELETE FROM test_case_tags WHERE test_case_id = ?"
+            params = [test_case_id]
+        
+        db_manager.execute_delete(query, tuple(params))
+    
+    def update_test_case_tags(self, test_case_id: int, tag_ids: List[int]):
+        """更新測試案例標籤"""
+        # 先移除所有現有標籤
+        self._remove_test_case_tags(test_case_id)
+        
+        # 添加新標籤
+        if tag_ids:
+            self._add_test_case_tags(test_case_id, tag_ids)
+    
+    def _generate_tc_id(self) -> str:
+        """生成 TC ID"""
+        query = "SELECT COUNT(*) as count FROM test_cases"
+        result = db_manager.execute_query(query)
+        count = result[0]['count'] if result else 0
+        return f"TC{count + 1:05d}"  # TC00001, TC00002, ...
+    
+    # ========== 統計相關 ==========
+    
+    def get_test_case_statistics(self) -> Dict:
+        """取得測試案例統計"""
+        query = """
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft,
+                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'blocked' THEN 1 ELSE 0 END) as blocked,
+                SUM(estimated_hours) as total_estimated_hours,
+                SUM(actual_hours) as total_actual_hours
+            FROM test_cases
+        """
+        results = db_manager.execute_query(query)
+        return results[0] if results else {}
+    
+    def get_project_statistics(self, project_id: int) -> Dict:
         """取得專案統計"""
-        project = self.get_test_project(project_id)
-        if not project:
-            return None
-        
-        test_cases = {case.id: case for case in self.get_test_cases() 
-                     if case.id in project.selected_test_cases}
-        product_tags = {tag.id: tag for tag in self.get_product_tags()}
-        
-        total_cases = len(project.selected_test_cases)
-        passed_cases = sum(1 for result in project.test_results.values() 
-                          if result.status == TestStatus.PASS)
-        failed_cases = sum(1 for result in project.test_results.values() 
-                          if result.status == TestStatus.FAIL)
-        blocked_cases = sum(1 for result in project.test_results.values() 
-                           if result.status == TestStatus.BLOCKED)
-        not_tested_cases = total_cases - len(project.test_results)
-        
-        pass_rate = (passed_cases / total_cases * 100) if total_cases > 0 else 0
-        fail_rate = (failed_cases / total_cases * 100) if total_cases > 0 else 0
-        
-        # 計算各產品標籤的統計
-        product_stats = {}
-        for tag_id, tag in product_tags.items():
-            tag_cases = [case for case in test_cases.values() 
-                        if tag_id in case.product_tags]
-            
-            if not tag_cases:
-                continue
-            
-            tag_total = len(tag_cases)
-            tag_passed = sum(1 for case in tag_cases 
-                           if case.id in project.test_results and 
-                           project.test_results[case.id].status == TestStatus.PASS)
-            tag_failed = sum(1 for case in tag_cases 
-                           if case.id in project.test_results and 
-                           project.test_results[case.id].status == TestStatus.FAIL)
-            tag_blocked = sum(1 for case in tag_cases 
-                            if case.id in project.test_results and 
-                            project.test_results[case.id].status == TestStatus.BLOCKED)
-            tag_pass_rate = (tag_passed / tag_total * 100) if tag_total > 0 else 0
-            
-            product_stats[tag.name] = {
-                'total': tag_total,
-                'passed': tag_passed,
-                'failed': tag_failed,
-                'blocked': tag_blocked,
-                'not_tested': tag_total - tag_passed - tag_failed - tag_blocked,
-                'pass_rate': round(tag_pass_rate, 2)
-            }
-        
-        return TestStatistics(
-            total_cases=total_cases,
-            passed_cases=passed_cases,
-            failed_cases=failed_cases,
-            blocked_cases=blocked_cases,
-            not_tested_cases=not_tested_cases,
-            pass_rate=round(pass_rate, 2),
-            fail_rate=round(fail_rate, 2),
-            product_stats=product_stats
-        )
+        query = """
+            SELECT 
+                COUNT(*) as total_cases,
+                SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft,
+                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'blocked' THEN 1 ELSE 0 END) as blocked,
+                SUM(estimated_hours) as total_estimated_hours,
+                SUM(actual_hours) as total_actual_hours
+            FROM test_cases
+            WHERE test_project_id = ?
+        """
+        results = db_manager.execute_query(query, (project_id,))
+        return results[0] if results else {}
+    
+    # ========== 向後兼容方法 ==========
+    
+    def get_all_projects(self) -> Dict[str, Dict]:
+        """取得所有專案（向後兼容格式）"""
+        projects = self.get_test_projects()
+        return {project['name']: project for project in projects}
+    
+    def get_project_test_cases_count(self, project_name: str) -> int:
+        """取得專案的測試案例數量"""
+        project = self.get_test_project_by_name(project_name)
+        if project:
+            stats = self.get_project_statistics(project['id'])
+            return stats.get('total_cases', 0)
+        return 0
+    
+    def delete_project(self, project_name: str) -> bool:
+        """根據名稱刪除專案"""
+        project = self.get_test_project_by_name(project_name)
+        if project:
+            return self.delete_test_project(project['id'])
+        return False
