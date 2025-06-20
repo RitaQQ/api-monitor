@@ -99,22 +99,35 @@ class TestCaseManager:
         query = """
             SELECT 
                 tp.id, tp.name, tp.description, tp.status, tp.responsible_user_id,
-                tp.created_at, tp.updated_at,
+                tp.created_at, tp.updated_at, tp.start_time, tp.end_time,
                 u.username as responsible_user_name
             FROM test_projects tp
             LEFT JOIN users u ON tp.responsible_user_id = u.id
             ORDER BY tp.created_at DESC
         """
-        return db_manager.execute_query(query)
+        projects = db_manager.execute_query(query)
+        
+        # 為每個專案添加測試案例和測試結果
+        for project in projects:
+            # 添加專案關聯的測試案例 ID 列表
+            test_cases = self.get_test_cases(project_id=project['id'])
+            project['selected_test_cases'] = [tc['id'] for tc in test_cases]
+            
+            # 添加測試結果
+            project['test_results'] = self.get_test_results_for_project(project['id'])
+        
+        return projects
     
     def create_test_project(self, name: str, description: Optional[str] = None,
-                           responsible_user_id: Optional[str] = None) -> Dict:
+                           responsible_user_id: Optional[str] = None,
+                           start_time: Optional[str] = None,
+                           end_time: Optional[str] = None) -> Dict:
         """建立測試專案"""
         query = """
-            INSERT INTO test_projects (name, description, responsible_user_id)
-            VALUES (?, ?, ?)
+            INSERT INTO test_projects (name, description, responsible_user_id, start_time, end_time)
+            VALUES (?, ?, ?, ?, ?)
         """
-        project_id = db_manager.execute_insert(query, (name, description, responsible_user_id))
+        project_id = db_manager.execute_insert(query, (name, description, responsible_user_id, start_time, end_time))
         
         # 返回新創建的專案
         return self.get_test_project_by_id(int(project_id))
@@ -124,32 +137,59 @@ class TestCaseManager:
         query = """
             SELECT 
                 tp.id, tp.name, tp.description, tp.status, tp.responsible_user_id,
-                tp.created_at, tp.updated_at,
+                tp.created_at, tp.updated_at, tp.start_time, tp.end_time,
                 u.username as responsible_user_name
             FROM test_projects tp
             LEFT JOIN users u ON tp.responsible_user_id = u.id
             WHERE tp.id = ?
         """
         results = db_manager.execute_query(query, (project_id,))
-        return results[0] if results else None
+        
+        if results:
+            project = results[0]
+            
+            # 添加專案關聯的測試案例 ID 列表
+            test_cases = self.get_test_cases(project_id=project_id)
+            project['selected_test_cases'] = [tc['id'] for tc in test_cases]
+            
+            # 添加實際的測試結果
+            project['test_results'] = self.get_test_results_for_project(project_id)
+            
+            return project
+        
+        return None
     
     def get_test_project_by_name(self, name: str) -> Optional[Dict]:
         """根據名稱取得測試專案"""
         query = """
             SELECT 
                 tp.id, tp.name, tp.description, tp.status, tp.responsible_user_id,
-                tp.created_at, tp.updated_at,
+                tp.created_at, tp.updated_at, tp.start_time, tp.end_time,
                 u.username as responsible_user_name
             FROM test_projects tp
             LEFT JOIN users u ON tp.responsible_user_id = u.id
             WHERE tp.name = ?
         """
         results = db_manager.execute_query(query, (name,))
-        return results[0] if results else None
+        
+        if results:
+            project = results[0]
+            
+            # 添加專案關聯的測試案例 ID 列表
+            test_cases = self.get_test_cases(project_id=project['id'])
+            project['selected_test_cases'] = [tc['id'] for tc in test_cases]
+            
+            # 添加實際的測試結果
+            project['test_results'] = self.get_test_results_for_project(project['id'])
+            
+            return project
+        
+        return None
     
     def update_test_project(self, project_id: int, name: str = None, 
                            description: str = None, status: str = None,
-                           responsible_user_id: str = None) -> bool:
+                           responsible_user_id: str = None,
+                           start_time: str = None, end_time: str = None) -> bool:
         """更新測試專案"""
         update_fields = []
         params = []
@@ -169,6 +209,14 @@ class TestCaseManager:
         if responsible_user_id is not None:
             update_fields.append("responsible_user_id = ?")
             params.append(responsible_user_id)
+        
+        if start_time is not None:
+            update_fields.append("start_time = ?")
+            params.append(start_time)
+        
+        if end_time is not None:
+            update_fields.append("end_time = ?")
+            params.append(end_time)
         
         if not update_fields:
             return False
@@ -423,6 +471,76 @@ class TestCaseManager:
         """
         results = db_manager.execute_query(query, (project_id,))
         return results[0] if results else {}
+    
+    def update_test_result(self, project_id: str, test_case_id: str, status, 
+                          notes: str = None, known_issues: str = None, 
+                          blocked_reason: str = None) -> Optional[Dict]:
+        """更新測試結果"""
+        try:
+            # 轉換 project_id 為整數
+            project_id = int(project_id)
+            test_case_id = int(test_case_id)
+            
+            # 轉換狀態枚舉為字符串
+            status_str = status.value if hasattr(status, 'value') else str(status)
+            
+            # 檢查專案是否存在
+            project = self.get_test_project_by_id(project_id)
+            if not project:
+                return None
+            
+            # 檢查測試案例是否存在
+            test_case = self.get_test_case_by_id(test_case_id)
+            if not test_case:
+                return None
+            
+            # 使用 UPSERT 語法更新或插入測試結果
+            upsert_query = """
+                INSERT INTO test_results (project_id, test_case_id, status, notes, known_issues, blocked_reason, tested_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT(project_id, test_case_id) 
+                DO UPDATE SET 
+                    status = excluded.status,
+                    notes = excluded.notes,
+                    known_issues = excluded.known_issues,
+                    blocked_reason = excluded.blocked_reason,
+                    tested_at = excluded.tested_at,
+                    updated_at = excluded.updated_at
+            """
+            
+            db_manager.execute_update(upsert_query, (
+                project_id, test_case_id, status_str, 
+                notes or '', known_issues or '', blocked_reason or ''
+            ))
+            
+            # 重新獲取專案以包含更新的測試結果
+            return self.get_test_project_by_id(project_id)
+            
+        except Exception as e:
+            print(f"更新測試結果失敗: {e}")
+            return None
+    
+    def get_test_results_for_project(self, project_id: int) -> Dict[str, Dict]:
+        """取得專案的所有測試結果"""
+        query = """
+            SELECT test_case_id, status, notes, known_issues, blocked_reason, tested_at
+            FROM test_results 
+            WHERE project_id = ?
+        """
+        results = db_manager.execute_query(query, (project_id,))
+        
+        test_results = {}
+        for result in results:
+            test_results[str(result['test_case_id'])] = {
+                'test_case_id': result['test_case_id'],
+                'status': result['status'],
+                'notes': result['notes'] or '',
+                'known_issues': result['known_issues'] or '',
+                'blocked_reason': result['blocked_reason'] or '',
+                'tested_at': result['tested_at']
+            }
+        
+        return test_results
     
     # ========== 向後兼容方法 ==========
     

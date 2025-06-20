@@ -445,7 +445,9 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             project = test_case_manager.create_test_project(
                 name=data['name'],
                 description=data.get('description'),
-                responsible_user_id=responsible_user_id
+                responsible_user_id=responsible_user_id,
+                start_time=data.get('start_time'),
+                end_time=data.get('end_time')
             )
             
             # 處理選中的測試案例關聯
@@ -474,12 +476,8 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             # 處理測試案例關聯（需要單獨處理，不能傳給 update_test_project）
             selected_test_cases = data.pop('selected_test_cases', None)
             
-            # 移除不支援的時間欄位（資料庫表沒有這些欄位）
-            data.pop('start_time', None)
-            data.pop('end_time', None)
-            
-            # 只保留 update_test_project 支援的參數
-            allowed_fields = ['name', 'description', 'status', 'responsible_user_id']
+            # update_test_project 現在支援時間欄位
+            allowed_fields = ['name', 'description', 'status', 'responsible_user_id', 'start_time', 'end_time']
             filtered_data = {k: v for k, v in data.items() if k in allowed_fields}
             
             success = test_case_manager.update_test_project(int(project_id), **filtered_data)
@@ -608,8 +606,8 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             # 獲取所有測試案例以便查找名稱
             test_cases = test_case_manager.get_test_cases()
             
-            # 建立測試案例ID到名稱的映射
-            test_case_map = {tc.id: tc.title for tc in test_cases}
+            # 建立測試案例ID到名稱的映射（修復：使用字典語法）
+            test_case_map = {tc['id']: tc['title'] for tc in test_cases}
             
             # 建立CSV內容
             csv_buffer = io.StringIO()
@@ -617,52 +615,52 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             
             # CSV標題行
             headers = [
-                '專案ID', '專案名稱', '狀態', '開始日期', '結束日期', '負責人', 
-                '建立時間', '更新時間', '測試案例ID', '測試案例名稱', 
-                '測試狀態', '測試備註', '已知問題', '阻擋原因', '測試時間'
+                '專案ID', '專案名稱', '狀態', '描述', '負責人', 
+                '建立時間', '更新時間', '測試案例ID', '測試案例名稱'
             ]
             csv_writer.writerow(headers)
             
-            # 寫入專案和測試結果數據
+            # 寫入專案數據（修復：使用字典語法）
             for project in projects:
+                # 解析時間字串
+                created_at = project.get('created_at', '')
+                updated_at = project.get('updated_at', '')
+                
+                # 格式化時間（如果是datetime物件則轉字串，如果已是字串則直接使用）
+                if hasattr(created_at, 'strftime'):
+                    created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    created_at_str = str(created_at) if created_at else ''
+                
+                if hasattr(updated_at, 'strftime'):
+                    updated_at_str = updated_at.strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    updated_at_str = str(updated_at) if updated_at else ''
+                
                 base_row = [
-                    project.id,
-                    project.name,
-                    project.status.value,
-                    project.start_time.strftime('%Y-%m-%d') if project.start_time else '',
-                    project.end_time.strftime('%Y-%m-%d') if project.end_time else '',
-                    project.responsible_user,
-                    project.created_at.strftime('%Y-%m-%d %H:%M:%S') if project.created_at else '',
-                    project.updated_at.strftime('%Y-%m-%d %H:%M:%S') if project.updated_at else ''
+                    project['id'],
+                    project['name'],
+                    project.get('status', ''),
+                    project.get('description', ''),
+                    project.get('responsible_user_name', ''),
+                    created_at_str,
+                    updated_at_str
                 ]
                 
-                # 如果專案有測試案例，為每個測試案例寫一行
-                if project.selected_test_cases:
-                    for test_case_id in project.selected_test_cases:
-                        test_case_name = test_case_map.get(test_case_id, '未知測試案例')
-                        test_result = project.test_results.get(test_case_id)
-                        
-                        if test_result:
-                            result_row = base_row + [
-                                test_case_id,
-                                test_case_name,
-                                test_result.status.value,
-                                test_result.notes or '',
-                                test_result.known_issues or '',
-                                test_result.blocked_reason or '',
-                                test_result.tested_at.strftime('%Y-%m-%d %H:%M:%S') if test_result.tested_at else ''
-                            ]
-                        else:
-                            result_row = base_row + [
-                                test_case_id,
-                                test_case_name,
-                                '未測試',
-                                '', '', '', ''
-                            ]
+                # 獲取專案關聯的測試案例
+                project_cases = test_case_manager.get_test_cases(project_id=project['id'])
+                
+                if project_cases:
+                    # 為每個測試案例寫一行
+                    for test_case in project_cases:
+                        result_row = base_row + [
+                            test_case['id'],
+                            test_case['title']
+                        ]
                         csv_writer.writerow(result_row)
                 else:
                     # 如果沒有測試案例，只寫專案基本信息
-                    empty_row = base_row + ['', '', '', '', '', '', '']
+                    empty_row = base_row + ['', '']
                     csv_writer.writerow(empty_row)
             
             # 準備檔案下載

@@ -500,8 +500,9 @@ async function loadProjectDetail(projectId) {
             }
             
             // 只保留專案中選擇的測試案例
+            const selectedTestCases = currentProject.selected_test_cases || [];
             testCases = allTestCases.filter(tc => 
-                currentProject.selected_test_cases.includes(tc.id)
+                selectedTestCases.includes(tc.id)
             );
             
             renderProjectDetail();
@@ -553,7 +554,7 @@ function renderProjectDetail() {
     projectMeta.innerHTML = `
         <div class="meta-item">
             <div class="meta-label">負責人</div>
-            <div class="meta-value">${currentProject.responsible_user}</div>
+            <div class="meta-value">${currentProject.responsible_user_name || currentProject.responsible_user || '未指定'}</div>
         </div>
         <div class="meta-item">
             <div class="meta-label">開始日期</div>
@@ -565,7 +566,7 @@ function renderProjectDetail() {
         </div>
         <div class="meta-item">
             <div class="meta-label">測試案例數</div>
-            <div class="meta-value">${currentProject.selected_test_cases.length}</div>
+            <div class="meta-value">${(currentProject.selected_test_cases || []).length}</div>
         </div>
         <div class="meta-item">
             <div class="meta-label">建立時間</div>
@@ -580,7 +581,7 @@ function renderProjectDetail() {
 // 渲染進度統計
 function renderProgressStats() {
     const testResults = currentProject.test_results || {};
-    const totalCases = currentProject.selected_test_cases.length;
+    const totalCases = (currentProject.selected_test_cases || []).length;
     
     const passCount = Object.values(testResults).filter(r => r.status === 'pass').length;
     const failCount = Object.values(testResults).filter(r => r.status === 'fail').length;
