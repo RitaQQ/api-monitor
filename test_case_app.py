@@ -29,6 +29,56 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         user = get_current_user()
         return user and user.get('role') == 'admin'
     
+    # 輔助函數：將後端資料格式轉換為前端期望格式
+    def _process_case_for_frontend(case_dict):
+        """將後端測試案例資料轉換為前端期望格式"""
+        processed_case = case_dict.copy()
+        
+        # 將 description 拆分為 user_role 和 feature_description
+        description = case_dict.get('description', '')
+        user_role = ''
+        feature_description = ''
+        
+        if description:
+            lines = description.split('\n')
+            for line in lines:
+                line = line.strip()
+                if line.startswith('用戶角色:'):
+                    user_role = line.replace('用戶角色:', '').strip()
+                elif line.startswith('功能描述:'):
+                    feature_description = line.replace('功能描述:', '').strip()
+                elif not user_role and not feature_description:
+                    # 如果沒有特定格式，將整個描述作為功能描述
+                    feature_description = description
+        
+        processed_case['user_role'] = user_role
+        processed_case['feature_description'] = feature_description
+        
+        # 將 acceptance_criteria 字串轉換為列表
+        if processed_case.get('acceptance_criteria'):
+            if isinstance(processed_case['acceptance_criteria'], str):
+                processed_case['acceptance_criteria'] = [
+                    criterion.strip() 
+                    for criterion in processed_case['acceptance_criteria'].split('\n') 
+                    if criterion.strip()
+                ]
+        else:
+            processed_case['acceptance_criteria'] = []
+        
+        # 添加空的 test_notes 欄位（前端期望）
+        processed_case['test_notes'] = ''
+        
+        # 確保 product_tags 是 ID 陣列格式
+        if 'product_tags' in processed_case:
+            if isinstance(processed_case['product_tags'], list) and processed_case['product_tags']:
+                # 如果是物件陣列，轉換為 ID 陣列
+                if isinstance(processed_case['product_tags'][0], dict):
+                    processed_case['product_tags'] = [tag['id'] for tag in processed_case['product_tags']]
+        else:
+            processed_case['product_tags'] = []
+        
+        return processed_case
+    
     # ========== 頁面路由 ==========
     
     @app.route('/test-case-management')
@@ -154,10 +204,22 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         try:
             cases = test_case_manager.get_test_cases()
             # 處理兩種情況：字典列表或物件列表
-            if cases and hasattr(cases[0], 'to_dict'):
-                return jsonify([case.to_dict() for case in cases])
+            if cases:
+                # 轉換後端資料格式為前端期望格式
+                processed_cases = []
+                for case in cases:
+                    if hasattr(case, 'to_dict'):
+                        case_dict = case.to_dict()
+                    else:
+                        case_dict = case
+                    
+                    # 將 description 拆分為 user_role 和 feature_description
+                    processed_case = _process_case_for_frontend(case_dict)
+                    processed_cases.append(processed_case)
+                
+                return jsonify(processed_cases)
             else:
-                return jsonify(cases)
+                return jsonify([])
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -165,13 +227,17 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     def get_test_case(case_id):
         """取得特定測試案例"""
         try:
-            case = test_case_manager.get_test_case(case_id)
+            case = test_case_manager.get_test_case_by_id(int(case_id))
             if case:
                 # 處理兩種情況：字典或物件
                 if hasattr(case, 'to_dict'):
-                    return jsonify(case.to_dict())
+                    case_dict = case.to_dict()
                 else:
-                    return jsonify(case)
+                    case_dict = case
+                
+                # 將後端資料格式轉換為前端期望格式
+                processed_case = _process_case_for_frontend(case_dict)
+                return jsonify(processed_case)
             else:
                 return jsonify({'error': '測試案例不存在'}), 404
         except Exception as e:
@@ -182,19 +248,50 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """建立測試案例"""
         try:
             data = request.get_json()
+            
+            # 處理前端資料格式轉換
+            # 合併 user_role 和 feature_description 為 description
+            description = None
+            if data.get('user_role') or data.get('feature_description'):
+                user_role = data.get('user_role', '').strip()
+                feature_desc = data.get('feature_description', '').strip()
+                if user_role and feature_desc:
+                    description = f"用戶角色: {user_role}\n功能描述: {feature_desc}"
+                elif feature_desc:
+                    description = feature_desc
+                elif user_role:
+                    description = f"用戶角色: {user_role}"
+            else:
+                description = data.get('description')
+            
+            # 處理驗收條件：如果是列表則轉換為字符串
+            acceptance_criteria = data.get('acceptance_criteria')
+            if isinstance(acceptance_criteria, list):
+                acceptance_criteria = '\n'.join(acceptance_criteria) if acceptance_criteria else None
+            
+            # 處理產品標籤：前端可能發送 product_tags 或 product_tag_ids
+            product_tag_ids = data.get('product_tag_ids') or data.get('product_tags') or []
+            
             case = test_case_manager.create_test_case(
                 title=data['title'],
-                user_role=data['user_role'],
-                feature_description=data['feature_description'],
-                acceptance_criteria=data.get('acceptance_criteria', []),
-                test_notes=data.get('test_notes'),
-                product_tags=data.get('product_tags', [])
+                description=description,
+                acceptance_criteria=acceptance_criteria,
+                priority=data.get('priority', 'medium'),
+                status=data.get('status', 'draft'),
+                test_project_id=data.get('test_project_id'),
+                responsible_user_id=data.get('responsible_user_id'),
+                estimated_hours=data.get('estimated_hours', 0),
+                product_tag_ids=product_tag_ids
             )
             # 處理兩種情況：字典或物件
             if hasattr(case, 'to_dict'):
-                return jsonify(case.to_dict()), 201
+                case_dict = case.to_dict()
             else:
-                return jsonify(case), 201
+                case_dict = case
+            
+            # 將後端資料格式轉換為前端期望格式
+            processed_case = _process_case_for_frontend(case_dict)
+            return jsonify(processed_case), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -203,15 +300,47 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """更新測試案例"""
         try:
             data = request.get_json()
-            case = test_case_manager.update_test_case(case_id, **data)
-            if case:
-                # 安全檢查：確認物件有 to_dict 方法
-                if hasattr(case, 'to_dict'):
-                    return jsonify(case.to_dict())
+            
+            # 處理前端資料格式轉換
+            # 合併 user_role 和 feature_description 為 description
+            if data.get('user_role') or data.get('feature_description'):
+                user_role = data.get('user_role', '').strip()
+                feature_desc = data.get('feature_description', '').strip()
+                if user_role and feature_desc:
+                    data['description'] = f"用戶角色: {user_role}\n功能描述: {feature_desc}"
+                elif feature_desc:
+                    data['description'] = feature_desc
+                elif user_role:
+                    data['description'] = f"用戶角色: {user_role}"
+                # 移除前端專用欄位
+                data.pop('user_role', None)
+                data.pop('feature_description', None)
+            
+            # 處理驗收條件：如果是列表則轉換為字符串
+            if 'acceptance_criteria' in data and isinstance(data['acceptance_criteria'], list):
+                data['acceptance_criteria'] = '\n'.join(data['acceptance_criteria']) if data['acceptance_criteria'] else None
+            
+            # 處理產品標籤：前端可能發送 product_tags 或 product_tag_ids
+            if 'product_tags' in data:
+                data['product_tag_ids'] = data.pop('product_tags')
+            
+            # 移除前端專用欄位
+            data.pop('test_notes', None)  # 這個欄位在後端沒有對應
+            
+            success = test_case_manager.update_test_case(int(case_id), **data)
+            if success:
+                # 更新成功，返回更新後的案例
+                updated_case = test_case_manager.get_test_case_by_id(int(case_id))
+                if hasattr(updated_case, 'to_dict'):
+                    case_dict = updated_case.to_dict()
                 else:
-                    return jsonify(case)
+                    case_dict = updated_case
+                
+                # 將後端資料格式轉換為前端期望格式
+                processed_case = _process_case_for_frontend(case_dict)
+                return jsonify(processed_case)
             else:
-                return jsonify({'error': '測試案例不存在'}), 404
+                return jsonify({'error': '更新失敗'}), 400
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -219,7 +348,7 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     def delete_test_case(case_id):
         """刪除測試案例"""
         try:
-            success = test_case_manager.delete_test_case(case_id)
+            success = test_case_manager.delete_test_case(int(case_id))
             if success:
                 return jsonify({'message': '刪除成功'})
             else:
@@ -318,6 +447,16 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                 description=data.get('description'),
                 responsible_user_id=responsible_user_id
             )
+            
+            # 處理選中的測試案例關聯
+            selected_test_cases = data.get('selected_test_cases', [])
+            if selected_test_cases and project:
+                project_id = project['id']
+                for case_id in selected_test_cases:
+                    try:
+                        test_case_manager.update_test_case(int(case_id), test_project_id=project_id)
+                    except Exception as e:
+                        print(f"關聯測試案例 {case_id} 失敗: {e}")
             # 處理兩種情況：字典或物件
             if hasattr(project, 'to_dict'):
                 return jsonify(project.to_dict()), 201
@@ -332,18 +471,29 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         try:
             data = request.get_json()
             
-            # 處理日期格式
-            if 'start_time' in data and isinstance(data['start_time'], str):
-                data['start_time'] = datetime.fromisoformat(data['start_time'])
+            # 處理測試案例關聯（需要單獨處理，不能傳給 update_test_project）
+            selected_test_cases = data.pop('selected_test_cases', None)
             
-            if 'end_time' in data and isinstance(data['end_time'], str):
-                data['end_time'] = datetime.fromisoformat(data['end_time'])
+            # 移除不支援的時間欄位（資料庫表沒有這些欄位）
+            data.pop('start_time', None)
+            data.pop('end_time', None)
             
-            # 處理狀態
-            if 'status' in data and isinstance(data['status'], str):
-                data['status'] = ProjectStatus(data['status'])
+            # 只保留 update_test_project 支援的參數
+            allowed_fields = ['name', 'description', 'status', 'responsible_user_id']
+            filtered_data = {k: v for k, v in data.items() if k in allowed_fields}
             
-            success = test_case_manager.update_test_project(int(project_id), **data)
+            success = test_case_manager.update_test_project(int(project_id), **filtered_data)
+            
+            # 處理測試案例關聯更新
+            if success and selected_test_cases is not None:
+                # 先清除該專案的所有測試案例關聯
+                try:
+                    test_case_manager.clear_project_test_cases(int(project_id))
+                    # 重新關聯選中的測試案例
+                    for case_id in selected_test_cases:
+                        test_case_manager.update_test_case(int(case_id), test_project_id=int(project_id))
+                except Exception as e:
+                    print(f"更新測試案例關聯失敗: {e}")
             if success:
                 # 更新成功，返回更新後的專案
                 updated_project = test_case_manager.get_test_project_by_id(int(project_id))

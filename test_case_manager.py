@@ -185,6 +185,12 @@ class TestCaseManager:
         rows_affected = db_manager.execute_delete(query, (project_id,))
         return rows_affected > 0
     
+    def clear_project_test_cases(self, project_id: int) -> bool:
+        """清除專案的所有測試案例關聯"""
+        query = "UPDATE test_cases SET test_project_id = NULL WHERE test_project_id = ?"
+        rows_affected = db_manager.execute_update(query, (project_id,))
+        return True  # 即使沒有關聯的案例也返回成功
+    
     # ========== Test Cases 管理 ==========
     
     def get_test_cases(self, project_id: Optional[int] = None, 
@@ -309,6 +315,9 @@ class TestCaseManager:
             'test_project_id', 'responsible_user_id', 'estimated_hours', 'actual_hours'
         ]
         
+        # 處理產品標籤更新
+        product_tag_ids = kwargs.pop('product_tag_ids', None)
+        
         update_fields = []
         params = []
         
@@ -317,14 +326,17 @@ class TestCaseManager:
                 update_fields.append(f"{field} = ?")
                 params.append(value)
         
-        if not update_fields:
-            return False
+        # 更新基本欄位
+        if update_fields:
+            params.append(test_case_id)
+            query = f"UPDATE test_cases SET {', '.join(update_fields)} WHERE id = ?"
+            db_manager.execute_update(query, tuple(params))
         
-        params.append(test_case_id)
-        query = f"UPDATE test_cases SET {', '.join(update_fields)} WHERE id = ?"
+        # 更新產品標籤
+        if product_tag_ids is not None:
+            self.update_test_case_tags(test_case_id, product_tag_ids)
         
-        rows_affected = db_manager.execute_update(query, tuple(params))
-        return rows_affected > 0
+        return True
     
     def delete_test_case(self, test_case_id: int) -> bool:
         """刪除測試案例"""

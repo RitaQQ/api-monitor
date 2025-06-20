@@ -682,7 +682,7 @@ async function showProjectModal(project = null) {
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #30363D;">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-success" onclick="saveProject(${isEdit ? `'${project.id}'` : 'null'})">
+                        <button type="button" class="btn btn-success" onclick="saveProject(${isEdit ? project.id : null})">
                             ${isEdit ? '更新' : '建立'}
                         </button>
                     </div>

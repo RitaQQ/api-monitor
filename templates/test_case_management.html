@@ -586,7 +586,7 @@ function filterTestCases() {
         const textMatch = titleMatch || descriptionMatch || roleMatch;
         
         // 標籤篩選
-        const tagMatch = !selectedTagId || testCase.product_tags.includes(selectedTagId);
+        const tagMatch = !selectedTagId || testCase.product_tags.includes(parseInt(selectedTagId)) || testCase.product_tags.includes(selectedTagId);
         
         const shouldShow = textMatch && tagMatch;
         row.style.display = shouldShow ? '' : 'none';
