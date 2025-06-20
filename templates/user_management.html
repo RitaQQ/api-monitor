@@ -330,7 +330,7 @@
         <h2><i class="fas fa-user-plus"></i> 新增用戶</h2>
     </div>
     <div class="form-body">
-        <form method="POST" action="{{ url_for('add_user') }}">
+        <form method="POST" action="{{ url_for('user_management.add_user') }}">
             <div class="form-grid">
                 <div class="form-group">
                     <label for="username">用戶名 <span class="required">*</span></label>
@@ -430,7 +430,7 @@
                                         title="編輯用戶">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" 
+                                <form method="POST" action="{{ url_for('user_management.delete_user', user_id=user.id) }}" 
                                       style="display: inline;" 
                                       onsubmit="return confirm('確定要刪除用戶「{{ user.username }}」嗎？\\n\\n此操作無法復原！')">
                                     <button type="submit" class="btn btn-outline-danger btn-sm" 
