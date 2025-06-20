@@ -51,7 +51,7 @@ def register_user_management_routes(app, user_manager, user_story_manager, admin
         return redirect(url_for('user_management.user_management'))
 
     @user_management_bp.route('/projects/delete/<project_name>', methods=['POST'])
-    @login_required
+    @admin_required
     def delete_project(project_name):
         """刪除專案"""
         try:

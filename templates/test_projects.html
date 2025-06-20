@@ -398,7 +398,8 @@
 {% block extra_js %}
 <script>
 // 全域變數 - 用戶角色
-const userRole = '{{ user_role }}';
+const userRole = '{{ session.role if session.role else "user" }}';
+const isAdmin = userRole === 'admin';
 
 // 頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -942,8 +943,8 @@ function filterProjects() {
             <div class="empty-icon">
                 <i class="fas fa-folder-open"></i>
             </div>
-            <h4>尚無測試專案</h4>
-            <p>點擊右下角的按鈕建立您的第一個測試專案</p>
+            <h4>${isAdmin ? '尚無測試專案' : '您尚未負責任何測試專案'}</h4>
+            <p>${isAdmin ? '點擊右下角的按鈕建立您的第一個測試專案' : '請聯繫管理員將您設定為專案負責人'}</p>
         `;
     } else {
         tableContainer.style.display = 'block';

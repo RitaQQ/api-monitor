@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, send_file, session
+from flask import Flask, request, jsonify, render_template, send_file, session, flash, redirect
 from datetime import datetime
 import json
 import os
@@ -95,8 +95,36 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     
     @app.route('/test-projects/<project_id>')
     def project_detail(project_id):
-        """測試專案詳情頁面"""
-        return render_template('project_detail.html', project_id=project_id)
+        """測試專案詳情頁面（檢查權限）"""
+        # 檢查專案是否存在及權限
+        try:
+            project = test_case_manager.get_test_project_by_id(int(project_id))
+            if not project:
+                flash('專案不存在', 'error')
+                return redirect('/test-projects')
+            
+            # 獲取當前用戶
+            current_user = get_current_user()
+            if not current_user:
+                flash('請先登入', 'error')
+                return redirect('/login')
+            
+            # 權限檢查：管理員可以訪問所有專案，一般用戶只能訪問自己負責的專案
+            if current_user.get('role') != 'admin':
+                responsible_user = ''
+                if hasattr(project, 'responsible_user'):
+                    responsible_user = project.responsible_user
+                elif isinstance(project, dict):
+                    responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
+                
+                if responsible_user != current_user.get('username'):
+                    flash('無權限訪問此專案', 'error')
+                    return redirect('/test-projects')
+            
+            return render_template('project_detail.html', project_id=project_id)
+        except Exception as e:
+            flash(f'訪問專案時發生錯誤: {str(e)}', 'error')
+            return redirect('/test-projects')
     
     @app.route('/product-tag-management')
     def product_tag_management():
@@ -187,6 +215,10 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     @app.route('/api/product-tags/<tag_id>', methods=['DELETE'])
     def delete_product_tag(tag_id):
         """刪除產品標籤"""
+        # 檢查管理員權限
+        if not is_admin():
+            return jsonify({'error': '需要管理員權限'}), 403
+        
         try:
             success = test_case_manager.delete_product_tag(tag_id)
             if success:
@@ -347,6 +379,10 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     @app.route('/api/test-cases/<case_id>', methods=['DELETE'])
     def delete_test_case(case_id):
         """刪除測試案例"""
+        # 檢查管理員權限
+        if not is_admin():
+            return jsonify({'error': '需要管理員權限'}), 403
+        
         try:
             success = test_case_manager.delete_test_case(int(case_id))
             if success:
@@ -375,9 +411,35 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     
     @app.route('/api/test-projects', methods=['GET'])
     def get_test_projects():
-        """取得所有測試專案"""
+        """取得測試專案（根據用戶權限過濾）"""
         try:
             projects = test_case_manager.get_test_projects()
+            
+            # 獲取當前用戶
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '未登入'}), 401
+            
+            # 權限過濾：管理員可以看到所有專案，一般用戶只能看到自己負責的專案
+            if current_user.get('role') != 'admin':
+                # 過濾出當前用戶負責的專案
+                filtered_projects = []
+                current_username = current_user.get('username')
+                
+                for project in projects:
+                    if hasattr(project, 'responsible_user'):
+                        responsible_user = project.responsible_user
+                    elif isinstance(project, dict):
+                        # SQLite 版本使用 responsible_user_name，JSON 版本使用 responsible_user
+                        responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
+                    else:
+                        continue
+                    
+                    if responsible_user == current_username:
+                        filtered_projects.append(project)
+                
+                projects = filtered_projects
+            
             # 處理兩種情況：字典列表或物件列表
             if projects:
                 # 檢查所有元素是否都有 to_dict 方法
@@ -392,24 +454,45 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     
     @app.route('/api/test-projects/<project_id>', methods=['GET'])
     def get_test_project(project_id):
-        """取得特定測試專案"""
+        """取得特定測試專案（檢查權限）"""
         try:
             project = test_case_manager.get_test_project_by_id(int(project_id))
-            if project:
-                # 安全檢查：確認物件有 to_dict 方法
-                if hasattr(project, 'to_dict'):
-                    return jsonify(project.to_dict())
-                else:
-                    return jsonify(project)
-            else:
+            if not project:
                 return jsonify({'error': '專案不存在'}), 404
+            
+            # 獲取當前用戶
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '未登入'}), 401
+            
+            # 權限檢查：管理員可以訪問所有專案，一般用戶只能訪問自己負責的專案
+            if current_user.get('role') != 'admin':
+                responsible_user = ''
+                if hasattr(project, 'responsible_user'):
+                    responsible_user = project.responsible_user
+                elif isinstance(project, dict):
+                    responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
+                
+                if responsible_user != current_user.get('username'):
+                    return jsonify({'error': '無權限訪問此專案'}), 403
+            
+            # 安全檢查：確認物件有 to_dict 方法
+            if hasattr(project, 'to_dict'):
+                return jsonify(project.to_dict())
+            else:
+                return jsonify(project)
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
     @app.route('/api/test-projects', methods=['POST'])
     def create_test_project():
-        """建立測試專案"""
+        """建立測試專案（權限控制）"""
         try:
+            # 獲取當前用戶
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '未登入'}), 401
+            
             data = request.get_json()
             
             # 解析開始和結束時間
@@ -422,25 +505,33 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             if data.get('end_time'):
                 end_time = datetime.fromisoformat(data['end_time']) if isinstance(data['end_time'], str) else data['end_time']
             
-            # 驗證負責人用戶是否存在
+            # 處理負責人權限：一般用戶只能將自己設為負責人
             responsible_user_input = data.get('responsible_user_id') or data.get('responsible_user')
             responsible_user_id = None
             
-            if responsible_user_input:
-                from user_manager import UserManager
-                user_manager = UserManager()
-                
-                # 先嘗試用ID查詢，再嘗試用用戶名查詢
-                user = user_manager.get_user_by_id(responsible_user_input)
-                if user:
-                    responsible_user_id = responsible_user_input
-                else:
-                    # 嘗試用用戶名查詢
-                    user = user_manager.get_user_by_username(responsible_user_input)
+            # 如果不是管理員，強制將當前用戶設為負責人
+            if current_user.get('role') != 'admin':
+                responsible_user_id = current_user.get('id')
+            else:
+                # 管理員可以指定任何用戶為負責人
+                if responsible_user_input:
+                    from user_manager import UserManager
+                    user_manager = UserManager()
+                    
+                    # 先嘗試用ID查詢，再嘗試用用戶名查詢
+                    user = user_manager.get_user_by_id(responsible_user_input)
                     if user:
-                        responsible_user_id = user['id']
+                        responsible_user_id = responsible_user_input
                     else:
-                        return jsonify({'error': f"用戶 '{responsible_user_input}' 不存在"}), 400
+                        # 嘗試用用戶名查詢
+                        user = user_manager.get_user_by_username(responsible_user_input)
+                        if user:
+                            responsible_user_id = user['id']
+                        else:
+                            return jsonify({'error': f"用戶 '{responsible_user_input}' 不存在"}), 400
+                else:
+                    # 管理員如果沒有指定負責人，默認為自己
+                    responsible_user_id = current_user.get('id')
             
             project = test_case_manager.create_test_project(
                 name=data['name'],
@@ -469,8 +560,29 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     
     @app.route('/api/test-projects/<project_id>', methods=['PUT'])
     def update_test_project(project_id):
-        """更新測試專案"""
+        """更新測試專案（檢查權限）"""
         try:
+            # 首先檢查專案是否存在及權限
+            project = test_case_manager.get_test_project_by_id(int(project_id))
+            if not project:
+                return jsonify({'error': '專案不存在'}), 404
+            
+            # 獲取當前用戶
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '未登入'}), 401
+            
+            # 權限檢查：管理員可以編輯所有專案，一般用戶只能編輯自己負責的專案
+            if current_user.get('role') != 'admin':
+                responsible_user = ''
+                if hasattr(project, 'responsible_user'):
+                    responsible_user = project.responsible_user
+                elif isinstance(project, dict):
+                    responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
+                
+                if responsible_user != current_user.get('username'):
+                    return jsonify({'error': '無權限編輯此專案'}), 403
+            
             data = request.get_json()
             
             # 處理測試案例關聯（需要單獨處理，不能傳給 update_test_project）
@@ -506,8 +618,29 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     
     @app.route('/api/test-projects/<project_id>/results', methods=['PUT'])
     def update_test_result(project_id):
-        """更新測試結果"""
+        """更新測試結果（檢查權限）"""
         try:
+            # 首先檢查專案是否存在及權限
+            project = test_case_manager.get_test_project_by_id(int(project_id))
+            if not project:
+                return jsonify({'error': '專案不存在'}), 404
+            
+            # 獲取當前用戶
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '未登入'}), 401
+            
+            # 權限檢查：管理員可以更新所有專案結果，一般用戶只能更新自己負責的專案結果
+            if current_user.get('role') != 'admin':
+                responsible_user = ''
+                if hasattr(project, 'responsible_user'):
+                    responsible_user = project.responsible_user
+                elif isinstance(project, dict):
+                    responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
+                
+                if responsible_user != current_user.get('username'):
+                    return jsonify({'error': '無權限更新此專案的測試結果'}), 403
+            
             data = request.get_json()
             
             project = test_case_manager.update_test_result(
@@ -533,6 +666,10 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     @app.route('/api/test-projects/<project_id>', methods=['DELETE'])
     def delete_test_project(project_id):
         """刪除測試專案"""
+        # 檢查管理員權限
+        if not is_admin():
+            return jsonify({'error': '需要管理員權限'}), 403
+        
         try:
             success = test_case_manager.delete_test_project(int(project_id))
             if success:
@@ -546,8 +683,29 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     
     @app.route('/api/test-projects/<project_id>/statistics', methods=['GET'])
     def get_project_statistics(project_id):
-        """取得專案統計"""
+        """取得專案統計（檢查權限）"""
         try:
+            # 首先檢查專案是否存在及權限
+            project = test_case_manager.get_test_project_by_id(int(project_id))
+            if not project:
+                return jsonify({'error': '專案不存在'}), 404
+            
+            # 獲取當前用戶
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '未登入'}), 401
+            
+            # 權限檢查：管理員可以訪問所有專案，一般用戶只能訪問自己負責的專案
+            if current_user.get('role') != 'admin':
+                responsible_user = ''
+                if hasattr(project, 'responsible_user'):
+                    responsible_user = project.responsible_user
+                elif isinstance(project, dict):
+                    responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
+                
+                if responsible_user != current_user.get('username'):
+                    return jsonify({'error': '無權限訪問此專案'}), 403
+            
             statistics = test_case_manager.get_project_statistics(int(project_id))
             if statistics:
                 # 安全檢查：確認物件有 to_dict 方法
@@ -556,19 +714,40 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                 else:
                     return jsonify(statistics)
             else:
-                return jsonify({'error': '專案不存在'}), 404
+                return jsonify({'error': '無法獲取統計資料'}), 500
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
     @app.route('/api/test-projects/<project_id>/report', methods=['GET'])
     def get_project_report(project_id):
-        """取得專案報告"""
+        """取得專案報告（檢查權限）"""
         try:
+            # 首先檢查專案是否存在及權限
+            project = test_case_manager.get_test_project_by_id(int(project_id))
+            if not project:
+                return jsonify({'error': '專案不存在'}), 404
+            
+            # 獲取當前用戶
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '未登入'}), 401
+            
+            # 權限檢查：管理員可以訪問所有專案，一般用戶只能訪問自己負責的專案
+            if current_user.get('role') != 'admin':
+                responsible_user = ''
+                if hasattr(project, 'responsible_user'):
+                    responsible_user = project.responsible_user
+                elif isinstance(project, dict):
+                    responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
+                
+                if responsible_user != current_user.get('username'):
+                    return jsonify({'error': '無權限訪問此專案'}), 403
+            
             report = report_generator.generate_project_report(project_id)
             if report:
                 return jsonify(report_generator.export_to_dict(report))
             else:
-                return jsonify({'error': '專案不存在'}), 404
+                return jsonify({'error': '無法產生報告'}), 500
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     

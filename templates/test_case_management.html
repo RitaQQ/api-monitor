@@ -366,9 +366,11 @@
             <button class="btn btn-sm btn-outline-warning me-2" onclick="bulkEdit()">
                 <i class="fas fa-edit"></i> 批量編輯
             </button>
+            {% if session.role == 'admin' %}
             <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
                 <i class="fas fa-trash"></i> 批量刪除
             </button>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -429,6 +431,8 @@
 let allTestCases = [];
 let availableProductTags = [];
 let selectedTestCases = new Set();
+// 用戶權限檢查
+const isAdmin = {{ 'true' if session.role == 'admin' else 'false' }};
 
 // 頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -550,10 +554,10 @@ function renderTestCases(testCases) {
                             onclick="editTestCase('${testCase.id}')" title="編輯">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" 
+                    ${isAdmin ? `<button class="btn btn-sm btn-outline-danger" 
                             onclick="deleteTestCase('${testCase.id}', '${testCase.title}')" title="刪除">
                         <i class="fas fa-trash"></i>
-                    </button>
+                    </button>` : ''}
                 </td>
             </tr>
         `;
