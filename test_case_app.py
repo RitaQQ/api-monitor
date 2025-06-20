@@ -60,7 +60,11 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """取得所有產品標籤"""
         try:
             tags = test_case_manager.get_product_tags()
-            return jsonify([tag.to_dict() for tag in tags])
+            # 處理兩種情況：字典列表或物件列表
+            if tags and hasattr(tags[0], 'to_dict'):
+                return jsonify([tag.to_dict() for tag in tags])
+            else:
+                return jsonify(tags)
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -69,11 +73,21 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """建立產品標籤"""
         try:
             data = request.get_json()
+            
+            # 檢查是否已存在相同名稱
+            if test_case_manager.get_product_tag_by_name(data['name']):
+                return jsonify({'error': f"產品標籤 '{data['name']}' 已存在"}), 400
+            
             tag = test_case_manager.create_product_tag(
                 name=data['name'],
                 description=data.get('description')
             )
-            return jsonify(tag.to_dict()), 201
+            
+            # 處理兩種情況：字典或物件
+            if hasattr(tag, 'to_dict'):
+                return jsonify(tag.to_dict()), 201
+            else:
+                return jsonify(tag), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -221,14 +235,26 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             if data.get('end_time'):
                 end_time = datetime.fromisoformat(data['end_time']) if isinstance(data['end_time'], str) else data['end_time']
             
+            # 驗證負責人用戶是否存在
+            responsible_user_id = data.get('responsible_user')
+            if responsible_user_id:
+                # 檢查用戶是否存在
+                from user_manager import UserManager
+                user_manager = UserManager()
+                user = user_manager.get_user_by_id(responsible_user_id)
+                if not user:
+                    return jsonify({'error': f"用戶 ID '{responsible_user_id}' 不存在"}), 400
+            
             project = test_case_manager.create_test_project(
                 name=data['name'],
-                responsible_user=data['responsible_user'],
-                selected_test_cases=data['selected_test_cases'],
-                start_time=start_time,
-                end_time=end_time
+                description=data.get('description'),
+                responsible_user_id=responsible_user_id
             )
-            return jsonify(project.to_dict()), 201
+            # 處理兩種情況：字典或物件
+            if hasattr(project, 'to_dict'):
+                return jsonify(project.to_dict()), 201
+            else:
+                return jsonify(project), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
