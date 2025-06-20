@@ -513,8 +513,8 @@ function renderTestCases(testCases) {
     const testCasesContainer = document.getElementById('testCasesContainer');
     
     testCasesContainer.innerHTML = testCases.map((testCase, index) => {
-        const tagNames = testCase.product_tags.map(tagId => {
-            const tag = availableProductTags.find(t => t.id === tagId);
+        const tagNames = (testCase.product_tags || []).map(tagId => {
+            const tag = availableProductTags.find(t => t.id == tagId); // 使用 == 比較，支援字串和數字
             return tag ? tag.name : '';
         }).filter(name => name); // 過濾掉空字串，只顯示標籤名稱
         
@@ -673,16 +673,38 @@ function showCreateTestCaseModal() {
 
 // 編輯測試案例
 function editTestCase(testCaseId) {
-    const testCase = allTestCases.find(tc => tc.id === testCaseId);
+    console.log('編輯測試案例:', testCaseId);
+    const testCase = allTestCases.find(tc => tc.id == testCaseId); // 使用 == 比較，支援字串和數字
+    console.log('找到的測試案例:', testCase);
     if (testCase) {
         showTestCaseModal(testCase);
+    } else {
+        console.error('找不到測試案例:', testCaseId);
+        showAlert('找不到指定的測試案例', 'error');
     }
 }
 
 // 顯示測試案例模態框
 function showTestCaseModal(testCase = null) {
+    console.log('顯示模態框，測試案例:', testCase);
     const isEdit = testCase !== null;
     const modalTitle = isEdit ? '編輯測試案例' : '新增測試案例';
+    
+    // 安全地獲取欄位值
+    const title = testCase ? (testCase.title || '') : '';
+    const userRole = testCase ? (testCase.user_role || '') : '';
+    const featureDescription = testCase ? (testCase.feature_description || '') : '';
+    const testNotes = testCase ? (testCase.test_notes || '') : '';
+    
+    // 安全地處理驗收條件
+    let acceptanceCriteriaText = '';
+    if (testCase && testCase.acceptance_criteria) {
+        if (Array.isArray(testCase.acceptance_criteria)) {
+            acceptanceCriteriaText = testCase.acceptance_criteria.join('\n');
+        } else if (typeof testCase.acceptance_criteria === 'string') {
+            acceptanceCriteriaText = testCase.acceptance_criteria;
+        }
+    }
     
     const modalHtml = `
         <div class="modal fade" id="testCaseModal" tabindex="-1">
@@ -697,19 +719,19 @@ function showTestCaseModal(testCase = null) {
                             <div class="mb-3">
                                 <label class="form-label" style="color: #C9D1D9;">標題 *</label>
                                 <input type="text" class="form-control" id="testCaseTitle" 
-                                       value="${testCase?.title || ''}" required
+                                       value="${title}" required
                                        style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" style="color: #C9D1D9;">功能描述 *</label>
                                 <textarea class="form-control" id="featureDescription" rows="3" required
                                           style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
-                                          placeholder="描述這個測試項目的功能...">${testCase?.feature_description || ''}</textarea>
+                                          placeholder="描述這個測試項目的功能...">${featureDescription}</textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" style="color: #C9D1D9;">用戶角色 *</label>
                                 <input type="text" class="form-control" id="userRole" 
-                                       value="${testCase?.user_role || ''}" required
+                                       value="${userRole}" required
                                        style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
                                        placeholder="例如：一般用戶、管理者、訪客">
                             </div>
@@ -717,37 +739,41 @@ function showTestCaseModal(testCase = null) {
                                 <label class="form-label" style="color: #C9D1D9;">驗收條件</label>
                                 <textarea class="form-control" id="acceptanceCriteria" rows="4"
                                           style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
-                                          placeholder="每行一個驗收條件，例如：\n能夠成功登入系統\n顯示正確的用戶資訊\n登入失敗時顯示錯誤訊息">${testCase?.acceptance_criteria ? testCase.acceptance_criteria.join('\n') : ''}</textarea>
+                                          placeholder="每行一個驗收條件，例如：&#10;能夠成功登入系統&#10;顯示正確的用戶資訊&#10;登入失敗時顯示錯誤訊息">${acceptanceCriteriaText}</textarea>
                                 <div class="form-text" style="color: #8B949E;">每行一個驗收條件，列出此功能需要滿足的具體要求</div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" style="color: #C9D1D9;">測試備註</label>
                                 <textarea class="form-control" id="testNotes" rows="2"
                                           style="background: #161B22; color: #C9D1D9; border: 1px solid #30363D;"
-                                          placeholder="測試相關的備註資訊">${testCase?.test_notes || ''}</textarea>
+                                          placeholder="測試相關的備註資訊">${testNotes}</textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" style="color: #C9D1D9;">產品標籤</label>
                                 <div class="row">
-                                    ${availableProductTags.map(tag => `
+                                    ${availableProductTags.map(tag => {
+                                        const isChecked = testCase && testCase.product_tags && 
+                                            (testCase.product_tags.includes(tag.id) || testCase.product_tags.includes(String(tag.id)));
+                                        return `
                                         <div class="col-md-6 mb-2">
                                             <div class="form-check">
                                                 <input class="form-check-input tag-checkbox" type="checkbox" 
                                                        value="${tag.id}" id="tag_${tag.id}"
-                                                       ${testCase?.product_tags?.includes(tag.id) ? 'checked' : ''}>
+                                                       ${isChecked ? 'checked' : ''}>
                                                 <label class="form-check-label" for="tag_${tag.id}" style="color: #C9D1D9;">
                                                     ${tag.name}
                                                 </label>
                                             </div>
                                         </div>
-                                    `).join('')}
+                                        `;
+                                    }).join('')}
                                 </div>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #30363D;">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-success" onclick="saveTestCase(${isEdit ? `'${testCase?.id}'` : 'null'})">
+                        <button type="button" class="btn btn-success" onclick="saveTestCase(${isEdit ? `'${testCase.id}'` : 'null'})">
                             ${isEdit ? '更新' : '建立'}
                         </button>
                     </div>
@@ -756,18 +782,25 @@ function showTestCaseModal(testCase = null) {
         </div>
     `;
     
-    // 移除舊的模態框
-    const existingModal = document.getElementById('testCaseModal');
-    if (existingModal) {
-        existingModal.remove();
+    try {
+        // 移除舊的模態框
+        const existingModal = document.getElementById('testCaseModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // 添加新的模態框
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // 顯示模態框
+        const modal = new bootstrap.Modal(document.getElementById('testCaseModal'));
+        modal.show();
+        
+        console.log('模態框顯示成功');
+    } catch (error) {
+        console.error('顯示模態框時發生錯誤:', error);
+        showAlert('無法顯示編輯窗口，請重新整理頁面後再試', 'error');
     }
-    
-    // 添加新的模態框
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // 顯示模態框
-    const modal = new bootstrap.Modal(document.getElementById('testCaseModal'));
-    modal.show();
 }
 
 // 這些函數已不再需要，因為驗收條件已隱藏

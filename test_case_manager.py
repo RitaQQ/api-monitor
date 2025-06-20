@@ -432,10 +432,25 @@ class TestCaseManager:
     
     def _generate_tc_id(self) -> str:
         """生成 TC ID"""
-        query = "SELECT COUNT(*) as count FROM test_cases"
+        # 獲取最大的 TC ID 序號，而不是使用 COUNT
+        query = """
+            SELECT tc_id FROM test_cases 
+            WHERE tc_id LIKE 'TC%' 
+            ORDER BY CAST(SUBSTR(tc_id, 3) AS INTEGER) DESC 
+            LIMIT 1
+        """
         result = db_manager.execute_query(query)
-        count = result[0]['count'] if result else 0
-        return f"TC{count + 1:05d}"  # TC00001, TC00002, ...
+        
+        if result and result[0]['tc_id']:
+            # 從最後一個 TC ID 提取序號並加 1
+            last_tc_id = result[0]['tc_id']
+            last_number = int(last_tc_id[2:])  # 移除 'TC' 前綴
+            next_number = last_number + 1
+        else:
+            # 如果沒有現有的 TC ID，從 1 開始
+            next_number = 1
+            
+        return f"TC{next_number:05d}"  # TC00001, TC00002, ...
     
     # ========== 統計相關 ==========
     

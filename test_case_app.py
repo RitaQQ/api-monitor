@@ -694,20 +694,13 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             active_users = []
             for user in all_users:
                 if user.get('is_active', True):  # 只包含活躍用戶
-                    # 構建顯示名稱
-                    display_name = user.get('email', user['username'])
-                    
-                    # 根據角色添加標識
+                    # 構建簡潔的顯示名稱（僅用戶名稱）
                     role = user.get('role', 'user')
-                    if role == 'admin':
-                        display_name = f"👑 {display_name} (管理員)"
-                    else:
-                        display_name = f"👤 {display_name} (用戶)"
                     
                     active_users.append({
                         'id': user['id'],  # 加入用戶ID
                         'username': user['username'],
-                        'display_name': display_name,
+                        'display_name': user['username'],  # 簡化顯示為用戶名稱
                         'role': role,
                         'email': user.get('email', ''),
                         'created_at': user.get('created_at', '')

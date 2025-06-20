@@ -483,7 +483,7 @@ function renderProjects(projects) {
                 </td>
                 <td class="project-time-cell">${formatDate(project.start_time)}</td>
                 <td class="project-time-cell">${formatDate(project.end_time)}</td>
-                <td class="project-user-cell">${project.responsible_user_name || project.responsible_user || '未指定'}</td>
+                <td class="project-user-cell">${project.responsible_user_name || getUsernameFromId(project.responsible_user_id) || '未指定'}</td>
                 <td class="project-stat-cell stat-total">${testCasesCount}</td>
                 <td class="project-stat-cell stat-pass">${passedCount}</td>
                 <td class="project-stat-cell stat-fail">${failedCount}</td>
@@ -645,7 +645,7 @@ async function showProjectModal(project = null) {
                                             <option value="">請選擇負責人</option>
                                             ${availableUsers.map(user => `
                                                 <option value="${user.id}" ${(project?.responsible_user_id == user.id || project?.responsible_user == user.id) ? 'selected' : ''}>
-                                                    ${user.display_name}
+                                                    ${user.username}${user.role === 'admin' ? ' (管理員)' : ''}
                                                 </option>
                                             `).join('')}
                                         </select>
@@ -748,6 +748,13 @@ function getUserDisplayInfo(username) {
         role: 'unknown',
         email: ''
     };
+}
+
+// 根據用戶 ID 獲取用戶名稱
+function getUsernameFromId(userId) {
+    if (!userId || !availableUsers) return null;
+    const user = availableUsers.find(u => u.id === userId);
+    return user ? user.username : null;
 }
 
 // 渲染測試案例列表

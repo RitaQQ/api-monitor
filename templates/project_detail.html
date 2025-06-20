@@ -357,6 +357,27 @@
     border-color: #58a6ff;
     color: #C9D1D9;
 }
+
+.back-btn {
+    background: #161B22;
+    border: 1px solid #30363D;
+    color: #8B949E;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.back-btn:hover {
+    background: #0D1117;
+    border-color: #58a6ff;
+    color: #58a6ff;
+    transform: translateX(-2px);
+}
 {% endblock %}
 
 {% block content %}
@@ -364,7 +385,12 @@
 <div class="project-header-card">
     <div class="d-flex justify-content-between align-items-start mb-3">
         <div>
-            <h2 id="projectName" style="color: #C9D1D9; margin-bottom: 10px;">載入中...</h2>
+            <div class="d-flex align-items-center mb-2">
+                <button class="back-btn me-3" onclick="goBackToProjects()" title="返回專案列表 (按 Esc 鍵快速返回)">
+                    <i class="fas fa-arrow-left"></i> 返回專案列表
+                </button>
+                <h2 id="projectName" style="color: #C9D1D9; margin: 0;">載入中...</h2>
+            </div>
             <span id="projectStatus" class="status-badge">載入中</span>
         </div>
     </div>
@@ -466,6 +492,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     setupFilterButtons();
+    
+    // 添加鍵盤快捷鍵支持
+    document.addEventListener('keydown', function(event) {
+        // Esc 鍵返回專案列表
+        if (event.key === 'Escape') {
+            goBackToProjects();
+        }
+    });
 });
 
 // 從 URL 獲取專案 ID
@@ -537,6 +571,13 @@ function getUserDisplayInfo(username) {
     };
 }
 
+// 根據用戶 ID 獲取用戶名稱
+function getUsernameFromId(userId) {
+    if (!userId || !window.availableUsers) return null;
+    const user = window.availableUsers.find(u => u.id === userId);
+    return user ? user.username : null;
+}
+
 // 渲染專案詳情
 function renderProjectDetail() {
     const statusText = {
@@ -554,7 +595,7 @@ function renderProjectDetail() {
     projectMeta.innerHTML = `
         <div class="meta-item">
             <div class="meta-label">負責人</div>
-            <div class="meta-value">${currentProject.responsible_user_name || currentProject.responsible_user || '未指定'}</div>
+            <div class="meta-value">${currentProject.responsible_user_name || getUsernameFromId(currentProject.responsible_user_id) || '未指定'}</div>
         </div>
         <div class="meta-item">
             <div class="meta-label">開始日期</div>
@@ -1060,6 +1101,11 @@ async function saveAllResults() {
     }
 }
 
+
+// 返回測試專案列表頁面
+function goBackToProjects() {
+    window.location.href = '/test-projects';
+}
 
 // 工具函數
 function formatDate(dateString) {
