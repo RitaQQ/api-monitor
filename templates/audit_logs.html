@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+
+{% block title %}操作記錄{% endblock %}
+{% block page_title %}操作記錄{% endblock %}
+{% block page_subtitle %}查看系統操作記錄和用戶活動{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 參考測試專案的樣式設計 */
+    .audit-logs-table {
+        background: #161B22;
+        border: 1px solid #30363D;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .audit-logs-table table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
+    }
+
+    .audit-logs-table th {
+        background: #0D1117;
+        color: #C9D1D9;
+        padding: 15px 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 1px solid #30363D;
+        font-size: 0.9em;
+    }
+
+    .audit-logs-table td {
+        padding: 15px 12px;
+        border-bottom: 1px solid #30363D;
+        vertical-align: middle;
+    }
+
+    .audit-logs-table tbody tr {
+        transition: background-color 0.2s;
+    }
+
+    .audit-logs-table tbody tr:hover {
+        background-color: #0D1117;
+    }
+
+    .audit-logs-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* 操作類型樣式 */
+    .action-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .action-CREATE {
+        background: rgba(35, 134, 54, 0.2);
+        color: #238636;
+    }
+
+    .action-UPDATE {
+        background: rgba(88, 166, 255, 0.2);
+        color: #58a6ff;
+    }
+
+    .action-DELETE {
+        background: rgba(248, 81, 73, 0.2);
+        color: #f85149;
+    }
+
+    .action-LOGIN {
+        background: rgba(88, 166, 255, 0.2);
+        color: #58a6ff;
+    }
+
+    .action-LOGOUT {
+        background: rgba(139, 148, 158, 0.2);
+        color: #8B949E;
+    }
+
+    .action-PASSWORD_CHANGE {
+        background: rgba(210, 153, 34, 0.2);
+        color: #d29922;
+    }
+
+    /* 資源類型樣式 */
+    .resource-badge {
+        background: #30363D;
+        color: #8B949E;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75em;
+        font-weight: 500;
+    }
+
+    /* 用戶和時間樣式 */
+    .user-cell {
+        color: #C9D1D9;
+        font-weight: 600;
+    }
+
+    .time-cell {
+        color: #8B949E;
+        font-size: 0.9em;
+    }
+
+    .ip-cell {
+        color: #8B949E;
+        font-size: 0.85em;
+        font-family: monospace;
+    }
+
+    /* 變更詳情樣式 */
+    .changes-button {
+        background: #30363D;
+        color: #8B949E;
+        border: 1px solid #30363D;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        cursor: pointer;
+    }
+
+    .changes-button:hover {
+        background: #58a6ff;
+        color: #fff;
+        border-color: #58a6ff;
+    }
+
+    .changes-modal .modal-content {
+        background: #161B22;
+        color: #C9D1D9;
+        border: 1px solid #30363D;
+    }
+
+    .changes-modal .modal-header {
+        background: #0D1117;
+        border-bottom: 1px solid #30363D;
+    }
+
+    .change-item {
+        background: #0D1117;
+        border: 1px solid #30363D;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+
+    .old-value {
+        color: #f85149;
+        background: rgba(248, 81, 73, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+
+    .new-value {
+        color: #238636;
+        background: rgba(35, 134, 54, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+
+    /* 搜尋控制區 */
+    .search-controls {
+        background: #161B22;
+        border: 1px solid #30363D;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .search-input, .filter-select {
+        background: #0D1117;
+        color: #C9D1D9;
+        border: 1px solid #30363D;
+        border-radius: 6px;
+        padding: 10px 15px;
+    }
+
+    .search-input:focus, .filter-select:focus {
+        border-color: #58a6ff;
+        box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+        outline: none;
+        background: #0D1117;
+        color: #C9D1D9;
+    }
+
+    /* 統計卡片 */
+    .stats-overview {
+        background: #0D1117;
+        border: 1px solid #30363D;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        background: #161B22;
+        border: 1px solid #30363D;
+        border-radius: 8px;
+    }
+
+    .stat-number {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #58a6ff;
+    }
+
+    .stat-label {
+        font-size: 0.9em;
+        color: #8B949E;
+        margin-top: 5px;
+    }
+
+    /* 分頁樣式 */
+    .pagination .page-link {
+        background: #161B22;
+        border-color: #30363D;
+        color: #8B949E;
+    }
+
+    .pagination .page-link:hover {
+        background: #0D1117;
+        border-color: #58a6ff;
+        color: #58a6ff;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #58a6ff;
+        border-color: #58a6ff;
+        color: #fff;
+    }
+
+    /* 空狀態 */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #8B949E;
+    }
+
+    .empty-icon {
+        font-size: 4em;
+        margin-bottom: 20px;
+        color: #30363D;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 統計概覽 -->
+<div class="stats-overview">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">總操作記錄</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ stats.today_count }}</div>
+            <div class="stat-label">今日操作</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ stats.unique_users }}</div>
+            <div class="stat-label">活躍用戶</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ stats.critical_actions }}</div>
+            <div class="stat-label">關鍵操作</div>
+        </div>
+    </div>
+</div>
+
+<!-- 搜尋和過濾控制 -->
+<div class="search-controls">
+    <form method="GET" action="{{ url_for('audit_logs') }}">
+        <div class="row align-items-end">
+            <div class="col-md-2">
+                <label for="action" class="form-label">操作類型</label>
+                <select class="form-select filter-select" id="action" name="action">
+                    <option value="">全部</option>
+                    <option value="CREATE" {% if request.args.get('action') == 'CREATE' %}selected{% endif %}>創建</option>
+                    <option value="UPDATE" {% if request.args.get('action') == 'UPDATE' %}selected{% endif %}>更新</option>
+                    <option value="DELETE" {% if request.args.get('action') == 'DELETE' %}selected{% endif %}>刪除</option>
+                    <option value="LOGIN" {% if request.args.get('action') == 'LOGIN' %}selected{% endif %}>登入</option>
+                    <option value="LOGOUT" {% if request.args.get('action') == 'LOGOUT' %}selected{% endif %}>登出</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="resource_type" class="form-label">資源類型</label>
+                <select class="form-select filter-select" id="resource_type" name="resource_type">
+                    <option value="">全部</option>
+                    <option value="USER" {% if request.args.get('resource_type') == 'USER' %}selected{% endif %}>用戶</option>
+                    <option value="API" {% if request.args.get('resource_type') == 'API' %}selected{% endif %}>API</option>
+                    <option value="TEST_CASE" {% if request.args.get('resource_type') == 'TEST_CASE' %}selected{% endif %}>測試案例</option>
+                    <option value="TEST_PROJECT" {% if request.args.get('resource_type') == 'TEST_PROJECT' %}selected{% endif %}>測試專案</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="username" class="form-label">用戶名</label>
+                <input type="text" class="form-control search-input" id="username" name="username" 
+                       value="{{ request.args.get('username', '') }}" placeholder="搜尋用戶">
+            </div>
+            <div class="col-md-2">
+                <label for="start_date" class="form-label">開始日期</label>
+                <input type="date" class="form-control search-input" id="start_date" name="start_date" 
+                       value="{{ request.args.get('start_date', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label for="end_date" class="form-label">結束日期</label>
+                <input type="date" class="form-control search-input" id="end_date" name="end_date" 
+                       value="{{ request.args.get('end_date', '') }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary me-2 w-100">
+                    <i class="fas fa-search"></i> 搜尋
+                </button>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12 text-end">
+                <a href="{{ url_for('audit_logs') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-undo"></i> 重置
+                </a>
+                <button type="button" class="btn btn-outline-success" onclick="exportLogs()">
+                    <i class="fas fa-download"></i> 匯出CSV
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 操作記錄表格 -->
+<div class="audit-logs-table">
+    <div class="d-flex justify-content-between align-items-center" style="padding: 15px 15px 0 15px;">
+        <div>
+            <button class="btn btn-outline-info btn-sm" id="autoRefreshBtn" onclick="toggleAutoRefresh()" title="自動刷新">
+                <i class="fas fa-sync-alt"></i> 自動刷新
+            </button>
+        </div>
+        <small class="text-muted" style="color: #8B949E; font-size: 0.8em;">
+            {% if logs %}
+                顯示 {{ (pagination.page - 1) * pagination.per_page + 1 }} - {{ (pagination.page - 1) * pagination.per_page + logs|length }} 共 {{ pagination.total }} 條記錄
+            {% else %}
+                無記錄
+            {% endif %}
+        </small>
+    </div>
+    
+    {% if logs %}
+    <table>
+        <thead>
+            <tr>
+                <th width="80">操作</th>
+                <th width="80">資源</th>
+                <th width="100">用戶</th>
+                <th width="150">資源名稱</th>
+                <th width="150">操作時間</th>
+                <th width="120">IP地址</th>
+                <th width="100">詳情</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>
+                    <span class="action-badge action-{{ log.action }}">
+                        {% if log.action == 'CREATE' %}創建
+                        {% elif log.action == 'UPDATE' %}更新
+                        {% elif log.action == 'DELETE' %}刪除
+                        {% elif log.action == 'LOGIN' %}登入
+                        {% elif log.action == 'LOGOUT' %}登出
+                        {% elif log.action == 'PASSWORD_CHANGE' %}改密
+                        {% else %}{{ log.action }}{% endif %}
+                    </span>
+                </td>
+                <td>
+                    <span class="resource-badge">
+                        {% if log.resource_type == 'USER' %}用戶
+                        {% elif log.resource_type == 'API' %}API
+                        {% elif log.resource_type == 'TEST_CASE' %}測試案例
+                        {% elif log.resource_type == 'TEST_PROJECT' %}測試專案
+                        {% else %}{{ log.resource_type }}{% endif %}
+                    </span>
+                </td>
+                <td class="user-cell">{{ log.username }}</td>
+                <td class="text-truncate" style="max-width: 150px;" title="{{ log.resource_name }}">
+                    {{ log.resource_name or '-' }}
+                </td>
+                <td class="time-cell">{{ log.created_at }}</td>
+                <td class="ip-cell">{{ log.ip_address }}</td>
+                <td>
+                    {% if log.old_values or log.new_values %}
+                    <button class="changes-button" onclick="showChangesModal('{{ loop.index }}')">
+                        <i class="fas fa-eye"></i> 查看
+                    </button>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- 分頁 -->
+    {% if pagination.total > pagination.per_page %}
+    <div style="padding: 20px;">
+        <nav aria-label="操作記錄分頁">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('audit_logs', page=pagination.prev_num, **request.args) }}">上一頁</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != pagination.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('audit_logs', page=page_num, **request.args) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('audit_logs', page=pagination.next_num, **request.args) }}">下一頁</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <!-- 空狀態 -->
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-search"></i>
+        </div>
+        <h4>沒有找到符合條件的操作記錄</h4>
+        <p>嘗試調整篩選條件或檢查日期範圍</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 變更詳情模態框 -->
+{% for log in logs %}
+<div class="modal fade changes-modal" id="changesModal{{ loop.index }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    操作詳情 - {{ log.username }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>操作信息：</strong>
+                    <span class="action-badge action-{{ log.action }} ms-2">{{ log.action }}</span>
+                    <span class="resource-badge ms-2">{{ log.resource_type }}</span>
+                </div>
+                
+                {% if log.action == 'CREATE' and log.new_values %}
+                <h6>新建資料：</h6>
+                {% for key, value in log.new_values.items() %}
+                    {% if key not in ['password', 'password_hash'] %}
+                    <div class="change-item">
+                        <strong>{{ key }}:</strong>
+                        <span class="new-value">{{ value }}</span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                
+                {% elif log.action == 'DELETE' and log.old_values %}
+                <h6>刪除資料：</h6>
+                {% for key, value in log.old_values.items() %}
+                    {% if key not in ['password', 'password_hash'] %}
+                    <div class="change-item">
+                        <strong>{{ key }}:</strong>
+                        <span class="old-value">{{ value }}</span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                
+                {% elif log.action == 'UPDATE' and log.old_values and log.new_values %}
+                <h6>變更內容：</h6>
+                {% for key in log.new_values.keys() %}
+                    {% if key not in ['password', 'password_hash'] and log.old_values.get(key) != log.new_values.get(key) %}
+                    <div class="change-item">
+                        <strong>{{ key }}:</strong>
+                        <div class="mt-2">
+                            <div><span class="text-muted">原值:</span> <span class="old-value">{{ log.old_values.get(key, 'N/A') }}</span></div>
+                            <div><span class="text-muted">新值:</span> <span class="new-value">{{ log.new_values.get(key, 'N/A') }}</span></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 匯出操作記錄
+function exportLogs() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.location.href = '{{ url_for("audit_logs") }}?' + params.toString();
+}
+
+// 顯示變更詳情模態框
+function showChangesModal(index) {
+    const modal = new bootstrap.Modal(document.getElementById('changesModal' + index));
+    modal.show();
+}
+
+// 自動刷新功能
+let autoRefresh = false;
+let refreshInterval;
+
+function toggleAutoRefresh() {
+    const button = document.getElementById('autoRefreshBtn');
+    autoRefresh = !autoRefresh;
+    
+    if (autoRefresh) {
+        button.innerHTML = '<i class="fas fa-pause"></i> 停止自動刷新';
+        button.classList.remove('btn-outline-info');
+        button.classList.add('btn-info');
+        refreshInterval = setInterval(() => {
+            window.location.reload();
+        }, 30000); // 30秒刷新一次
+    } else {
+        button.innerHTML = '<i class="fas fa-sync-alt"></i> 自動刷新';
+        button.classList.remove('btn-info');
+        button.classList.add('btn-outline-info');
+        clearInterval(refreshInterval);
+    }
+}
+
+// 顯示警告訊息
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
+}
+
+// 快捷鍵支持
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + R: 刷新
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        window.location.reload();
+    }
+    
+    // Ctrl/Cmd + E: 匯出
+    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        exportLogs();
+    }
+});
+
+// 頁面載入完成時初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 可以添加其他初始化代碼
+});
+</script>
+{% endblock %}

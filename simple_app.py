@@ -13,6 +13,7 @@ from routes.main_routes import register_main_routes
 from routes.admin_routes import register_admin_routes
 from routes.stress_test_routes import register_stress_test_routes
 from routes.user_management_routes import register_user_management_routes
+from routes.audit_routes import register_audit_routes
 
 import os
 
@@ -51,6 +52,7 @@ def create_app():
     register_admin_routes(app, data_manager, api_checker, admin_required)
     register_stress_test_routes(app, data_manager, stress_tester, login_required)
     register_user_management_routes(app, user_manager, user_story_manager, admin_required, login_required)
+    register_audit_routes(app, admin_required)
     
     return app
 

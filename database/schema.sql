@@ -155,3 +155,26 @@ CREATE TRIGGER IF NOT EXISTS update_test_cases_timestamp
     BEGIN
         UPDATE test_cases SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
     END;
+
+-- 操作記錄表
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    username TEXT NOT NULL,
+    action TEXT NOT NULL,           -- 操作類型：CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+    resource_type TEXT NOT NULL,    -- 資源類型：USER, API, TEST_CASE, TEST_PROJECT
+    resource_id TEXT,              -- 資源ID
+    resource_name TEXT,            -- 資源名稱
+    old_values TEXT,               -- 變更前內容（JSON格式）
+    new_values TEXT,               -- 變更後內容（JSON格式）
+    ip_address TEXT,               -- 操作者IP
+    user_agent TEXT,               -- 瀏覽器信息
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 操作記錄索引
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_resource_type ON audit_logs(resource_type);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);

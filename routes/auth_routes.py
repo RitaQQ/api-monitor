@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from functools import wraps
+from audit_logger import AuditLogger
 
 # 創建認證相關的藍圖
 auth_bp = Blueprint('auth', __name__)
@@ -50,6 +51,10 @@ def register_auth_routes(app, user_manager):
                 session['user_id'] = user['id']
                 session['username'] = user['username']
                 session['role'] = user['role']
+                
+                # 記錄登入操作
+                AuditLogger.log_user_login(user['id'], user['username'])
+                
                 flash(f'歡迎回來，{user["username"]}！', 'success')
                 return redirect(url_for('main.index'))
             else:
@@ -60,7 +65,13 @@ def register_auth_routes(app, user_manager):
     @auth_bp.route('/logout')
     def logout():
         """用戶登出"""
+        user_id = session.get('user_id')
         username = session.get('username', '用戶')
+        
+        # 記錄登出操作
+        if user_id and username:
+            AuditLogger.log_user_logout(user_id, username)
+        
         session.clear()
         flash(f'{username} 已成功登出', 'success')
         return redirect(url_for('auth.login'))

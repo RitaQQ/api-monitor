@@ -10,6 +10,7 @@ from test_case_manager import TestCaseManager
 from report_generator import ReportGenerator
 from pdf_exporter import PDFExporter
 from user_manager import UserManager
+from audit_logger import AuditLogger
 
 def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     """建立測試案例相關的路由"""
@@ -280,6 +281,10 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """建立測試案例"""
         try:
             data = request.get_json()
+            current_user = get_current_user()
+            
+            if not current_user:
+                return jsonify({'error': '請先登入'}), 401
             
             # 處理前端資料格式轉換
             # 合併 user_role 和 feature_description 為 description
@@ -315,11 +320,31 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                 estimated_hours=data.get('estimated_hours', 0),
                 product_tag_ids=product_tag_ids
             )
+            
             # 處理兩種情況：字典或物件
             if hasattr(case, 'to_dict'):
                 case_dict = case.to_dict()
             else:
                 case_dict = case
+            
+            # 記錄審計日誌 - 測試案例創建
+            AuditLogger.log_action(
+                user_id=current_user['id'],
+                username=current_user['username'],
+                action=AuditLogger.ACTION_CREATE,
+                resource_type=AuditLogger.RESOURCE_TEST_CASE,
+                resource_id=str(case_dict['id']),
+                resource_name=case_dict['title'],
+                new_values={
+                    'tc_id': case_dict.get('tc_id'),
+                    'title': case_dict['title'],
+                    'description': description,
+                    'acceptance_criteria': acceptance_criteria,
+                    'priority': data.get('priority', 'medium'),
+                    'status': data.get('status', 'draft'),
+                    'estimated_hours': data.get('estimated_hours', 0)
+                }
+            )
             
             # 將後端資料格式轉換為前端期望格式
             processed_case = _process_case_for_frontend(case_dict)
@@ -332,6 +357,15 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         """更新測試案例"""
         try:
             data = request.get_json()
+            current_user = get_current_user()
+            
+            if not current_user:
+                return jsonify({'error': '請先登入'}), 401
+            
+            # 獲取更新前的測試案例數據（用於審計日誌）
+            old_case = test_case_manager.get_test_case_by_id(int(case_id))
+            if not old_case:
+                return jsonify({'error': '測試案例不存在'}), 404
             
             # 處理前端資料格式轉換
             # 合併 user_role 和 feature_description 為 description
@@ -368,6 +402,39 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                 else:
                     case_dict = updated_case
                 
+                # 記錄審計日誌 - 測試案例更新
+                # 準備舊值和新值用於比較
+                old_values = {
+                    'tc_id': old_case.get('tc_id'),
+                    'title': old_case.get('title'),
+                    'description': old_case.get('description'),
+                    'acceptance_criteria': old_case.get('acceptance_criteria'),
+                    'priority': old_case.get('priority'),
+                    'status': old_case.get('status'),
+                    'estimated_hours': old_case.get('estimated_hours')
+                }
+                
+                new_values = {
+                    'tc_id': case_dict.get('tc_id'),
+                    'title': case_dict.get('title'),
+                    'description': case_dict.get('description'),
+                    'acceptance_criteria': case_dict.get('acceptance_criteria'),
+                    'priority': case_dict.get('priority'),
+                    'status': case_dict.get('status'),
+                    'estimated_hours': case_dict.get('estimated_hours')
+                }
+                
+                AuditLogger.log_action(
+                    user_id=current_user['id'],
+                    username=current_user['username'],
+                    action=AuditLogger.ACTION_UPDATE,
+                    resource_type=AuditLogger.RESOURCE_TEST_CASE,
+                    resource_id=str(case_id),
+                    resource_name=case_dict['title'],
+                    old_values=old_values,
+                    new_values=new_values
+                )
+                
                 # 將後端資料格式轉換為前端期望格式
                 processed_case = _process_case_for_frontend(case_dict)
                 return jsonify(processed_case)
@@ -384,8 +451,36 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             return jsonify({'error': '需要管理員權限'}), 403
         
         try:
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '請先登入'}), 401
+            
+            # 獲取要刪除的測試案例數據（用於審計日誌）
+            case_to_delete = test_case_manager.get_test_case_by_id(int(case_id))
+            if not case_to_delete:
+                return jsonify({'error': '測試案例不存在'}), 404
+            
             success = test_case_manager.delete_test_case(int(case_id))
             if success:
+                # 記錄審計日誌 - 測試案例刪除
+                AuditLogger.log_action(
+                    user_id=current_user['id'],
+                    username=current_user['username'],
+                    action=AuditLogger.ACTION_DELETE,
+                    resource_type=AuditLogger.RESOURCE_TEST_CASE,
+                    resource_id=str(case_id),
+                    resource_name=case_to_delete.get('title', ''),
+                    old_values={
+                        'tc_id': case_to_delete.get('tc_id'),
+                        'title': case_to_delete.get('title'),
+                        'description': case_to_delete.get('description'),
+                        'acceptance_criteria': case_to_delete.get('acceptance_criteria'),
+                        'priority': case_to_delete.get('priority'),
+                        'status': case_to_delete.get('status'),
+                        'estimated_hours': case_to_delete.get('estimated_hours')
+                    }
+                )
+                
                 return jsonify({'message': '刪除成功'})
             else:
                 return jsonify({'error': '測試案例不存在'}), 404
@@ -550,11 +645,30 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                         test_case_manager.update_test_case(int(case_id), test_project_id=project_id)
                     except Exception as e:
                         print(f"關聯測試案例 {case_id} 失敗: {e}")
+            
             # 處理兩種情況：字典或物件
             if hasattr(project, 'to_dict'):
-                return jsonify(project.to_dict()), 201
+                project_dict = project.to_dict()
             else:
-                return jsonify(project), 201
+                project_dict = project
+            
+            # 記錄審計日誌 - 測試專案創建
+            AuditLogger.log_test_project_create(
+                user_id=current_user['id'],
+                username=current_user['username'],
+                project_data={
+                    'id': project_dict['id'],
+                    'name': project_dict['name'],
+                    'description': project_dict.get('description'),
+                    'status': project_dict.get('status', 'draft'),
+                    'responsible_user_id': responsible_user_id,
+                    'start_time': data.get('start_time'),
+                    'end_time': data.get('end_time'),
+                    'selected_test_cases': selected_test_cases
+                }
+            )
+            
+            return jsonify(project_dict), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -583,6 +697,18 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                 if responsible_user != current_user.get('username'):
                     return jsonify({'error': '無權限編輯此專案'}), 403
             
+            # 保存更新前的專案數據（用於審計日誌）
+            old_project_data = {
+                'id': project.get('id'),
+                'name': project.get('name'),
+                'description': project.get('description'),
+                'status': project.get('status'),
+                'responsible_user_id': project.get('responsible_user_id'),
+                'start_time': project.get('start_time'),
+                'end_time': project.get('end_time'),
+                'selected_test_cases': project.get('selected_test_cases', [])
+            }
+            
             data = request.get_json()
             
             # 處理測試案例關聯（需要單獨處理，不能傳給 update_test_project）
@@ -604,13 +730,37 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                         test_case_manager.update_test_case(int(case_id), test_project_id=int(project_id))
                 except Exception as e:
                     print(f"更新測試案例關聯失敗: {e}")
+            
             if success:
                 # 更新成功，返回更新後的專案
                 updated_project = test_case_manager.get_test_project_by_id(int(project_id))
                 if hasattr(updated_project, 'to_dict'):
-                    return jsonify(updated_project.to_dict())
+                    project_dict = updated_project.to_dict()
                 else:
-                    return jsonify(updated_project)
+                    project_dict = updated_project
+                
+                # 準備新的專案數據（用於審計日誌）
+                new_project_data = {
+                    'id': project_dict.get('id'),
+                    'name': project_dict.get('name'),
+                    'description': project_dict.get('description'),
+                    'status': project_dict.get('status'),
+                    'responsible_user_id': project_dict.get('responsible_user_id'),
+                    'start_time': project_dict.get('start_time'),
+                    'end_time': project_dict.get('end_time'),
+                    'selected_test_cases': selected_test_cases if selected_test_cases is not None else old_project_data.get('selected_test_cases', [])
+                }
+                
+                # 記錄審計日誌 - 測試專案更新
+                AuditLogger.log_test_project_update(
+                    user_id=current_user['id'],
+                    username=current_user['username'],
+                    project_id=str(project_id),
+                    old_data=old_project_data,
+                    new_data=new_project_data
+                )
+                
+                return jsonify(project_dict)
             else:
                 return jsonify({'error': '更新失敗'}), 400
         except Exception as e:
@@ -671,8 +821,34 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             return jsonify({'error': '需要管理員權限'}), 403
         
         try:
+            current_user = get_current_user()
+            if not current_user:
+                return jsonify({'error': '請先登入'}), 401
+            
+            # 獲取要刪除的測試專案數據（用於審計日誌）
+            project_to_delete = test_case_manager.get_test_project_by_id(int(project_id))
+            if not project_to_delete:
+                return jsonify({'error': '專案不存在'}), 404
+            
             success = test_case_manager.delete_test_project(int(project_id))
             if success:
+                # 記錄審計日誌 - 測試專案刪除
+                AuditLogger.log_test_project_delete(
+                    user_id=current_user['id'],
+                    username=current_user['username'],
+                    project_data={
+                        'id': project_to_delete.get('id'),
+                        'name': project_to_delete.get('name'),
+                        'description': project_to_delete.get('description'),
+                        'status': project_to_delete.get('status'),
+                        'responsible_user_id': project_to_delete.get('responsible_user_id'),
+                        'responsible_user_name': project_to_delete.get('responsible_user_name'),
+                        'start_time': project_to_delete.get('start_time'),
+                        'end_time': project_to_delete.get('end_time'),
+                        'selected_test_cases': project_to_delete.get('selected_test_cases', [])
+                    }
+                )
+                
                 return jsonify({'message': '刪除成功'})
             else:
                 return jsonify({'error': '專案不存在'}), 404
