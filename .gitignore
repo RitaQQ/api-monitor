@@ -68,3 +68,22 @@ htmlcov/
 # Temporary files
 nohup.out
 test_server.py
+
+# Database and data files
+data/api_monitor.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Cookie files
+cookies.txt
+*_cookies.txt
+admin_cookies.txt
+test1_cookies.txt
+
+# Test files
+test_*.py
+*_test.py
+add_time_fields.py
+create_test_results_table.py
+final_*.py
