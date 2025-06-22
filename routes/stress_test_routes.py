@@ -16,12 +16,12 @@ def register_stress_test_routes(app, data_manager, stress_tester, login_required
             api = data_manager.get_api_by_id(api_id)
             if not api:
                 flash('找不到指定的 API', 'error')
-                return redirect(url_for('main.index'))
+                return redirect(url_for('main.dashboard'))
             
             # 檢查是否已有測試在執行
             if stress_tester.is_test_running(api_id):
                 flash(f'API {api["name"]} 的壓力測試正在執行中', 'error')
-                return redirect(url_for('main.index'))
+                return redirect(url_for('main.dashboard'))
             
             # 在背景執行壓力測試
             def run_test():

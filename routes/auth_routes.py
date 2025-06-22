@@ -26,7 +26,7 @@ def create_auth_decorators(user_manager):
             user = user_manager.get_user_by_id(session['user_id'])
             if not user or user.get('role') != 'admin':
                 flash('需要管理員權限', 'error')
-                return redirect(url_for('main.index'))
+                return redirect(url_for('main.dashboard'))
             return f(*args, **kwargs)
         return decorated_function
     
@@ -56,7 +56,7 @@ def register_auth_routes(app, user_manager):
                 AuditLogger.log_user_login(user['id'], user['username'])
                 
                 flash(f'歡迎回來，{user["username"]}！', 'success')
-                return redirect(url_for('main.index'))
+                return redirect(url_for('main.dashboard'))
             else:
                 flash('用戶名或密碼錯誤', 'error')
         

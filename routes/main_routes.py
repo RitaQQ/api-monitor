@@ -8,9 +8,19 @@ def register_main_routes(app, data_manager, api_checker, stress_tester, user_man
     """註冊主要功能路由"""
     
     @main_bp.route('/')
-    @login_required
     def index():
-        """主監控頁面"""
+        """首頁 - 檢查是否已登入"""
+        if 'user_id' not in session:
+            # 未登入，顯示歡迎頁面
+            return render_template('welcome.html')
+        
+        # 已登入，顯示監控頁面
+        return redirect(url_for('main.dashboard'))
+    
+    @main_bp.route('/dashboard')
+    @login_required
+    def dashboard():
+        """主監控頁面（需要登入）"""
         apis = data_manager.load_apis()
         
         # 計算統計資料
@@ -41,7 +51,7 @@ def register_main_routes(app, data_manager, api_checker, stress_tester, user_man
             flash(f'執行檢查時發生錯誤: {str(e)}', 'error')
             print(f"檢查錯誤詳情: {e}")
         
-        return redirect(url_for('main.index') + '?from_loading=true')
+        return redirect(url_for('main.dashboard') + '?from_loading=true')
 
     @main_bp.route('/loading')
     def loading():
