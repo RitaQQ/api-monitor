@@ -21,7 +21,6 @@
 ### 必要環境變數
 ```
 SECRET_KEY=your-super-secret-key-for-production
-PORT=5001
 FLASK_ENV=production
 ```
 
@@ -30,6 +29,8 @@ FLASK_ENV=production
 DATABASE_PATH=/app/data/api_monitor.db
 LOG_LEVEL=INFO
 ```
+
+> **注意**: Railway 會自動設置 `PORT` 環境變數，應用會自動使用正確的端口。
 
 ## 部署檢查清單
 
