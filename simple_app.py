@@ -92,6 +92,8 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
+    import os
+    
     print("🚀 啟動 API 監控系統（簡化版）...")
     print("請訪問: http://127.0.0.1:5001 (本機)")
     print("      http://192.168.12.5:5001 (局域網)")
@@ -107,7 +109,6 @@ if __name__ == '__main__':
     
     # 啟動 Flask 應用程式
     # Railway 使用 PORT 環境變數，本地使用 5001
-    import os
     port = int(os.environ.get('PORT', 5001))
     debug = os.environ.get('FLASK_ENV') != 'production'
     
