@@ -323,3 +323,132 @@ gunicorn --config gunicorn.conf.py simple_app:app
 - **VPS**: Self-hosted with Docker Compose
 
 See `DOCKER_DEPLOY.md` for detailed deployment instructions.
+
+## Railway 部署問題調試
+
+### 遇到的問題與解決過程
+
+#### 問題 1: 登入失敗 (已解決)
+**症狀**: 本地 Docker 可以登入，Railway 部署後無法登入，輸入正確帳密顯示密碼錯誤
+
+**根本原因**: 密碼加密方式不一致
+- 本地 Docker 建置時：`hashlib.sha256(password.encode()).hexdigest()` (無鹽值)
+- 運行時驗證：`hashlib.sha256((password + salt).encode()).hexdigest()` (有鹽值)
+
+**解決方案**: 統一密碼加密方式
+```python
+# database/db_manager.py:75
+salt = "api_monitor_salt_2025"
+password_hash = hashlib.sha256((password + salt).encode()).hexdigest()
+```
+
+#### 問題 2: NameError 啟動錯誤 (已解決)
+**症狀**: `NameError: name 'project' is not defined` 在 test_case_app.py:1146
+
+**根本原因**: 初始化測試案例時引用未定義的 project 變數
+
+**解決方案**: 
+```python
+# test_case_app.py:1146
+test_project_id=None  # 改為 None，後續可分配
+```
+
+#### 問題 3: 健康檢查失敗 (已解決)
+**症狀**: Railway 健康檢查連續失敗，顯示 "service unavailable"
+
+**根本原因**: 端口配置衝突
+- 應用硬編碼 port=5001
+- Railway 使用動態端口通過 PORT 環境變數
+
+**解決方案**: 動態端口配置
+```python
+port = int(os.environ.get('PORT', 5001))
+app.run(debug=debug, host='0.0.0.0', port=port)
+```
+
+#### 問題 4: 首頁顯示異常 (已解決)
+**症狀**: 訪問 Railway URL 顯示 PNG 圖示或 "Application failed to respond"
+
+**根本原因**: 首頁路由需要登入，未登入用戶無法正常訪問
+
+**解決方案**: 分離首頁和儀表板
+```python
+@main_bp.route('/')
+def index():
+    if 'user_id' not in session:
+        return render_template('welcome.html')  # 歡迎頁面
+    return redirect(url_for('main.dashboard'))
+
+@main_bp.route('/dashboard')
+@login_required
+def dashboard():
+    # 原監控邏輯
+```
+
+#### 問題 5: 502 Bad Gateway (進行中)
+**症狀**: Railway 部署成功，但訪問時顯示 502 Bad Gateway
+
+**可能原因**:
+1. 應用程式啟動時崩潰
+2. 模組導入失敗
+3. 數據庫連接問題
+4. 路由配置錯誤
+
+**調試步驟**:
+1. ✅ 檢查端口配置 (已修復)
+2. ✅ 簡化啟動邏輯 (已完成)
+3. 🔄 檢查 Railway 日誌中的具體錯誤
+4. 🔄 測試健康檢查端點 `/health`
+5. 🔄 檢查模組導入和數據庫初始化
+
+**調試命令**:
+```bash
+# 本地測試
+python simple_app.py
+
+# 檢查健康端點
+curl https://your-app.railway.app/health
+
+# 檢查端口配置
+echo $PORT
+```
+
+### 部署配置檔案
+
+**railway.json**:
+```json
+{
+  "build": {
+    "builder": "DOCKERFILE"
+  },
+  "deploy": {
+    "startCommand": "python simple_app.py",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 300,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  }
+}
+```
+
+**環境變數設置**:
+```
+SECRET_KEY=your-super-secret-key-for-production
+FLASK_ENV=production
+```
+
+### 調試技巧
+
+1. **本地與 Railway 環境差異**:
+   - 本地 Docker: 持久化存儲，數據保留
+   - Railway: 每次部署全新環境，無狀態
+
+2. **錯誤隱藏原因**:
+   - 條件分支可能跳過有問題的代碼
+   - 環境差異暴露潛在 Bug
+
+3. **下一步調試方向**:
+   - 檢查 Railway 部署日誌
+   - 測試各個模組的導入
+   - 驗證數據庫初始化過程
+   - 確認所有路由正確註冊
