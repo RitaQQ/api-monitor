@@ -1,286 +1,277 @@
-# API 監控系統 (API Monitor)
+# API Monitor
 
-一個功能完整的 Python Flask API 監控系統，提供即時監控、自動檢查、狀態追蹤、測試案例管理和專案測試管理功能。
+一個基於 Flask 的 API 監控系統，提供實時監控、壓力測試和 Web 管理介面。
 
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![Flask](https://img.shields.io/badge/flask-2.3+-green.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+## 功能特色
 
-## 🚀 功能特色
+- 🔍 **實時 API 監控** - 自動定期檢查 API 健康狀態
+- 📊 **儀表板** - 直觀的 Web 介面顯示監控狀態
+- 🔐 **用戶管理** - 支援多用戶和權限控制
+- ⚡ **壓力測試** - 內建負載測試功能
+- 📈 **歷史記錄** - 追蹤 API 響應時間和狀態變化
+- 🎯 **靈活配置** - 支援多種 HTTP 方法和自定義參數
+- 🧪 **測試案例管理** - 完整的測試專案和案例管理系統
+- 📋 **審計日誌** - 完整的操作追蹤和用戶活動記錄
+- 🐳 **容器化部署** - 支援 Docker 和雲端部署
 
-### 🔍 即時監控
-- 定時自動檢查 API 健康狀態（預設 60 秒間隔）
-- 支援多種 HTTP 方法：GET、POST、PUT、DELETE
-- 即時顯示回應時間和狀態統計
+## 系統要求
 
-### 📊 視覺化儀表板
-- 美觀的響應式網頁介面
-- 即時狀態指示（正常/異常/未知）
-- 自動重新整理功能
-
-### 🔧 靈活配置
-- 透過網頁介面新增/刪除 API
-- 支援自訂 JSON Request Body
-- 動態時間戳變數支援
-
-### 📝 詳細記錄
-- 完整的 API 回應內容查看
-- 錯誤次數追蹤和通知
-- 檢查歷史記錄
-
-### 🚨 智慧通知
-- 連續錯誤自動警報
-- Console 和 Log 檔案記錄
-- 可自訂錯誤閾值
-
-### 📋 測試案例管理
-- TC格式ID系統（TC00001, TC00002等）
-- 橫向表格式檢視，提高資訊密度
-- **完整驗收條件顯示和編輯**
-- CSV批量匯入/匯出功能（包含驗收條件）
-- 產品標籤分類管理
-- 直觀的表單介面設計
-
-### 🎯 測試專案管理
-- 表格式專案概覽
-- 專案狀態追蹤（草稿/進行中/已完成）
-- 測試案例分配和進度監控
-- 通過/失敗/阻擋統計
-- 負責人指派管理
-
-### 🎨 優化的使用者介面
-- **簡化的側邊欄設計**：登出區塊顯示用戶名
-- **精簡的管理介面**：移除冗餘的統計區塊
-- **無頭像的用戶列表**：更簡潔的垂直佈局
-- 統一的深色主題設計
-- 響應式設計支援
-- 可收納的管理區塊
-
-## 📷 螢幕截圖
-
-### 主監控頁面
-- 清晰的狀態概覽
-- 點擊查看 API 回應內容
-- 即時統計資料
-
-### 管理後台
-- 簡易的 API 管理介面
-- 可收納的新增API區塊
-- Request Body 編輯器
-- 回應內容預覽
-
-### 測試案例管理
-- 橫向表格顯示所有測試案例**含驗收條件欄位**
-- TC格式ID自動生成
-- **完整的用戶角色和驗收條件編輯**
-- CSV匯入/匯出功能（支援驗收條件）
-- 產品標籤管理
-
-### 測試專案管理
-- 專案狀態和進度一覽
-- 測試案例分配
-- 統計資料追蹤
-
-## 🛠 安裝與使用
-
-### 系統需求
 - Python 3.8+
-- pip
+- SQLite 3
+- Docker (推薦部署方式)
+- 支援的作業系統：Windows、macOS、Linux
 
-### 快速開始
+## 🚀 快速開始
 
-1. **克隆專案**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/api-monitor.git
-   cd api-monitor
+### 🐳 方法一：Docker 部署 (強烈推薦)
+
+**最簡單的一鍵啟動方式：**
+
+```bash
+# 1. 克隆項目
+git clone https://github.com/RitaQQ/api-monitor.git
+cd api-monitor
+
+# 2. 確保 Docker 已安裝
+docker --version
+
+# 3. 一鍵啟動 (就這麼簡單！)
+docker compose up -d
+```
+
+**Docker 管理命令：**
+
+```bash
+# 查看服務狀態
+docker compose ps
+
+# 查看應用日誌
+docker compose logs -f api-monitor
+
+# 停止服務
+docker compose down
+
+# 重啟服務 (有代碼更改時)
+docker compose up -d --build
+
+# 完全清理 (包括數據)
+docker compose down -v
+```
+
+**Docker 故障排除：**
+
+```bash
+# 如果遇到建置問題，清理後重試
+docker system prune -f
+docker compose build --no-cache
+docker compose up -d
+```
+
+### 💻 方法二：本地開發環境
+
+**macOS 用戶（推薦使用虛擬環境）：**
+
+```bash
+# 創建虛擬環境
+python3 -m venv venv
+source venv/bin/activate
+
+# 安裝依賴
+pip install -r requirements.txt
+
+# 前台運行（開發/除錯）
+python simple_app.py
+
+# 背景運行（推薦日常使用）
+nohup python simple_app.py > app.log 2>&1 &
+
+# 檢查是否運行
+lsof -i :5001
+
+# 停止背景服務
+pkill -f simple_app.py
+```
+
+**Windows 用戶：**
+
+```bash
+# 創建虛擬環境
+python -m venv venv
+venv\Scripts\activate
+
+# 安裝依賴並運行
+pip install -r requirements.txt
+python simple_app.py
+```
+
+### ☁️ 方法三：雲端部署 (Railway)
+
+**一鍵部署到 Railway：**
+
+1. Fork 這個項目到你的 GitHub
+2. 前往 [Railway](https://railway.app) 並連接 GitHub
+3. 選擇這個項目並部署
+4. 設置環境變數（可選）：
+   ```
+   SECRET_KEY=your-super-secret-key
+   PORT=5001
    ```
 
-2. **安裝依賴**
-   ```bash
-   pip install -r requirements.txt
-   ```
+詳細部署指南請參考：[RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md)
 
-3. **啟動應用程式**
-   ```bash
-   python app.py
-   ```
-   或使用啟動腳本：
-   ```bash
-   ./start.sh
-   ```
+## 🌐 訪問應用
 
-4. **訪問網頁介面**
-   - 監控儀表板: http://localhost:5001
-   - 管理後台: http://localhost:5001/admin
-   - 測試案例管理: http://localhost:5001/test-cases
-   - 測試專案管理: http://localhost:5001/test-projects
+啟動後訪問以下地址：
+
+**本地訪問：**
+- **主頁面**: http://localhost:5001
+- **登入頁面**: http://localhost:5001/login
+- **管理介面**: http://localhost:5001/admin
+- **健康檢查**: http://localhost:5001/health
+
+**區域網訪問：**
+- http://[你的IP]:5001 (例如: http://192.168.1.100:5001)
+
+## 🔑 預設帳號
+
+```
+用戶名: admin
+密碼: admin123
+```
+
+> ⚠️ **安全提醒**: 生產環境請立即修改預設密碼！
+
+## 📋 主要功能
+
+### 🔍 API 監控
+- 支援 GET、POST、PUT、DELETE 請求
+- 自動檢測響應時間和狀態碼
+- 可設定檢查間隔和錯誤閾值
+- 動態變數支援（如 `{{timestamp}}`）
+
+### ⚡ 壓力測試
+- 並發請求測試
+- 即時結果顯示
+- 響應時間統計和成功率分析
+
+### 👥 用戶管理
+- 多用戶支援
+- 角色權限控制 (admin/user)
+- 完整的操作審計日誌
+
+### 🧪 測試管理
+- 測試案例管理 (TC格式編號)
+- 測試專案組織
+- CSV 匯入/匯出功能
+- 產品標籤分類
+
+### 📊 審計系統
+- 完整的用戶操作記錄
+- 登入/登出追蹤
+- 數據變更歷史
+
+## ⚙️ 配置說明
+
+**主要配置文件：`config.py`**
+
+```python
+CHECK_INTERVAL = 60      # 背景檢查間隔（秒）
+MAX_ERROR_COUNT = 3      # 連續錯誤閾值
+REQUEST_TIMEOUT = 10     # HTTP 請求超時（秒）
+```
+
+**Docker 環境變數：**
+
+```yaml
+# docker-compose.yml 中可配置
+SECRET_KEY: "your-secret-key"
+PORT: 5001
+FLASK_ENV: production
+DATABASE_PATH: "/app/data/api_monitor.db"
+```
+
+## 🏗️ 技術架構
+
+**核心技術棧：**
+- **後端框架**: Flask 2.3.3
+- **資料庫**: SQLite 3 (已從 JSON 遷移)
+- **任務排程**: APScheduler 3.10.4
+- **前端框架**: Bootstrap 5 + jQuery
+- **容器化**: Docker + Docker Compose
+- **生產部署**: Gunicorn + Gevent
+
+**架構特色：**
+- 模組化設計，易於擴展
+- 完整的資料庫遷移系統
+- 統一的深色主題 UI
+- 響應式設計，支援行動裝置
 
 ## 📁 專案結構
 
 ```
 api_monitor/
-├── app.py                 # Flask 主程式
-├── simple_app.py          # 簡化版主程式（無排程器）
-├── api_checker.py         # API 健康檢查邏輯
-├── data_manager.py        # JSON 資料管理
-├── scheduler.py          # 定時檢查排程器
-├── config.py             # 配置設定
-├── requirements.txt      # 依賴套件清單
-├── start.sh             # 啟動腳本
-├── data/
-│   ├── apis.json        # API 資料儲存
-│   ├── test_cases.json  # 測試案例資料
-│   ├── test_projects.json # 測試專案資料
-│   ├── product_tags.json # 產品標籤資料
-│   └── users.json       # 使用者資料
-└── templates/
-    ├── index.html       # 監控儀表板頁面
-    ├── admin.html       # 管理後台頁面
-    ├── test_case_management.html # 測試案例管理
-    └── test_projects.html # 測試專案管理
+├── 📁 database/          # 資料庫管理
+│   ├── db_manager.py     # SQLite 管理器
+│   ├── schema.sql        # 資料庫結構
+│   └── migration.py      # 資料遷移工具
+├── 📁 routes/            # 路由模組
+├── 📁 templates/         # Jinja2 模板
+├── 📁 static/            # 靜態資源
+├── 📁 data/              # 資料存儲
+├── 🐳 docker-compose.yml # Docker 配置
+├── 🐳 Dockerfile         # 容器建置
+├── 📋 requirements.txt   # Python 依賴
+└── 🚀 simple_app.py      # 主應用程式
 ```
 
-## ⚙️ 配置設定
+## 🔧 開發指南
 
-在 `config.py` 中可以調整以下設定：
+**本地開發設置：**
 
-```python
-CHECK_INTERVAL = 60      # 檢查間隔時間（秒）
-MAX_ERROR_COUNT = 3      # 觸發通知的連續錯誤次數
-REQUEST_TIMEOUT = 10     # HTTP 請求超時時間
+```bash
+# 安裝開發依賴
+pip install -r requirements.txt
+
+# 運行測試服務器
+python test_server.py
+
+# 檢查代碼格式
+# (可添加 linting 工具)
 ```
 
-## 📖 使用說明
+**Docker 開發：**
 
-### 新增 API
+```bash
+# 開發環境
+docker compose up -d
 
-1. 訪問管理後台：http://localhost:5001/admin
-2. 點擊「新增 API 監控」展開表單
-3. 填寫 API 資訊：
-   - **名稱**: API 的顯示名稱
-   - **URL**: API 端點位址
-   - **HTTP 方法**: GET, POST, PUT, DELETE
-   - **API 類型**: REST, GraphQL, 其他
-   - **Request Body**: JSON 格式（POST/PUT 時可用）
-
-4. 點擊「新增 API 監控」
-
-### 查看監控狀態
-
-1. 訪問主頁面：http://localhost:5001
-2. 查看即時統計和狀態指示
-3. 點擊「📄 查看回應」查看 API 回應內容
-4. 使用「🔄 立即檢查」手動觸發檢查
-
-### 測試案例管理
-
-1. 訪問測試案例管理：http://localhost:5001/test-cases
-2. 使用「匯入」功能批量新增測試案例：
-   - 下載CSV範本檔案
-   - 填寫測試案例資料
-   - 上傳CSV檔案進行批量匯入
-3. 使用「匯出」功能將測試案例匯出為CSV
-4. 點擊「新增測試案例」按鈕手動新增單一測試案例
-
-### 測試專案管理
-
-1. 訪問測試專案管理：http://localhost:5001/test-projects
-2. 點擊「新增專案」建立測試專案
-3. 選擇要包含的測試案例
-4. 指派負責人和設定測試日期
-5. 在專案詳情頁面追蹤測試進度
-
-### 動態變數
-
-在 Request Body 中可以使用以下動態變數：
-- `{{timestamp}}`: 自動替換為當前時間戳（毫秒）
-
-## 🔌 API 端點
-
-系統提供以下 REST API 端點：
-
-**監控相關：**
-- `GET /` - 主監控頁面
-- `GET /admin` - 管理後台
-- `POST /admin/add` - 新增 API
-- `POST /admin/delete/<id>` - 刪除 API
-- `GET /check-now` - 立即檢查
-- `GET /api/status` - 取得 JSON 格式狀態
-- `GET /health` - 應用程式健康檢查
-
-**測試案例管理：**
-- `GET /test-cases` - 測試案例管理頁面
-- `GET /api/test-cases` - 取得測試案例列表
-- `POST /api/test-cases` - 新增測試案例
-- `PUT /api/test-cases/<id>` - 更新測試案例
-- `DELETE /api/test-cases/<id>` - 刪除測試案例
-
-**測試專案管理：**
-- `GET /test-projects` - 測試專案管理頁面
-- `GET /api/test-projects` - 取得專案列表
-- `POST /api/test-projects` - 新增測試專案
-- `PUT /api/test-projects/<id>` - 更新測試專案
-- `DELETE /api/test-projects/<id>` - 刪除測試專案
-
-**產品標籤管理：**
-- `GET /api/product-tags` - 取得產品標籤列表
-- `POST /api/product-tags` - 新增產品標籤
-
-## 🎯 使用範例
-
-### 監控 REST API
-```json
-{
-  "name": "用戶服務 API",
-  "url": "https://api.example.com/users",
-  "method": "GET",
-  "type": "REST"
-}
+# 生產環境測試
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-### 監控 POST API 含 Request Body
-```json
-{
-  "name": "搜尋 API",
-  "url": "https://api.example.com/search",
-  "method": "POST",
-  "type": "REST",
-  "request_body": {
-    "query": "search term",
-    "timestamp": "{{timestamp}}"
-  }
-}
-```
-
-### 測試案例 CSV 格式範例
-```csv
-標題,用戶角色,功能描述,驗收條件,測試備註,產品標籤
-登入功能測試,一般用戶,我希望能夠使用帳號密碼登入系統,輸入正確帳密可成功登入; 錯誤帳密顯示錯誤訊息; 登入後導向首頁,需測試各種瀏覽器,web
-購物車功能測試,購物用戶,我希望能夠將商品加入購物車,點擊加入購物車按鈕; 購物車數量增加; 商品出現在購物車列表,,app
-```
-
-## 🤝 貢獻
+## 🤝 貢獻指南
 
 歡迎提交 Issue 和 Pull Request！
 
-1. Fork 這個專案
-2. 建立功能分支：`git checkout -b feature/amazing-feature`
-3. 提交變更：`git commit -m 'Add amazing feature'`
-4. 推送到分支：`git push origin feature/amazing-feature`
-5. 開啟 Pull Request
+1. Fork 這個項目
+2. 創建特性分支：`git checkout -b feature/amazing-feature`
+3. 提交更改：`git commit -m 'Add amazing feature'`
+4. 推送分支：`git push origin feature/amazing-feature`
+5. 提交 Pull Request
 
 ## 📄 授權
 
-本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 檔案
+MIT License - 詳見 [LICENSE](LICENSE) 文件
 
-## 🙏 致謝
+## 🆘 支援
 
-- Flask - 輕量級 Web 框架
-- APScheduler - Python 任務排程
-- Requests - HTTP 請求庫
+如果遇到問題：
+
+1. 查看 [Issues](https://github.com/RitaQQ/api-monitor/issues)
+2. 查看部署指南：[RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md)
+3. 查看開發文檔：[CLAUDE.md](CLAUDE.md)
+4. 提交新的 Issue
 
 ---
 
-🚀 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
+⭐ 如果這個項目對你有幫助，請給個星星！
