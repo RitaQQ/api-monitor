@@ -8,8 +8,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     FLASK_APP=simple_app.py \
-    FLASK_ENV=production \
-    PORT=5001
+    FLASK_ENV=production
 
 # 安裝系統依賴
 RUN apt-get update \
@@ -36,17 +35,17 @@ RUN mkdir -p /app/data \
 # 創建數據庫初始化腳本並執行
 RUN python railway_init.py
 
-# 暴露端口
-EXPOSE 5001
+# 暴露端口（Railway 會動態分配）
+EXPOSE ${PORT:-5001}
 
 # 創建非 root 用戶
 RUN adduser --disabled-password --gecos '' --uid 1000 appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
-# 健康檢查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5001/health || exit 1
+# 健康檢查（移除，因為 Railway 有自己的健康檢查機制）
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost:${PORT:-5001}/health || exit 1
 
 # 啟動命令
 CMD ["python", "simple_app.py"]
