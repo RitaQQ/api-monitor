@@ -54,6 +54,38 @@ def create_app():
     register_user_management_routes(app, user_manager, user_story_manager, admin_required, login_required)
     register_audit_routes(app, admin_required)
     
+    # 健康檢查端點
+    @app.route('/health')
+    def health_check():
+        """Docker 健康檢查端點"""
+        import os
+        from datetime import datetime
+        
+        try:
+            # 檢查數據庫是否可訪問
+            db_path = os.getenv('DATABASE_PATH', 'data/api_monitor.db')
+            db_accessible = os.path.exists(db_path) and os.access(db_path, os.R_OK | os.W_OK)
+            
+            # 檢查用戶管理器是否正常
+            user_manager_ok = user_manager is not None
+            
+            status = {
+                'status': 'healthy' if db_accessible and user_manager_ok else 'unhealthy',
+                'timestamp': datetime.now().isoformat(),
+                'database': 'accessible' if db_accessible else 'inaccessible',
+                'user_manager': 'ok' if user_manager_ok else 'error',
+                'version': '1.0.0'
+            }
+            
+            return status, 200 if status['status'] == 'healthy' else 503
+            
+        except Exception as e:
+            return {
+                'status': 'unhealthy',
+                'timestamp': datetime.now().isoformat(),
+                'error': str(e)
+            }, 503
+    
     return app
 
 # 建立應用程式實例

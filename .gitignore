@@ -87,3 +87,20 @@ test_*.py
 add_time_fields.py
 create_test_results_table.py
 final_*.py
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Docker
+docker-compose.override.yml
+
+# SSL certificates
+nginx/ssl/*.pem
+nginx/ssl/*.crt
+nginx/ssl/*.key
+
+# Backup files
+backups/
+*.backup

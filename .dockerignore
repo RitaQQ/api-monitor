@@ -1,0 +1,109 @@
+# Git
+.git
+.gitignore
+*.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+server.log
+api_monitor.log
+app.log
+debug.log
+nohup.out
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+test_*.py
+*_test.py
+final_*.py
+add_time_fields.py
+create_test_results_table.py
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Cookie files
+cookies.txt
+*_cookies.txt
+admin_cookies.txt
+test1_cookies.txt
+test_cookies.txt
+
+# Database backup files (keep schema but exclude data)
+# Keep the empty database structure
+# Exclude any test databases
+*_backup.*
+test_*.db
+
+# Docker
+Dockerfile.*
+docker-compose.override.yml
+.dockerignore
+
+# Deployment scripts
+*.sh
+push_*.sh
+
+# Documentation (except essential ones)
+DEPLOY.md
+GITHUB_SETUP.md
+SQLITE_MIGRATION.md
+audit_log_design.md
+README_TEST_MANAGEMENT.md
+login_test.txt
+
+# Development tools
+migrate_to_sqlite.py
+minimal_server.py

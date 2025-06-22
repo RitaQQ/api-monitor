@@ -5,3 +5,17 @@ aiohttp==3.12.12
 reportlab==4.0.4
 matplotlib==3.7.2
 numpy<2
+
+# 生產環境依賴
+gunicorn==21.2.0
+gevent==23.7.0
+
+# 健康檢查和監控
+psutil==5.9.5
+
+# 安全和加密
+cryptography==41.0.4
+python-dotenv==1.0.0
+
+# 日誌和調試
+coloredlogs==15.0.1

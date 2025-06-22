@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # API 監控主服務
+  api-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-monitor-app
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    volumes:
+      # 持久化數據庫
+      - api_monitor_data:/app/data
+      # 持久化日誌
+      - api_monitor_logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=simple_app.py
+      - PORT=5001
+      # 數據庫路徑
+      - DATABASE_PATH=/app/data/api_monitor.db
+      # 安全設置
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - api-monitor-network
+
+  # Nginx 反向代理 (可選)
+  nginx:
+    image: nginx:alpine
+    container_name: api-monitor-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api-monitor
+    networks:
+      - api-monitor-network
+    profiles:
+      - nginx  # 使用 --profile nginx 來啟用
+
+volumes:
+  api_monitor_data:
+    driver: local
+  api_monitor_logs:
+    driver: local
+
+networks:
+  api-monitor-network:
+    driver: bridge

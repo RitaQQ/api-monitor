@@ -45,6 +45,13 @@ pkill -f simple_app.py
 ### Dependencies
 - `pip install -r requirements.txt` - Install Python dependencies
 
+### Docker Deployment
+- `docker-compose up -d` - Quick start with Docker (development)
+- `docker-compose -f docker-compose.prod.yml up -d` - Production deployment
+- `docker-compose down` - Stop all services
+- `docker-compose logs -f api-monitor` - View application logs
+- `curl http://localhost:5001/health` - Health check endpoint
+
 ### Testing
 - `python test_server.py` - Run test server for development
 
@@ -68,11 +75,12 @@ pkill -f simple_app.py
 - `user_story_manager.py` - User story/test case management
 
 **Data Storage:**
-- `data/apis.json` - API configurations and status data
-- `data/users.json` - User accounts and authentication data
-- `data/test_cases.json` - Test cases data with TC format IDs
-- `data/test_projects.json` - Test project management data
-- `data/product_tags.json` - Product tag definitions
+- `data/api_monitor.db` - SQLite database (primary data store)
+- `data/apis.json` - Legacy API configurations (migrated to SQLite)
+- `data/users.json` - Legacy user accounts (migrated to SQLite)
+- `data/test_cases.json` - Legacy test cases (migrated to SQLite)
+- `data/test_projects.json` - Legacy test project data (migrated to SQLite)
+- `data/product_tags.json` - Legacy product tag definitions (migrated to SQLite)
 
 ### UI Architecture
 
@@ -110,6 +118,14 @@ pkill -f simple_app.py
 - **Simplified product tag management**: Statistics overview removed
 - **Clean user management**: Avatar-free vertical layout
 - Test project management with table-based views
+- **Audit logging system**: Complete operation tracking for test cases and projects
+
+**Audit and Security:**
+- Comprehensive audit trail for all test case and project operations
+- User authentication tracking (login/logout)
+- Change history with before/after data comparison
+- Admin-only access to audit logs with filtering and export capabilities
+- IP address and browser tracking for security monitoring
 
 ## Configuration
 
@@ -198,8 +214,32 @@ Critical version constraints:
 - `numpy<2` - Required for matplotlib compatibility
 - `Flask==2.3.3` - Core framework
 - `APScheduler==3.10.4` - Background task scheduling
+- `gunicorn==21.2.0` - Production WSGI server
+- `gevent==23.7.0` - Async worker class for Gunicorn
 
-## Recent Updates (June 18, 2025)
+## Recent Updates (June 22, 2025)
+
+### Docker Deployment System
+- **Complete Docker configuration**: Multi-stage production builds with security optimization
+- **Docker Compose setup**: Both development and production environment configurations
+- **Nginx integration**: Reverse proxy with SSL support and security headers
+- **Health monitoring**: Built-in health check endpoints and container monitoring
+- **Environment management**: Comprehensive `.env` configuration with security best practices
+- **Production optimization**: Gunicorn WSGI server with gevent workers for high performance
+
+### Audit Logging System  
+- **Complete operation tracking**: Comprehensive audit trail for test cases and test projects
+- **User activity monitoring**: Login/logout tracking with IP and browser information
+- **Change history**: Before/after data comparison for all modifications
+- **Admin dashboard**: Full audit log viewing with filtering, search, and CSV export
+- **Security compliance**: Automatic sensitive data filtering and retention policies
+
+### Database Migration
+- **SQLite integration**: Complete migration from JSON to SQLite database
+- **Schema management**: Structured database with proper indexing and constraints
+- **Data integrity**: Foreign key relationships and data validation
+- **Performance optimization**: Indexed queries and efficient data retrieval
+- **Backup support**: Database backup and restore capabilities
 
 ### Interface Redesign
 - **Restored acceptance criteria functionality**: Full display and editing in test case management
@@ -207,9 +247,41 @@ Critical version constraints:
 - **User management cleanup**: Removed user avatars, implemented vertical layout
 - **Sidebar optimization**: User name displayed only in logout section
 - **Global user context**: Added template context processor for consistent user access across all pages
+- **Audit interface**: New audit logs page with advanced filtering and visualization
 
 ### Technical Improvements
 - Added `@app.context_processor` in `simple_app.py` for global user access
 - Updated base template to remove redundant user info sections
 - Enhanced test case table to include acceptance criteria column
 - Fixed user role validation in test case forms
+- Implemented comprehensive audit logging throughout the application
+- Added health check endpoint for Docker deployment monitoring
+- Configured production-ready WSGI server with performance optimization
+
+## Deployment Options
+
+### Development Deployment
+```bash
+# Local development
+python simple_app.py
+
+# Docker development
+docker-compose up -d
+```
+
+### Production Deployment
+```bash
+# Production with Docker
+docker-compose -f docker-compose.prod.yml up -d
+
+# Manual production setup
+gunicorn --config gunicorn.conf.py simple_app:app
+```
+
+### Cloud Deployment
+- **AWS/GCP/Azure**: Use Docker containers with load balancer
+- **Digital Ocean**: Docker Droplet with managed database
+- **Heroku**: Container deployment with add-ons
+- **VPS**: Self-hosted with Docker Compose
+
+See `DOCKER_DEPLOY.md` for detailed deployment instructions.

@@ -1,0 +1,99 @@
+# 多階段構建 - 生產優化版 Dockerfile
+
+# ===============================================================================
+# Stage 1: Builder
+# ===============================================================================
+FROM python:3.11-slim as builder
+
+# 設置工作目錄
+WORKDIR /app
+
+# 安裝構建依賴
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        libc6-dev \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# 複製依賴文件
+COPY requirements.txt .
+
+# 安裝 Python 依賴到虛擬環境
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+# ===============================================================================
+# Stage 2: Production
+# ===============================================================================
+FROM python:3.11-slim as production
+
+# 設置標籤
+LABEL maintainer="API Monitor Team"
+LABEL description="API Monitor Production Container"
+LABEL version="1.0.0"
+
+# 設置環境變量
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH="/opt/venv/bin:$PATH" \
+    FLASK_APP=simple_app.py \
+    FLASK_ENV=production \
+    PORT=5001 \
+    WEB_CONCURRENCY=2
+
+# 安裝運行時依賴
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        sqlite3 \
+        curl \
+        tini \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# 從構建階段複製虛擬環境
+COPY --from=builder /opt/venv /opt/venv
+
+# 創建非 root 用戶
+RUN groupadd -r appgroup && useradd -r -g appgroup -u 1000 appuser
+
+# 設置工作目錄
+WORKDIR /app
+
+# 創建必要目錄並設置權限
+RUN mkdir -p /app/{data,logs,backups} \
+    && chown -R appuser:appgroup /app
+
+# 複製應用代碼
+COPY --chown=appuser:appgroup . .
+
+# 切換到非 root 用戶
+USER appuser
+
+# 初始化數據庫（如果需要）
+RUN python -c "
+import os
+if not os.path.exists('/app/data/api_monitor.db'):
+    print('Initializing database...')
+    from database.db_manager import db_manager
+    db_manager.init_database()
+    print('Database initialized')
+else:
+    print('Database already exists')
+" 2>/dev/null || echo "Database initialization skipped"
+
+# 暴露端口
+EXPOSE 5001
+
+# 健康檢查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5001/health || exit 1
+
+# 使用 tini 作為 init 進程
+ENTRYPOINT ["tini", "--"]
+
+# 啟動命令 - 使用 Gunicorn
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "simple_app:app"]

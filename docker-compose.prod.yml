@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # API 監控主服務 - 生產環境配置
+  api-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: api-monitor:latest
+    container_name: api-monitor-prod
+    restart: always
+    ports:
+      - "127.0.0.1:5001:5001"  # 只綁定到本地，通過nginx對外
+    volumes:
+      # 持久化數據庫到宿主機
+      - /opt/api-monitor/data:/app/data
+      # 持久化日誌到宿主機
+      - /opt/api-monitor/logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=simple_app.py
+      - PORT=5001
+      # 生產環境數據庫
+      - DATABASE_PATH=/app/data/api_monitor.db
+      # 安全設置 - 從環境變量讀取
+      - SECRET_KEY=${SECRET_KEY}
+      # 日誌級別
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - api-monitor-network
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # 需要寫入數據庫
+    tmpfs:
+      - /tmp
+
+  # Nginx 反向代理 - 生產環境
+  nginx:
+    image: nginx:alpine
+    container_name: api-monitor-nginx-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - /var/log/nginx:/var/log/nginx
+    depends_on:
+      - api-monitor
+    networks:
+      - api-monitor-network
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  api_monitor_data:
+    driver: local
+  api_monitor_logs:
+    driver: local
+
+networks:
+  api-monitor-network:
+    driver: bridge
