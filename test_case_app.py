@@ -1143,7 +1143,7 @@ def init_test_case_data():
             title=case_data['title'],
             description=f"用戶角色: {case_data['user_role']}\n功能描述: {case_data['feature_description']}",
             acceptance_criteria='\n'.join(case_data['acceptance_criteria']),
-            test_project_id=project['id'],
+            test_project_id=None,  # 初始化時不指定測試專案，後續可以分配
             product_tag_ids=product_tag_ids
         )
     
