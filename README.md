@@ -67,6 +67,119 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
+### 🔄 本地 Docker 開發工作流
+
+#### 程式碼更新方式
+
+**方法一：重新建置並啟動 (推薦)**
+
+```bash
+# 每次程式碼修改後，重新建置映像
+docker compose up -d --build
+
+# 如果遇到快取問題，使用無快取建置
+docker compose build --no-cache && docker compose up -d
+```
+
+**方法二：開發模式 Volume 掛載 (最佳開發體驗)**
+
+創建 `docker-compose.dev.yml`：
+
+```yaml
+# docker-compose.dev.yml
+version: '3.8'
+
+services:
+  api-monitor:
+    build: .
+    ports:
+      - "5001:5001"
+    volumes:
+      # 將本地代碼掛載到容器內，即時同步
+      - .:/app
+      - /app/venv
+      - /app/__pycache__
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    command: python simple_app.py
+```
+
+使用開發配置：
+
+```bash
+# 啟動開發環境
+docker compose -f docker-compose.dev.yml up -d
+
+# 修改程式碼後只需重啟 (程式碼自動同步)
+docker compose -f docker-compose.dev.yml restart
+
+# 查看即時日誌
+docker compose -f docker-compose.dev.yml logs -f
+```
+
+**方法三：快速重啟**
+
+```bash
+# 如果使用 Volume 掛載，程式碼修改後重啟即可
+docker compose restart api-monitor
+```
+
+#### 常用開發命令
+
+```bash
+# 開發過程中的常用操作
+docker compose up -d --build      # 重新建置並啟動
+docker compose logs -f api-monitor # 查看應用日誌
+docker compose exec api-monitor bash # 進入容器除錯
+docker compose restart api-monitor  # 重啟特定服務
+docker compose down              # 停止所有服務
+docker compose down -v           # 停止並清理資料
+
+# 完全清理重來
+docker system prune -f
+docker compose up -d --build
+```
+
+#### 高效開發別名設置
+
+```bash
+# 在 ~/.bashrc 或 ~/.zshrc 中添加
+alias dcup="docker compose up -d --build"
+alias dcdev="docker compose -f docker-compose.dev.yml up -d"
+alias dcdown="docker compose down"
+alias dclogs="docker compose logs -f"
+alias dcrestart="docker compose restart"
+alias dcexec="docker compose exec api-monitor bash"
+
+# 使用別名
+dcup           # 重新建置並啟動
+dcdev          # 啟動開發環境
+dclogs         # 查看日誌
+dcrestart      # 快速重啟
+```
+
+#### 推薦的開發流程
+
+**日常開發**：
+1. 修改程式碼
+2. 執行 `docker compose up -d --build`
+3. 測試應用：`curl http://localhost:5001/health`
+4. 查看日誌（如有問題）：`docker compose logs -f`
+
+**高效開發**（使用 Volume 掛載）：
+1. 一次性設置：`docker compose -f docker-compose.dev.yml up -d`
+2. 修改程式碼（自動同步）
+3. 重啟應用：`docker compose restart`
+4. 即時查看日誌：`docker compose logs -f`
+
+#### 注意事項
+
+- **Docker 快取**：如果程式碼沒有更新，使用 `--no-cache` 強制重建
+- **依賴變更**：`requirements.txt` 修改時必須重新建置
+- **資料清理**：開發時可能需要 `docker compose down -v` 清理舊資料
+- **效能考慮**：Volume 掛載在 Windows/Mac 上可能較慢，生產環境應使用建置映像
+
 ### 💻 方法二：本地開發環境
 
 **macOS 用戶（推薦使用虛擬環境）：**
