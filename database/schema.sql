@@ -70,6 +70,8 @@ CREATE TABLE IF NOT EXISTS test_projects (
     description TEXT,
     status TEXT DEFAULT 'draft',
     responsible_user_id TEXT,
+    start_time DATETIME,
+    end_time DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (responsible_user_id) REFERENCES users (id) ON DELETE SET NULL
@@ -103,6 +105,23 @@ CREATE TABLE IF NOT EXISTS test_case_tags (
     FOREIGN KEY (product_tag_id) REFERENCES product_tags (id) ON DELETE CASCADE
 );
 
+-- 測試結果表
+CREATE TABLE IF NOT EXISTS test_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    test_case_id INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'not_tested',
+    notes TEXT,
+    known_issues TEXT,
+    blocked_reason TEXT,
+    tested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES test_projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (test_case_id) REFERENCES test_cases(id) ON DELETE CASCADE,
+    UNIQUE(project_id, test_case_id)
+);
+
 -- 用戶故事表（向後兼容）
 CREATE TABLE IF NOT EXISTS user_stories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -123,6 +142,9 @@ CREATE INDEX IF NOT EXISTS idx_stress_test_results_start_time ON stress_test_res
 CREATE INDEX IF NOT EXISTS idx_test_cases_tc_id ON test_cases(tc_id);
 CREATE INDEX IF NOT EXISTS idx_test_cases_status ON test_cases(status);
 CREATE INDEX IF NOT EXISTS idx_test_cases_project_id ON test_cases(test_project_id);
+CREATE INDEX IF NOT EXISTS idx_test_results_project ON test_results(project_id);
+CREATE INDEX IF NOT EXISTS idx_test_results_test_case ON test_results(test_case_id);
+CREATE INDEX IF NOT EXISTS idx_test_results_status ON test_results(status);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 
 -- 創建觸發器自動更新 updated_at 欄位
@@ -154,6 +176,12 @@ CREATE TRIGGER IF NOT EXISTS update_test_cases_timestamp
     AFTER UPDATE ON test_cases
     BEGIN
         UPDATE test_cases SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+    END;
+
+CREATE TRIGGER IF NOT EXISTS update_test_results_timestamp 
+    AFTER UPDATE ON test_results
+    BEGIN
+        UPDATE test_results SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
     END;
 
 -- 操作記錄表

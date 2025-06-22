@@ -36,6 +36,16 @@ def railway_init():
         else:
             print("📊 數據庫已存在")
         
+        # 執行資料庫遷移
+        try:
+            print("🔄 執行資料庫遷移...")
+            from database.migrate_test_projects import migrate_test_projects_table
+            migrate_test_projects_table()
+            print("✅ 資料庫遷移完成")
+        except Exception as e:
+            print(f"⚠️ 資料庫遷移警告: {e}")
+            print("🔄 繼續部署，應用將在運行時處理遷移")
+        
         print("✅ Railway 環境初始化完成")
         
     except Exception as e:
