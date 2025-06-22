@@ -62,7 +62,7 @@ nohup.out
 .pytest_cache/
 .coverage
 htmlcov/
-test_*.py
+test_server.py
 *_test.py
 final_*.py
 add_time_fields.py

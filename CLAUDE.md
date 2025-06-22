@@ -46,11 +46,49 @@ pkill -f simple_app.py
 - `pip install -r requirements.txt` - Install Python dependencies
 
 ### Docker Deployment
-- `docker-compose up -d` - Quick start with Docker (development)
-- `docker-compose -f docker-compose.prod.yml up -d` - Production deployment
-- `docker-compose down` - Stop all services
-- `docker-compose logs -f api-monitor` - View application logs
-- `curl http://localhost:5001/health` - Health check endpoint
+
+**Prerequisites:**
+- Install Docker Desktop for Mac: `brew install --cask docker`
+- Ensure Docker Desktop is running (green status in menu bar)
+
+**Quick Start Commands:**
+```bash
+# Development deployment (recommended)
+docker compose up -d
+
+# Production deployment
+docker compose -f docker-compose.prod.yml up -d
+
+# Rebuild and start (if code changes)
+docker compose up -d --build
+
+# No-cache rebuild (if having issues)
+docker compose build --no-cache && docker compose up -d
+```
+
+**Management Commands:**
+```bash
+# Check service status
+docker compose ps
+
+# View application logs
+docker compose logs -f api-monitor
+
+# Stop all services
+docker compose down
+
+# Clean up (remove containers and networks)
+docker compose down -v
+
+# Health check
+curl http://localhost:5001/health
+```
+
+**Troubleshooting:**
+- If "docker: command not found": Install Docker Desktop
+- If "docker daemon not running": Start Docker Desktop application
+- If build fails: Try `docker system prune -f` then rebuild
+- If module not found: Check `.dockerignore` file for excluded files
 
 ### Testing
 - `python test_server.py` - Run test server for development
