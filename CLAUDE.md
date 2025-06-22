@@ -385,33 +385,153 @@ def dashboard():
     # 原監控邏輯
 ```
 
-#### 問題 5: 502 Bad Gateway (進行中)
+#### 問題 5: 502 Bad Gateway (已解決)
 **症狀**: Railway 部署成功，但訪問時顯示 502 Bad Gateway
 
-**可能原因**:
-1. 應用程式啟動時崩潰
-2. 模組導入失敗
-3. 數據庫連接問題
-4. 路由配置錯誤
+**根本原因**: 
+1. Dockerfile 硬編碼端口環境變數 `PORT=5001` 
+2. Docker 健康檢查使用固定端口 `localhost:5001`
+3. Railway 需要使用動態端口
 
-**調試步驟**:
-1. ✅ 檢查端口配置 (已修復)
-2. ✅ 簡化啟動邏輯 (已完成)
-3. 🔄 檢查 Railway 日誌中的具體錯誤
-4. 🔄 測試健康檢查端點 `/health`
-5. 🔄 檢查模組導入和數據庫初始化
+**解決方案**:
+```dockerfile
+# 移除硬編碼端口
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=simple_app.py \
+    FLASK_ENV=production
+    # 移除 PORT=5001
 
-**調試命令**:
-```bash
-# 本地測試
-python simple_app.py
+# 動態端口暴露
+EXPOSE ${PORT:-5001}
 
-# 檢查健康端點
-curl https://your-app.railway.app/health
-
-# 檢查端口配置
-echo $PORT
+# 註釋掉健康檢查
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost:${PORT:-5001}/health || exit 1
 ```
+
+#### 問題 6: 測試專案功能「載入專案資料失敗」(已解決)
+**症狀**: 本地 Docker 正常，Railway 部署後測試專案功能無法載入，API 返回 401 錯誤
+
+**根本原因**: 資料庫結構不一致
+- 程式碼在查詢 `test_projects` 表時使用了 `start_time` 和 `end_time` 欄位
+- 但 `database/schema.sql` 中的表定義缺少這些欄位
+- 導致 SQL 查詢失敗，進而影響認證流程
+
+**診斷過程**:
+1. 添加詳細日誌到 `test_case_app.py`, `test_case_manager.py`, `database/db_manager.py`
+2. 使用 emoji 標記和完整錯誤堆疊便於在 Railway 日誌中識別
+3. 發現 SQL 查詢失敗導致整個 API 端點異常
+
+**解決方案**:
+```sql
+-- 更新 database/schema.sql 添加缺失欄位
+CREATE TABLE IF NOT EXISTS test_projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    status TEXT DEFAULT 'draft',
+    responsible_user_id TEXT,
+    start_time DATETIME,        -- 新增
+    end_time DATETIME,          -- 新增
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (responsible_user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
+-- 同時添加 test_results 表
+CREATE TABLE IF NOT EXISTS test_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    test_case_id INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'not_tested',
+    notes TEXT,
+    known_issues TEXT,
+    blocked_reason TEXT,
+    tested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES test_projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (test_case_id) REFERENCES test_cases(id) ON DELETE CASCADE,
+    UNIQUE(project_id, test_case_id)
+);
+```
+
+**創建遷移腳本**:
+```python
+# database/migrate_test_projects.py
+def migrate_test_projects_table():
+    """遷移測試專案表，添加缺失的欄位"""
+    # 檢查欄位是否已存在並添加缺失欄位
+    # 確保向後兼容
+```
+
+**重要教訓**:
+- Railway 每次部署都是全新環境，任何資料庫結構不一致都會暴露
+- 本地 Docker 可能使用舊的資料庫檔案，掩蓋結構問題
+- 必須確保 schema.sql 包含所有程式碼中使用的欄位
+
+### 調試經驗總結
+
+#### 🔧 調試工具和技巧
+
+1. **詳細日誌添加**:
+```python
+import logging
+import sys
+
+# 配置標準輸出日誌，確保 Railway 能捕獲
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+
+# 使用 emoji 便於識別
+logger.info("🚀 開始執行...")
+logger.error("💥 執行失敗...")
+```
+
+2. **Railway 日誌監控**:
+- 實時查看 Railway Dashboard -> Logs
+- 關注應用啟動和 API 請求日誌
+- 使用 emoji 快速定位關鍵信息
+
+3. **分層調試**:
+- API 層: 請求參數和響應狀態
+- 業務層: 資料處理和邏輯流程  
+- 資料層: SQL 查詢和錯誤詳情
+
+#### 🚨 關鍵差異認知
+
+**本地 vs Railway 部署環境**:
+
+| 項目 | 本地開發 | Railway 部署 |
+|------|----------|-------------|
+| **狀態保持** | 持久化，增量修改 | 無狀態，每次全新 |
+| **錯誤容忍** | 開發模式，寬鬆 | 生產模式，嚴格 |
+| **資料庫** | 可能使用舊檔案 | 每次重新創建 |
+| **環境變數** | 本地設定 | Railway 動態分配 |
+| **調試方式** | 本地檔案/終端 | Railway UI 日誌 |
+
+#### 💡 最佳實踐
+
+1. **預防性措施**:
+   - 確保 schema.sql 包含所有欄位
+   - 使用遷移腳本處理結構變更
+   - 在 Railway 初始化中使用非致命錯誤處理
+
+2. **調試策略**:
+   - 優先在 Railway 環境驗證問題
+   - 使用詳細日誌快速定位錯誤
+   - 逐個修復，避免引入新問題
+
+3. **部署檢查清單**:
+   - [ ] 資料庫 schema 完整性
+   - [ ] 環境變數正確配置
+   - [ ] 端口動態適配
+   - [ ] 健康檢查兼容性
+   - [ ] 日誌輸出完善
 
 ### 部署配置檔案
 

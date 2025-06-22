@@ -272,6 +272,135 @@ MIT License - 詳見 [LICENSE](LICENSE) 文件
 3. 查看開發文檔：[CLAUDE.md](CLAUDE.md)
 4. 提交新的 Issue
 
+## 🐛 故障排除和調試指南
+
+### 🔍 常見問題診斷
+
+#### 問題 1: 測試專案功能顯示「載入專案資料失敗」
+
+**症狀**: 本地 Docker 運行正常，但部署到 Railway 後測試專案功能無法載入
+
+**根本原因**: 資料庫結構不一致
+- 程式碼中使用了 `start_time` 和 `end_time` 欄位
+- 但資料庫 schema 中 `test_projects` 表缺少這些欄位
+- 導致 SQL 查詢失敗
+
+**解決步驟**:
+1. 更新資料庫 schema 添加缺失欄位
+2. 創建資料庫遷移腳本
+3. 在部署初始化中執行遷移
+
+**已修復**: ✅ 已在 `database/schema.sql` 中添加缺失欄位，並創建遷移腳本
+
+#### 問題 2: Railway 部署後 502 Bad Gateway
+
+**症狀**: Railway 部署成功但訪問時顯示 502 錯誤
+
+**常見原因**:
+1. **端口配置衝突**: Dockerfile 硬編碼端口，但 Railway 使用動態端口
+2. **健康檢查失敗**: Docker 健康檢查使用固定端口
+3. **應用啟動失敗**: 初始化腳本錯誤導致應用崩潰
+
+**解決方案**:
+- 移除 Dockerfile 中的 `PORT=5001` 環境變數
+- 註釋掉 Docker 健康檢查，使用 Railway 內建機制
+- 程式碼中正確使用動態端口：`port = int(os.environ.get('PORT', 5001))`
+
+#### 問題 3: 登入失敗 (本地正常，Railway 失敗)
+
+**症狀**: 相同帳密本地可登入，Railway 部署後失敗
+
+**根本原因**: 密碼加密方式不一致
+- 建置時: `hashlib.sha256(password.encode()).hexdigest()`
+- 運行時: `hashlib.sha256((password + salt).encode()).hexdigest()`
+
+**解決方案**: 統一使用帶鹽值的加密方式
+
+### 🔧 調試技巧和工具
+
+#### 錯誤日誌增強
+
+為了更好地調試 Railway 部署問題，已在關鍵位置添加詳細日誌：
+
+```python
+# 在 test_case_app.py, test_case_manager.py, database/db_manager.py 中
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+
+# 使用 emoji 標記便於識別
+logger.info("🚀 開始執行...")
+logger.error("💥 執行失敗...")
+```
+
+#### Railway 日誌查看
+
+1. 進入 Railway Dashboard
+2. 選擇你的應用
+3. 點擊 "Logs" 標籤
+4. 實時查看部署和運行日誌
+
+#### 本地調試命令
+
+```bash
+# 檢查資料庫結構
+sqlite3 data/api_monitor.db ".schema test_projects"
+
+# 查看錯誤日誌
+tail -f app.log
+
+# 檢查端口占用
+lsof -i :5001
+
+# 測試健康檢查
+curl http://localhost:5001/health
+```
+
+### 🏗️ 本地 vs 遠端部署關鍵差異
+
+#### 環境差異對比
+
+| 項目 | 本地開發 | Docker 本地 | Railway 部署 |
+|------|----------|-------------|--------------|
+| **環境狀態** | 持久化 | 容器隔離 | 無狀態，每次全新 |
+| **資料庫** | 增量更新 | 容器內持久 | 每次重新創建 |
+| **端口配置** | 固定 5001 | 固定 5001 | 動態分配 |
+| **錯誤容忍** | 開發模式高 | 中等 | 生產模式嚴格 |
+| **日誌查看** | 本地檔案 | docker logs | Railway UI |
+| **環境變數** | .env 或系統 | docker-compose | Railway 設定 |
+
+#### 關鍵注意事項
+
+**🔥 Railway 部署特殊性**:
+1. **無狀態環境**: 每次部署都是全新環境，不保留任何狀態
+2. **動態端口**: 必須使用 `PORT` 環境變數，不能硬編碼
+3. **資料庫重建**: 每次都會重新執行 schema.sql，必須確保結構完整
+4. **嚴格模式**: 任何 SQL 錯誤都會導致應用無法啟動
+
+**💡 最佳實踐**:
+- 使用遷移腳本確保資料庫向後兼容
+- 添加詳細日誌以便快速定位問題
+- 在 Railway 初始化中使用非致命錯誤處理
+- 測試時優先使用 Railway 部署環境驗證
+
+**🚨 常見陷阱**:
+- 本地 Docker 可能使用舊的資料庫檔案，掩蓋結構問題
+- 條件分支可能在本地跳過有問題的代碼路徑
+- 環境變數差異導致不同的執行路徑
+
+#### 調試建議流程
+
+1. **本地驗證**: 先確保本地環境完全正常
+2. **Docker 測試**: 使用 `docker compose build --no-cache` 清理測試
+3. **Railway 部署**: 推送並查看 Railway 日誌
+4. **錯誤定位**: 使用詳細日誌快速找到問題點
+5. **逐步修復**: 每次只修復一個問題，避免引入新問題
+
 ---
 
 ⭐ 如果這個項目對你有幫助，請給個星星！
