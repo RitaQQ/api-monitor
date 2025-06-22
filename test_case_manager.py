@@ -1,7 +1,22 @@
 import json
 from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
+import logging
+import sys
 from database.db_manager import db_manager
+
+# 配置詳細的日誌輸出
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# 創建專門的 logger
+db_logger = logging.getLogger('test_case_db')
+db_logger.setLevel(logging.DEBUG)
 
 class TestCaseManager:
     """基於 SQLite 的測試案例管理器"""
@@ -96,27 +111,52 @@ class TestCaseManager:
     
     def get_test_projects(self) -> List[Dict]:
         """取得所有測試專案"""
-        query = """
-            SELECT 
-                tp.id, tp.name, tp.description, tp.status, tp.responsible_user_id,
-                tp.created_at, tp.updated_at, tp.start_time, tp.end_time,
-                u.username as responsible_user_name
-            FROM test_projects tp
-            LEFT JOIN users u ON tp.responsible_user_id = u.id
-            ORDER BY tp.created_at DESC
-        """
-        projects = db_manager.execute_query(query)
-        
-        # 為每個專案添加測試案例和測試結果
-        for project in projects:
-            # 添加專案關聯的測試案例 ID 列表
-            test_cases = self.get_test_cases(project_id=project['id'])
-            project['selected_test_cases'] = [tc['id'] for tc in test_cases]
+        db_logger.info("🚀 開始取得所有測試專案")
+        try:
+            query = """
+                SELECT 
+                    tp.id, tp.name, tp.description, tp.status, tp.responsible_user_id,
+                    tp.created_at, tp.updated_at, tp.start_time, tp.end_time,
+                    u.username as responsible_user_name
+                FROM test_projects tp
+                LEFT JOIN users u ON tp.responsible_user_id = u.id
+                ORDER BY tp.created_at DESC
+            """
+            db_logger.info(f"📊 執行查詢: {query}")
+            projects = db_manager.execute_query(query)
+            db_logger.info(f"📊 查詢結果: 取得 {len(projects) if projects else 0} 個專案")
             
-            # 添加測試結果
-            project['test_results'] = self.get_test_results_for_project(project['id'])
-        
-        return projects
+            if not projects:
+                db_logger.info("📭 沒有找到任何測試專案")
+                return []
+            
+            # 為每個專案添加測試案例和測試結果
+            for i, project in enumerate(projects):
+                db_logger.info(f"🔄 處理專案 {i+1}/{len(projects)}: {project.get('name', 'Unknown')}")
+                try:
+                    # 添加專案關聯的測試案例 ID 列表
+                    test_cases = self.get_test_cases(project_id=project['id'])
+                    project['selected_test_cases'] = [tc['id'] for tc in test_cases]
+                    db_logger.info(f"📋 專案 {project['id']} 有 {len(test_cases)} 個測試案例")
+                    
+                    # 添加測試結果
+                    project['test_results'] = self.get_test_results_for_project(project['id'])
+                    db_logger.info(f"📋 專案 {project['id']} 有 {len(project['test_results'])} 個測試結果")
+                except Exception as e:
+                    db_logger.error(f"💥 處理專案 {project['id']} 失敗: {str(e)}")
+                    # 設置默認值以防止整個流程中斷
+                    project['selected_test_cases'] = []
+                    project['test_results'] = []
+            
+            db_logger.info(f"✅ 成功處理完所有 {len(projects)} 個專案")
+            return projects
+            
+        except Exception as e:
+            db_logger.error(f"💥 取得測試專案失敗: {str(e)}")
+            db_logger.error(f"💥 錯誤類型: {type(e).__name__}")
+            import traceback
+            db_logger.error(f"💥 完整錯誤堆疊:\n{traceback.format_exc()}")
+            raise e
     
     def create_test_project(self, name: str, description: Optional[str] = None,
                            responsible_user_id: Optional[str] = None,

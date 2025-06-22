@@ -5,12 +5,27 @@ import os
 import csv
 import io
 import tempfile
+import logging
+import sys
 from models import TestCase, ProductTag, TestProject, TestResult, TestStatus, ProjectStatus, generate_id
 from test_case_manager import TestCaseManager
 from report_generator import ReportGenerator
 from pdf_exporter import PDFExporter
 from user_manager import UserManager
 from audit_logger import AuditLogger
+
+# 配置詳細的日誌輸出，確保 Railway 能看到錯誤
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# 創建專門的 logger
+test_project_logger = logging.getLogger('test_projects')
+test_project_logger.setLevel(logging.DEBUG)
 
 def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     """建立測試案例相關的路由"""
@@ -507,16 +522,22 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
     @app.route('/api/test-projects', methods=['GET'])
     def get_test_projects():
         """取得測試專案（根據用戶權限過濾）"""
+        test_project_logger.info("🚀 開始取得測試專案列表")
         try:
+            test_project_logger.info("📊 呼叫 test_case_manager.get_test_projects()")
             projects = test_case_manager.get_test_projects()
+            test_project_logger.info(f"📊 取得 {len(projects) if projects else 0} 個專案")
             
             # 獲取當前用戶
             current_user = get_current_user()
+            test_project_logger.info(f"👤 當前用戶: {current_user.get('username') if current_user else 'None'}")
             if not current_user:
+                test_project_logger.warning("❌ 用戶未登入")
                 return jsonify({'error': '未登入'}), 401
             
             # 權限過濾：管理員可以看到所有專案，一般用戶只能看到自己負責的專案
             if current_user.get('role') != 'admin':
+                test_project_logger.info(f"🔒 非管理員用戶，進行權限過濾")
                 # 過濾出當前用戶負責的專案
                 filtered_projects = []
                 current_username = current_user.get('username')
@@ -528,55 +549,85 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
                         # SQLite 版本使用 responsible_user_name，JSON 版本使用 responsible_user
                         responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
                     else:
+                        test_project_logger.warning(f"🔍 專案格式異常: {type(project)}")
                         continue
                     
                     if responsible_user == current_username:
                         filtered_projects.append(project)
                 
                 projects = filtered_projects
+                test_project_logger.info(f"🔒 過濾後剩餘 {len(projects)} 個專案")
+            else:
+                test_project_logger.info(f"👑 管理員用戶，不進行權限過濾")
             
             # 處理兩種情況：字典列表或物件列表
             if projects:
+                test_project_logger.info(f"📤 準備返回 {len(projects)} 個專案")
                 # 檢查所有元素是否都有 to_dict 方法
                 if all(hasattr(project, 'to_dict') for project in projects):
+                    test_project_logger.info("🔄 使用 to_dict() 方法格式化專案")
                     return jsonify([project.to_dict() for project in projects])
                 else:
+                    test_project_logger.info("🔄 直接返回字典格式專案")
                     return jsonify(projects)
             else:
+                test_project_logger.info("📭 沒有專案可返回")
                 return jsonify([])
         except Exception as e:
+            test_project_logger.error(f"💥 取得測試專案失敗: {str(e)}")
+            test_project_logger.error(f"💥 錯誤類型: {type(e).__name__}")
+            import traceback
+            test_project_logger.error(f"💥 完整錯誤堆疊:\n{traceback.format_exc()}")
             return jsonify({'error': str(e)}), 500
     
     @app.route('/api/test-projects/<project_id>', methods=['GET'])
     def get_test_project(project_id):
         """取得特定測試專案（檢查權限）"""
+        test_project_logger.info(f"🎯 開始取得測試專案: project_id={project_id}")
         try:
+            test_project_logger.info(f"📊 呼叫 test_case_manager.get_test_project_by_id({project_id})")
             project = test_case_manager.get_test_project_by_id(int(project_id))
             if not project:
+                test_project_logger.warning(f"❌ 專案不存在: project_id={project_id}")
                 return jsonify({'error': '專案不存在'}), 404
+            
+            test_project_logger.info(f"✅ 成功取得專案: {project.get('name') if isinstance(project, dict) else getattr(project, 'name', 'Unknown')}")
             
             # 獲取當前用戶
             current_user = get_current_user()
+            test_project_logger.info(f"👤 當前用戶: {current_user.get('username') if current_user else 'None'}")
             if not current_user:
+                test_project_logger.warning("❌ 用戶未登入")
                 return jsonify({'error': '未登入'}), 401
             
             # 權限檢查：管理員可以訪問所有專案，一般用戶只能訪問自己負責的專案
             if current_user.get('role') != 'admin':
+                test_project_logger.info("🔒 非管理員用戶，檢查專案權限")
                 responsible_user = ''
                 if hasattr(project, 'responsible_user'):
                     responsible_user = project.responsible_user
                 elif isinstance(project, dict):
                     responsible_user = project.get('responsible_user_name', '') or project.get('responsible_user', '')
                 
+                test_project_logger.info(f"🔍 專案負責人: {responsible_user}, 當前用戶: {current_user.get('username')}")
                 if responsible_user != current_user.get('username'):
+                    test_project_logger.warning(f"❌ 無權限訪問專案 {project_id}")
                     return jsonify({'error': '無權限訪問此專案'}), 403
+            else:
+                test_project_logger.info("👑 管理員用戶，跳過權限檢查")
             
             # 安全檢查：確認物件有 to_dict 方法
             if hasattr(project, 'to_dict'):
+                test_project_logger.info("🔄 使用 to_dict() 方法返回專案資料")
                 return jsonify(project.to_dict())
             else:
+                test_project_logger.info("🔄 直接返回字典格式專案資料")
                 return jsonify(project)
         except Exception as e:
+            test_project_logger.error(f"💥 取得單個測試專案失敗: {str(e)}")
+            test_project_logger.error(f"💥 錯誤類型: {type(e).__name__}")
+            import traceback
+            test_project_logger.error(f"💥 完整錯誤堆疊:\n{traceback.format_exc()}")
             return jsonify({'error': str(e)}), 500
     
     @app.route('/api/test-projects', methods=['POST'])

@@ -4,6 +4,21 @@ import threading
 from contextlib import contextmanager
 from typing import Dict, List, Any, Optional
 from datetime import datetime
+import logging
+import sys
+
+# 配置詳細的日誌輸出
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# 創建專門的 logger
+sql_logger = logging.getLogger('database')
+sql_logger.setLevel(logging.DEBUG)
 
 class DatabaseManager:
     """SQLite 資料庫管理器"""
@@ -85,10 +100,25 @@ class DatabaseManager:
     
     def execute_query(self, query: str, params: tuple = ()) -> List[Dict]:
         """執行查詢並返回結果"""
-        with self.get_db_cursor(commit=False) as cursor:
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-            return [dict(row) for row in rows]
+        sql_logger.info(f"🔍 執行 SQL 查詢")
+        sql_logger.info(f"📝 SQL: {query}")
+        sql_logger.info(f"📊 參數: {params}")
+        
+        try:
+            with self.get_db_cursor(commit=False) as cursor:
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+                result = [dict(row) for row in rows]
+                sql_logger.info(f"✅ 查詢成功，返回 {len(result)} 筆記錄")
+                return result
+        except Exception as e:
+            sql_logger.error(f"💥 SQL 查詢失敗: {str(e)}")
+            sql_logger.error(f"💥 錯誤類型: {type(e).__name__}")
+            sql_logger.error(f"💥 SQL: {query}")
+            sql_logger.error(f"💥 參數: {params}")
+            import traceback
+            sql_logger.error(f"💥 完整錯誤堆疊:\n{traceback.format_exc()}")
+            raise e
     
     def execute_insert(self, query: str, params: tuple = ()) -> str:
         """執行插入並返回 lastrowid"""
