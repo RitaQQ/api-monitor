@@ -70,7 +70,9 @@ class DatabaseManager:
         admin_id = str(uuid.uuid4())
         username = 'admin'
         password = 'admin123'
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        # 使用與 UserManager 相同的加密方式
+        salt = "api_monitor_salt_2025"
+        password_hash = hashlib.sha256((password + salt).encode()).hexdigest()
         
         with self.get_db_cursor() as cursor:
             # 檢查是否已存在管理員

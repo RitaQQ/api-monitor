@@ -33,17 +33,8 @@ RUN mkdir -p /app/data \
     && chmod -R 755 /app/data \
     && chmod -R 755 /app/logs
 
-# 創建數據庫初始化腳本
-RUN echo 'from database.db_manager import db_manager' > init_db.py && \
-    echo 'import os' >> init_db.py && \
-    echo 'if not os.path.exists("/app/data/api_monitor.db"):' >> init_db.py && \
-    echo '    print("初始化數據庫...")' >> init_db.py && \
-    echo '    db_manager.init_database()' >> init_db.py && \
-    echo '    print("數據庫初始化完成")' >> init_db.py && \
-    echo 'else:' >> init_db.py && \
-    echo '    print("數據庫已存在")' >> init_db.py && \
-    python init_db.py && \
-    rm init_db.py
+# 創建數據庫初始化腳本並執行
+RUN python railway_init.py
 
 # 暴露端口
 EXPOSE 5001
