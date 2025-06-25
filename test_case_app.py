@@ -458,6 +458,18 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/api/test-cases/<case_id>/check-associations', methods=['GET'])
+    def check_test_case_associations(case_id):
+        """檢查測試案例的專案關聯"""
+        try:
+            associated_projects = test_case_manager.check_test_case_project_associations(int(case_id))
+            return jsonify({
+                'can_delete': len(associated_projects) == 0,
+                'associated_projects': associated_projects
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
     @app.route('/api/test-cases/<case_id>', methods=['DELETE'])
     def delete_test_case(case_id):
         """刪除測試案例"""
@@ -474,6 +486,15 @@ def create_test_case_routes(app: Flask, test_case_manager: TestCaseManager):
             case_to_delete = test_case_manager.get_test_case_by_id(int(case_id))
             if not case_to_delete:
                 return jsonify({'error': '測試案例不存在'}), 404
+            
+            # 檢查測試案例是否與任何專案有關聯
+            associated_projects = test_case_manager.check_test_case_project_associations(int(case_id))
+            if associated_projects:
+                project_names = [proj['name'] for proj in associated_projects]
+                return jsonify({
+                    'error': f'無法刪除此測試案例，因為它已關聯到以下專案：{", ".join(project_names)}。請先從專案中移除此測試案例。',
+                    'associated_projects': associated_projects
+                }), 400
             
             success = test_case_manager.delete_test_case(int(case_id))
             if success:

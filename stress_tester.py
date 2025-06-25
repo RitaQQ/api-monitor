@@ -1,11 +1,15 @@
 import asyncio
-import aiohttp
 import time
 import threading
 from datetime import datetime
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import json as json_module
 import statistics
+
+try:
+    import aiohttp
+except ImportError:
+    aiohttp = None
 
 class StressTester:
     """API 壓力測試器"""
@@ -16,6 +20,9 @@ class StressTester:
     
     async def run_stress_test(self, api_id: str) -> Dict:
         """執行壓力測試"""
+        if aiohttp is None:
+            raise ImportError("aiohttp is required for stress testing")
+            
         api = self.data_manager.get_api_by_id(api_id)
         if not api or not api.get('stress_test'):
             raise ValueError("API 或壓力測試配置不存在")
@@ -102,7 +109,7 @@ class StressTester:
         
         return results
     
-    async def _make_request(self, session: aiohttp.ClientSession, api: Dict, results: Dict):
+    async def _make_request(self, session, api: Dict, results: Dict):
         """發送單個請求"""
         request_start = time.time()
         request_data = {
@@ -245,3 +252,62 @@ class StressTester:
     def get_active_tests(self) -> Dict:
         """取得所有活動測試"""
         return self.active_tests.copy()
+    
+    def calculate_statistics(self, requests_data: List[Dict]) -> Dict:
+        """計算統計資料"""
+        if not requests_data:
+            return {
+                'total_requests': 0,
+                'successful_requests': 0,
+                'failed_requests': 0,
+                'success_rate': 0.0,
+                'avg_response_time': 0.0,
+                'min_response_time': 0.0,
+                'max_response_time': 0.0,
+                'median_response_time': 0.0
+            }
+        
+        successful_requests = [r for r in requests_data if r.get('success', False)]
+        failed_requests = [r for r in requests_data if not r.get('success', False)]
+        response_times = [r.get('response_time', 0) for r in requests_data]
+        
+        return {
+            'total_requests': len(requests_data),
+            'successful_requests': len(successful_requests),
+            'failed_requests': len(failed_requests),
+            'success_rate': (len(successful_requests) / len(requests_data)) * 100,
+            'avg_response_time': statistics.mean(response_times) if response_times else 0,
+            'min_response_time': min(response_times) if response_times else 0,
+            'max_response_time': max(response_times) if response_times else 0,
+            'median_response_time': statistics.median(response_times) if response_times else 0
+        }
+    
+    def validate_test_config(self, test_config: Dict) -> bool:
+        """驗證測試配置"""
+        required_fields = ['concurrent_requests', 'duration_seconds']
+        for field in required_fields:
+            if field not in test_config:
+                return False
+            if not isinstance(test_config[field], (int, float)) or test_config[field] <= 0:
+                return False
+        
+        # 驗證限制
+        if test_config['concurrent_requests'] > 1000:  # 防止過度併發
+            return False
+        if test_config['duration_seconds'] > 3600:  # 限制最長測試時間
+            return False
+        
+        return True
+    
+    def stop_test(self, api_id: str) -> bool:
+        """停止測試"""
+        if api_id in self.active_tests:
+            self.active_tests[api_id]['status'] = 'stopped'
+            return True
+        return False
+    
+    def get_test_status(self, api_id: str) -> Optional[str]:
+        """獲取測試狀態"""
+        if api_id in self.active_tests:
+            return self.active_tests[api_id]['status']
+        return None

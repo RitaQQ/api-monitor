@@ -1,17 +1,18 @@
-# API Monitor
+# QA Management tool
 
-一個基於 Flask 的 API 監控系統，提供實時監控、壓力測試和 Web 管理介面。
+一個基於 Flask 的品質保證管理工具，提供測試案例管理、專案追蹤、API 監控和壓力測試等完整的 QA 功能。
 
 ## 功能特色
 
-- 🔍 **實時 API 監控** - 自動定期檢查 API 健康狀態
-- 📊 **儀表板** - 直觀的 Web 介面顯示監控狀態
-- 🔐 **用戶管理** - 支援多用戶和權限控制
+- 🧪 **測試案例管理** - 完整的測試專案和案例管理系統（TC格式編號）
+- 📊 **測試專案追蹤** - 專案進度管理和測試結果統計
+- 🏷️ **產品標籤管理** - 測試案例分類和標籤系統
+- 🔍 **API 監控** - 自動定期檢查 API 健康狀態
 - ⚡ **壓力測試** - 內建負載測試功能
-- 📈 **歷史記錄** - 追蹤 API 響應時間和狀態變化
-- 🎯 **靈活配置** - 支援多種 HTTP 方法和自定義參數
-- 🧪 **測試案例管理** - 完整的測試專案和案例管理系統
+- 🔐 **用戶管理** - 支援多用戶和權限控制
 - 📋 **審計日誌** - 完整的操作追蹤和用戶活動記錄
+- 📈 **數據分析** - 測試結果統計和趨勢分析
+- 📄 **CSV 匯入匯出** - 批量測試案例管理
 - 🐳 **容器化部署** - 支援 Docker 和雲端部署
 
 ## 系統要求
@@ -29,8 +30,8 @@
 
 ```bash
 # 1. 克隆項目
-git clone https://github.com/RitaQQ/api-monitor.git
-cd api-monitor
+git clone https://github.com/RitaQQ/qa-management-tool.git
+cd qa-management-tool
 
 # 2. 確保 Docker 已安裝
 docker --version
@@ -182,7 +183,23 @@ dcrestart      # 快速重啟
 
 ### 💻 方法二：本地開發環境
 
-**macOS 用戶（推薦使用虛擬環境）：**
+**推薦使用自動化啟動腳本：**
+
+```bash
+# 一鍵啟動（前台運行，推薦開發用）
+./start.sh
+
+# 後台運行（推薦日常使用）
+./start.sh --background
+
+# 查看後台日誌
+tail -f app.log
+
+# 停止後台服務
+pkill -f simple_app.py
+```
+
+**手動設置虛擬環境（macOS）：**
 
 ```bash
 # 創建虛擬環境
@@ -192,23 +209,14 @@ source venv/bin/activate
 # 安裝依賴
 pip install -r requirements.txt
 
-# 前台運行（開發/除錯）
+# 運行應用
 python simple_app.py
-
-# 背景運行（推薦日常使用）
-nohup python simple_app.py > app.log 2>&1 &
-
-# 檢查是否運行
-lsof -i :5001
-
-# 停止背景服務
-pkill -f simple_app.py
 ```
 
 **Windows 用戶：**
 
 ```bash
-# 創建虛擬環境
+# 手動設置（Windows 不支援 start.sh）
 python -m venv venv
 venv\Scripts\activate
 
@@ -239,8 +247,9 @@ python simple_app.py
 **本地訪問：**
 - **主頁面**: http://localhost:5001
 - **登入頁面**: http://localhost:5001/login
-- **管理介面**: http://localhost:5001/admin
-- **健康檢查**: http://localhost:5001/health
+- **測試案例管理**: http://localhost:5001/test-case-management
+- **測試專案**: http://localhost:5001/test-projects
+- **API 管理**: http://localhost:5001/admin
 
 **區域網訪問：**
 - http://[你的IP]:5001 (例如: http://192.168.1.100:5001)
@@ -256,6 +265,24 @@ python simple_app.py
 
 ## 📋 主要功能
 
+### 🧪 測試案例管理
+- TC 格式編號系統（TC00001, TC00002...）
+- 完整的測試案例 CRUD 功能
+- 產品標籤分類系統
+- CSV 批量匯入匯出
+- 接受標準（Acceptance Criteria）管理
+
+### 📊 測試專案管理
+- 專案狀態追蹤（草稿、進行中、完成）
+- 測試案例分配和進度監控
+- 測試結果統計（通過/失敗/阻塞）
+- 負責人指派系統
+
+### 👥 用戶管理
+- 多用戶支援
+- 角色權限控制 (admin/user)
+- 完整的操作審計日誌
+
 ### 🔍 API 監控
 - 支援 GET、POST、PUT、DELETE 請求
 - 自動檢測響應時間和狀態碼
@@ -266,17 +293,6 @@ python simple_app.py
 - 並發請求測試
 - 即時結果顯示
 - 響應時間統計和成功率分析
-
-### 👥 用戶管理
-- 多用戶支援
-- 角色權限控制 (admin/user)
-- 完整的操作審計日誌
-
-### 🧪 測試管理
-- 測試案例管理 (TC格式編號)
-- 測試專案組織
-- CSV 匯入/匯出功能
-- 產品標籤分類
 
 ### 📊 審計系統
 - 完整的用戶操作記錄
@@ -322,7 +338,7 @@ DATABASE_PATH: "/app/data/api_monitor.db"
 ## 📁 專案結構
 
 ```
-api_monitor/
+qa_management_tool/
 ├── 📁 database/          # 資料庫管理
 │   ├── db_manager.py     # SQLite 管理器
 │   ├── schema.sql        # 資料庫結構
@@ -380,7 +396,7 @@ MIT License - 詳見 [LICENSE](LICENSE) 文件
 
 如果遇到問題：
 
-1. 查看 [Issues](https://github.com/RitaQQ/api-monitor/issues)
+1. 查看 [Issues](https://github.com/RitaQQ/qa-management-tool/issues)
 2. 查看部署指南：[RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md)
 3. 查看開發文檔：[CLAUDE.md](CLAUDE.md)
 4. 提交新的 Issue
@@ -516,4 +532,4 @@ curl http://localhost:5001/health
 
 ---
 
-⭐ 如果這個項目對你有幫助，請給個星星！
+⭐ 如果這個 QA Management tool 對你有幫助，請給個星星！

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}測試案例管理 - API Monitor{% endblock %}
+{% block title %}測試案例管理 - QA Management tool{% endblock %}
 {% block page_title %}測試案例管理{% endblock %}
 {% block page_subtitle %}管理和追蹤產品測試案例{% endblock %}
 
@@ -195,27 +195,6 @@
 }
 
 
-.bulk-actions {
-    background: #0D1117;
-    border: 1px solid #30363D;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    display: none;
-}
-
-.bulk-actions.active {
-    display: block;
-}
-
-.test-case-checkbox {
-    margin-right: 10px;
-}
-
-.selected-count {
-    color: #58a6ff;
-    font-weight: bold;
-}
 
 .test-cases-table {
     background: #161B22;
@@ -314,9 +293,6 @@
     white-space: nowrap;
 }
 
-.table-checkbox {
-    margin: 0;
-}
 {% endblock %}
 
 {% block content %}
@@ -339,9 +315,6 @@
             </select>
         </div>
         <div class="col-md-5 text-end">
-            <button class="btn btn-outline-secondary btn-sm me-2" onclick="toggleSelectAll()">
-                <i class="fas fa-check-square"></i> 全選/取消
-            </button>
             <button class="btn btn-outline-success btn-sm me-2" onclick="showImportModal()">
                 <i class="fas fa-upload"></i> 匯入
             </button>
@@ -356,24 +329,6 @@
 </div>
 
 
-<!-- 批量操作 -->
-<div class="bulk-actions" id="bulkActions">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <span class="selected-count" id="selectedCount">已選擇 0 個測試案例</span>
-        </div>
-        <div>
-            <button class="btn btn-sm btn-outline-warning me-2" onclick="bulkEdit()">
-                <i class="fas fa-edit"></i> 批量編輯
-            </button>
-            {% if session.role == 'admin' %}
-            <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
-                <i class="fas fa-trash"></i> 批量刪除
-            </button>
-            {% endif %}
-        </div>
-    </div>
-</div>
 
 <!-- 測試案例列表 -->
 <div class="test-cases-table" id="testCasesTableContainer">
@@ -386,9 +341,6 @@
     <table>
         <thead>
             <tr>
-                <th width="40">
-                    <input type="checkbox" class="table-checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
-                </th>
                 <th width="100">測項ID</th>
                 <th>標題</th>
                 <th>功能描述</th>
@@ -430,7 +382,6 @@
 <script>
 let allTestCases = [];
 let availableProductTags = [];
-let selectedTestCases = new Set();
 // 用戶權限檢查
 const isAdmin = {{ 'true' if session.role == 'admin' else 'false' }};
 
@@ -526,10 +477,6 @@ function renderTestCases(testCases) {
         
         return `
             <tr data-test-case-id="${testCase.id}">
-                <td>
-                    <input type="checkbox" class="table-checkbox test-case-checkbox" value="${testCase.id}" 
-                           onchange="handleTestCaseSelection()">
-                </td>
                 <td class="test-case-id-cell">${tcId}</td>
                 <td class="test-case-title-cell">${testCase.title}</td>
                 <td class="test-case-description-cell">${testCase.feature_description}</td>
@@ -555,13 +502,41 @@ function renderTestCases(testCases) {
                         <i class="fas fa-edit"></i>
                     </button>
                     ${isAdmin ? `<button class="btn btn-sm btn-outline-danger" 
-                            onclick="deleteTestCase('${testCase.id}', '${testCase.title}')" title="刪除">
+                            onclick="deleteTestCase('${testCase.id}', '${testCase.title}')" 
+                            title="刪除" id="delete-btn-${testCase.id}">
                         <i class="fas fa-trash"></i>
                     </button>` : ''}
                 </td>
             </tr>
         `;
     }).join('');
+    
+    // 渲染完成後，檢查每個測試案例的關聯狀態
+    if (isAdmin) {
+        checkTestCaseAssociations(testCases);
+    }
+}
+
+// 檢查測試案例關聯狀態並更新按鈕樣式
+async function checkTestCaseAssociations(testCases) {
+    for (const testCase of testCases) {
+        try {
+            const response = await fetch(`/api/test-cases/${testCase.id}/check-associations`);
+            if (response.ok) {
+                const result = await response.json();
+                const deleteBtn = document.getElementById(`delete-btn-${testCase.id}`);
+                
+                if (deleteBtn && !result.can_delete) {
+                    // 有關聯的測試案例，修改按鈕樣式和提示
+                    deleteBtn.className = 'btn btn-sm btn-outline-secondary me-1';
+                    deleteBtn.title = `無法刪除 - 已關聯到 ${result.associated_projects.length} 個專案`;
+                    deleteBtn.innerHTML = '<i class="fas fa-link"></i>';
+                }
+            }
+        } catch (error) {
+            console.error(`檢查測試案例 ${testCase.id} 關聯狀態失敗:`, error);
+        }
+    }
 }
 
 // 更新測試案例總數顯示
@@ -631,44 +606,6 @@ function filterTestCases() {
     updateTestCaseCount(visibleCount);
 }
 
-// 處理測試案例選擇
-function handleTestCaseSelection() {
-    const checkboxes = document.querySelectorAll('.test-case-checkbox');
-    selectedTestCases.clear();
-    
-    checkboxes.forEach(cb => {
-        if (cb.checked) {
-            selectedTestCases.add(cb.value);
-        }
-    });
-    
-    const bulkActions = document.getElementById('bulkActions');
-    const selectedCount = document.getElementById('selectedCount');
-    
-    if (selectedTestCases.size > 0) {
-        bulkActions.classList.add('active');
-        selectedCount.textContent = `已選擇 ${selectedTestCases.size} 個測試案例`;
-    } else {
-        bulkActions.classList.remove('active');
-    }
-}
-
-// 全選/取消全選
-function toggleSelectAll() {
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    const visibleCheckboxes = document.querySelectorAll('.test-case-checkbox');
-    const visibleRows = Array.from(visibleCheckboxes).filter(cb => 
-        cb.closest('tr').style.display !== 'none'
-    );
-    
-    const shouldCheck = selectAllCheckbox.checked;
-    
-    visibleRows.forEach(cb => {
-        cb.checked = shouldCheck;
-    });
-    
-    handleTestCaseSelection();
-}
 
 // 顯示新增測試案例模態框
 function showCreateTestCaseModal() {
@@ -870,11 +807,36 @@ async function saveTestCase(testCaseId = null) {
 
 // 刪除測試案例
 async function deleteTestCase(testCaseId, testCaseTitle) {
-    if (!confirm(`確定要刪除測試案例「${testCaseTitle}」嗎？\n\n此操作無法復原！`)) {
-        return;
-    }
-    
     try {
+        // 先檢查是否有專案關聯
+        const checkResponse = await fetch(`/api/test-cases/${testCaseId}/check-associations`);
+        if (!checkResponse.ok) {
+            throw new Error('檢查關聯失敗');
+        }
+        
+        const checkResult = await checkResponse.json();
+        
+        // 如果有關聯的專案，顯示警告並阻止刪除
+        if (!checkResult.can_delete && checkResult.associated_projects.length > 0) {
+            const projectList = checkResult.associated_projects
+                .map(proj => `• ${proj.name} (${proj.status})`)
+                .join('\n');
+            
+            const message = `無法刪除測試案例「${testCaseTitle}」\n\n` +
+                          `此測試案例已關聯到以下專案：\n${projectList}\n\n` +
+                          `請先從專案中移除此測試案例後再刪除。\n\n是否前往專案管理頁面？`;
+            
+            if (confirm(message)) {
+                window.location.href = '/test-projects';
+            }
+            return;
+        }
+        
+        // 沒有關聯，可以安全刪除
+        if (!confirm(`確定要刪除測試案例「${testCaseTitle}」嗎？\n\n此操作無法復原！`)) {
+            return;
+        }
+        
         const response = await fetch(`/api/test-cases/${testCaseId}`, {
             method: 'DELETE'
         });
@@ -885,6 +847,22 @@ async function deleteTestCase(testCaseId, testCaseTitle) {
             showAlert('測試案例刪除成功', 'success');
         } else {
             const error = await response.json();
+            
+            // 特殊處理專案關聯錯誤
+            if (error.associated_projects && error.associated_projects.length > 0) {
+                const projectList = error.associated_projects
+                    .map(proj => `• ${proj.name} (${proj.status})`)
+                    .join('\n');
+                
+                const detailedMessage = `${error.error}\n\n關聯的專案：\n${projectList}`;
+                
+                // 顯示詳細的錯誤對話框
+                if (confirm(`${detailedMessage}\n\n是否前往專案管理頁面？`)) {
+                    window.location.href = '/test-projects';
+                    return;
+                }
+            }
+            
             throw new Error(error.error || '刪除失敗');
         }
     } catch (error) {
@@ -893,21 +871,6 @@ async function deleteTestCase(testCaseId, testCaseTitle) {
     }
 }
 
-// 批量操作
-function bulkEdit() {
-    showAlert('批量編輯功能開發中...', 'info');
-}
-
-function bulkDelete() {
-    if (selectedTestCases.size === 0) return;
-    
-    if (!confirm(`確定要刪除 ${selectedTestCases.size} 個測試案例嗎？\n\n此操作無法復原！`)) {
-        return;
-    }
-    
-    // 實作批量刪除邏輯
-    showAlert('批量刪除功能開發中...', 'info');
-}
 
 // 顯示匯入模態框
 function showImportModal() {

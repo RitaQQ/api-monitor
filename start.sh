@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 啟動 API 監控系統..."
+echo "🚀 啟動 QA Management tool..."
 
 # 檢查 Python 版本
 python_version=$(python3 --version 2>/dev/null || python --version 2>/dev/null)

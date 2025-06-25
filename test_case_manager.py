@@ -597,6 +597,26 @@ class TestCaseManager:
         
         return test_results
     
+    def check_test_case_project_associations(self, test_case_id: int) -> List[Dict]:
+        """檢查測試案例是否與任何專案有關聯
+        
+        Returns:
+            List[Dict]: 關聯的專案清單，如果沒有關聯則返回空列表
+        """
+        try:
+            query = """
+                SELECT DISTINCT tp.id, tp.name, tp.status
+                FROM test_projects tp
+                INNER JOIN test_results tr ON tp.id = tr.project_id
+                WHERE tr.test_case_id = ?
+                ORDER BY tp.name
+            """
+            projects = db_manager.execute_query(query, (test_case_id,))
+            return projects if projects else []
+        except Exception as e:
+            db_logger.error(f"❌ 檢查測試案例專案關聯失敗: {e}")
+            return []
+    
     # ========== 向後兼容方法 ==========
     
     def get_all_projects(self) -> Dict[str, Dict]:
@@ -618,3 +638,161 @@ class TestCaseManager:
         if project:
             return self.delete_test_project(project['id'])
         return False
+
+    # ========== 新增的統計方法 ==========
+    
+    def get_test_case_statistics(self) -> Dict:
+        """取得測試案例統計資訊"""
+        query = """
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft,
+                SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) as ready,
+                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'blocked' THEN 1 ELSE 0 END) as blocked,
+                SUM(CASE WHEN priority = 'low' THEN 1 ELSE 0 END) as priority_low,
+                SUM(CASE WHEN priority = 'medium' THEN 1 ELSE 0 END) as priority_medium,
+                SUM(CASE WHEN priority = 'high' THEN 1 ELSE 0 END) as priority_high,
+                SUM(estimated_hours) as total_estimated_hours,
+                SUM(actual_hours) as total_actual_hours
+            FROM test_cases
+        """
+        result = db_manager.execute_query(query)
+        
+        if result:
+            stats = result[0]
+            return {
+                'total': stats['total'] or 0,
+                'by_status': {
+                    'draft': stats['draft'] or 0,
+                    'ready': stats['ready'] or 0,
+                    'in_progress': stats['in_progress'] or 0,
+                    'completed': stats['completed'] or 0,
+                    'blocked': stats['blocked'] or 0
+                },
+                'by_priority': {
+                    'low': stats['priority_low'] or 0,
+                    'medium': stats['priority_medium'] or 0,
+                    'high': stats['priority_high'] or 0
+                },
+                'total_estimated_hours': stats['total_estimated_hours'] or 0,
+                'total_actual_hours': stats['total_actual_hours'] or 0
+            }
+        
+        return {
+            'total': 0,
+            'by_status': {'draft': 0, 'ready': 0, 'in_progress': 0, 'completed': 0, 'blocked': 0},
+            'by_priority': {'low': 0, 'medium': 0, 'high': 0},
+            'total_estimated_hours': 0,
+            'total_actual_hours': 0
+        }
+    
+    def get_test_project_statistics(self) -> Dict:
+        """取得測試專案統計資訊"""
+        query = """
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft,
+                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+            FROM test_projects
+        """
+        result = db_manager.execute_query(query)
+        
+        if result:
+            stats = result[0]
+            return {
+                'total': stats['total'] or 0,
+                'by_status': {
+                    'draft': stats['draft'] or 0,
+                    'in_progress': stats['in_progress'] or 0,
+                    'completed': stats['completed'] or 0,
+                    'cancelled': stats['cancelled'] or 0
+                }
+            }
+        
+        return {
+            'total': 0,
+            'by_status': {'draft': 0, 'in_progress': 0, 'completed': 0, 'cancelled': 0}
+        }
+
+    # ========== CSV 導出方法 ==========
+    
+    def export_test_cases_to_csv(self) -> str:
+        """導出測試案例為CSV格式"""
+        import csv
+        import io
+        
+        test_cases = self.get_test_cases()
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # 寫入標題行
+        headers = [
+            'TC ID', '標題', '描述', '驗收條件', '優先級', '狀態', 
+            '專案名稱', '負責人', '預估時數', '實際時數', '創建時間', '更新時間'
+        ]
+        writer.writerow(headers)
+        
+        # 寫入數據行
+        for case in test_cases:
+            row = [
+                case.get('tc_id', ''),
+                case.get('title', ''),
+                case.get('description', ''),
+                case.get('acceptance_criteria', ''),
+                case.get('priority', ''),
+                case.get('status', ''),
+                case.get('project_name', ''),
+                case.get('responsible_user_name', ''),
+                case.get('estimated_hours', 0),
+                case.get('actual_hours', 0),
+                case.get('created_at', ''),
+                case.get('updated_at', '')
+            ]
+            writer.writerow(row)
+        
+        csv_content = output.getvalue()
+        output.close()
+        
+        return csv_content
+    
+    def export_test_projects_to_csv(self) -> str:
+        """導出測試專案為CSV格式"""
+        import csv
+        import io
+        
+        projects = self.get_test_projects()
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # 寫入標題行
+        headers = [
+            'ID', '專案名稱', '描述', '狀態', '負責人', 
+            '開始時間', '結束時間', '創建時間', '更新時間'
+        ]
+        writer.writerow(headers)
+        
+        # 寫入數據行
+        for project in projects:
+            row = [
+                project.get('id', ''),
+                project.get('name', ''),
+                project.get('description', ''),
+                project.get('status', ''),
+                project.get('responsible_user_name', ''),
+                project.get('start_time', ''),
+                project.get('end_time', ''),
+                project.get('created_at', ''),
+                project.get('updated_at', '')
+            ]
+            writer.writerow(row)
+        
+        csv_content = output.getvalue()
+        output.close()
+        
+        return csv_content

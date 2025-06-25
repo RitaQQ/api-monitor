@@ -4,29 +4,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Python Flask-based API monitoring system that provides real-time API health checking, user management, stress testing, and a web dashboard. The system supports both scheduled background monitoring and on-demand API checks.
+This is a Python Flask-based QA Management tool that provides comprehensive quality assurance features including test case management, project tracking, user management, API monitoring, stress testing, and a web dashboard. The system supports both scheduled background monitoring and on-demand operations.
 
 ## Development Commands
 
 ### Running the Application
-- `python app.py` - Run full application with scheduler and user authentication
-- `python simple_app.py` - Run simplified version without scheduler
-- `./start.sh` - Automated startup script (foreground mode)
-- `./start.sh --background` or `./start.sh -b` - Start in background mode
+- `./start.sh` - **推薦方式** - 自動化啟動腳本（前台模式）
+- `./start.sh --background` or `./start.sh -b` - 後台運行模式
+- `python simple_app.py` - 簡化版（需先激活虛擬環境）
+- `python app.py` - 完整版（包含排程器和用戶認證）
 
-### Virtual Environment Setup (Required for macOS)
+### Quick Start (推薦方式)
+```bash
+# 一鍵啟動（自動處理虛擬環境和依賴）
+./start.sh
+
+# 後台運行
+./start.sh --background
+
+# 查看後台日誌
+tail -f app.log
+
+# 停止服務
+pkill -f simple_app.py
+```
+
+### Manual Virtual Environment Setup (如需手動設置)
 ```bash
 # First time setup
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Run in foreground (for development/debugging)
-source venv/bin/activate
+# Run in foreground
 python simple_app.py
 
-# Run in background (recommended for normal use)
-source venv/bin/activate
+# Run in background
 nohup python simple_app.py > app.log 2>&1 &
 
 # Check if running

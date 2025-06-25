@@ -69,9 +69,9 @@ class UserManager:
         results = db_manager.execute_query(query, (username,))
         return results[0] if results else None
     
-    def create_user(self, username: str, password: str, role: str = 'user', 
+    def create_user_legacy(self, username: str, password: str, role: str = 'user', 
                    email: str = None) -> Tuple[bool, str]:
-        """創建新用戶"""
+        """創建新用戶（傳統格式）"""
         # 檢查用戶名是否已存在
         if self.get_user_by_username(username):
             return False, f"用戶名 '{username}' 已經存在"
@@ -100,9 +100,9 @@ class UserManager:
         except Exception as e:
             return False, f"創建用戶時發生錯誤: {str(e)}"
     
-    def update_user(self, user_id: str, username: str = None, email: str = None, 
+    def update_user_legacy(self, user_id: str, username: str = None, email: str = None, 
                    role: str = None, password: str = None) -> Tuple[bool, str]:
-        """更新用戶信息"""
+        """更新用戶信息（傳統格式）"""
         # 檢查用戶是否存在
         user = self.get_user_by_id(user_id)
         if not user:
@@ -153,8 +153,8 @@ class UserManager:
         except Exception as e:
             return False, f"更新用戶時發生錯誤: {str(e)}"
     
-    def delete_user(self, user_id: str, current_user_id: str) -> Tuple[bool, str]:
-        """刪除用戶"""
+    def delete_user_legacy(self, user_id: str, current_user_id: str) -> Tuple[bool, str]:
+        """刪除用戶（傳統格式）"""
         # 不能刪除自己
         if user_id == current_user_id:
             return False, "不能刪除自己的帳號"
@@ -252,3 +252,147 @@ class UserManager:
             ORDER BY created_at DESC
         """
         return db_manager.execute_query(query, (role,))
+    
+    # ========== 測試期望的方法格式 ==========
+    
+    def create_user(self, username: str, password: str, email: str, role: str) -> Dict:
+        """創建新用戶（測試期望的格式）"""
+        # 驗證輸入
+        if not username or not username.strip():
+            raise ValueError("用戶名不能為空")
+        
+        if not password or not password.strip():
+            raise ValueError("密碼不能為空")
+        
+        if role not in ['admin', 'user']:
+            raise ValueError("角色必須是 'admin' 或 'user'")
+        
+        # 檢查用戶名是否已存在
+        if self.get_user_by_username(username):
+            raise Exception(f"用戶名 '{username}' 已經存在")
+        
+        try:
+            user_id = str(uuid.uuid4())
+            password_hash = self.hash_password(password)
+            
+            query = """
+                INSERT INTO users (id, username, password_hash, email, role)
+                VALUES (?, ?, ?, ?, ?)
+            """
+            
+            db_manager.execute_insert(query, (user_id, username, password_hash, email, role))
+            
+            # 返回創建的用戶信息
+            return {
+                'id': user_id,
+                'username': username,
+                'email': email,
+                'role': role,
+                'created_at': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            raise Exception(f"創建用戶時發生錯誤: {str(e)}")
+    
+    def update_user(self, user_id: str, **kwargs) -> Optional[Dict]:
+        """更新用戶信息（測試期望的格式）"""
+        # 檢查用戶是否存在
+        user = self.get_user_by_id(user_id)
+        if not user:
+            return None
+        
+        try:
+            # 構建更新查詢
+            update_fields = []
+            params = []
+            
+            for field, value in kwargs.items():
+                if field == 'username' and value:
+                    # 檢查用戶名是否重複
+                    existing_user = self.get_user_by_username(value)
+                    if existing_user and existing_user['id'] != user_id:
+                        raise Exception(f"用戶名 '{value}' 已經存在")
+                    update_fields.append("username = ?")
+                    params.append(value)
+                elif field == 'email':
+                    update_fields.append("email = ?")
+                    params.append(value)
+                elif field == 'role' and value in ['admin', 'user']:
+                    update_fields.append("role = ?")
+                    params.append(value)
+            
+            if update_fields:
+                params.append(user_id)
+                query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = ?"
+                db_manager.execute_update(query, tuple(params))
+            
+            # 返回更新後的用戶信息
+            return self.get_user_by_id(user_id)
+                
+        except Exception as e:
+            raise Exception(f"更新用戶時發生錯誤: {str(e)}")
+    
+    def update_user_password(self, user_id: str, new_password: str) -> Optional[Dict]:
+        """更新用戶密碼（測試期望的格式）"""
+        user = self.get_user_by_id(user_id)
+        if not user:
+            return None
+        
+        try:
+            new_password_hash = self.hash_password(new_password)
+            query = "UPDATE users SET password_hash = ? WHERE id = ?"
+            
+            rows_affected = db_manager.execute_update(query, (new_password_hash, user_id))
+            
+            if rows_affected > 0:
+                return self.get_user_by_id(user_id)
+            else:
+                return None
+                
+        except Exception as e:
+            raise Exception(f"更新密碼時發生錯誤: {str(e)}")
+    
+    def delete_user(self, user_id: str) -> bool:
+        """刪除用戶（測試期望的格式）"""
+        # 檢查用戶是否存在
+        user = self.get_user_by_id(user_id)
+        if not user:
+            return False
+        
+        try:
+            query = "DELETE FROM users WHERE id = ?"
+            rows_affected = db_manager.execute_delete(query, (user_id,))
+            return rows_affected > 0
+                
+        except Exception as e:
+            return False
+    
+    def verify_password(self, password: str, hashed_password: str) -> bool:
+        """驗證密碼"""
+        return self.hash_password(password) == hashed_password
+    
+    def get_user_statistics(self) -> Dict:
+        """獲取用戶統計信息（測試期望的格式）"""
+        query = """
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admin_count,
+                SUM(CASE WHEN role = 'user' THEN 1 ELSE 0 END) as user_count
+            FROM users
+        """
+        results = db_manager.execute_query(query)
+        
+        if results:
+            stats = results[0]
+            return {
+                'total': stats['total'] or 0,
+                'by_role': {
+                    'admin': stats['admin_count'] or 0,
+                    'user': stats['user_count'] or 0
+                }
+            }
+        
+        return {
+            'total': 0,
+            'by_role': {'admin': 0, 'user': 0}
+        }
