@@ -69,11 +69,16 @@ htmlcov/
 nohup.out
 test_server.py
 
-# Database and data files
-data/api_monitor.db
+# Database and data files - 完全排除
+data/
+data/*
 *.db
 *.sqlite
 *.sqlite3
+
+# 確保本地開發資料不被上傳
+logs/
+backups/
 
 # Cookie files
 cookies.txt

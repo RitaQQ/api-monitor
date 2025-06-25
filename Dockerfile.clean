@@ -1,4 +1,5 @@
-# 使用官方 Python 3.11 slim 基礎鏡像
+# 乾淨的生產環境 Dockerfile
+# 確保完全不包含本地開發資料
 FROM python:3.11-slim as base
 
 # 設置工作目錄
@@ -16,39 +17,37 @@ RUN apt-get update \
         gcc \
         libc6-dev \
         sqlite3 \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 複製 requirements.txt 並安裝 Python 依賴
+# 複製並安裝 Python 依賴
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-# 複製應用代碼
+# 複製應用檔案 (使用 COPY . . 但排除不需要的檔案)
 COPY . .
 
-# 創建數據目錄和日誌目錄
+# 清理不需要的檔案（.dockerignore 已經處理大部分）
+RUN find . -name "*.pyc" -delete \
+    && find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+
+# 創建乾淨的資料和日誌目錄
 RUN mkdir -p /app/data \
     && mkdir -p /app/logs \
     && chmod -R 755 /app/data \
     && chmod -R 755 /app/logs
 
-# 僅複製數據庫 schema，不包含本地資料
-COPY database/schema.sql /app/database/schema.sql
-
-# 設置資料庫初始化（運行時執行，而非構建時）
-# 這確保每個容器都有乾淨的初始狀態
-
-# 暴露端口（Railway 會動態分配）
-EXPOSE ${PORT:-5001}
-
 # 創建非 root 用戶
 RUN adduser --disabled-password --gecos '' --uid 1000 appuser \
     && chown -R appuser:appuser /app
+
+# 切換到應用用戶
 USER appuser
 
-# 健康檢查（移除，因為 Railway 有自己的健康檢查機制）
-# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-#     CMD curl -f http://localhost:${PORT:-5001}/health || exit 1
+# 健康檢查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-5001}/health || exit 1
 
-# 啟動命令
-CMD ["python", "simple_app.py"]
+# 運行時初始化並啟動
+CMD ["sh", "-c", "python railway_init.py && python simple_app.py"]

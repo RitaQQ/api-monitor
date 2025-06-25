@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # 開發環境 API 監控服務
+  api-monitor-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.clean  # 使用乾淨的 Dockerfile
+    container_name: api-monitor-dev
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    volumes:
+      # 開發環境：持久化但與本地分離的資料
+      - dev_api_monitor_data:/app/data
+      - dev_api_monitor_logs:/app/logs
+      # 開發時可以掛載程式碼 (可選，用於即時開發)
+      # - ./templates:/app/templates:ro
+      # - ./static:/app/static:ro
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - FLASK_APP=simple_app.py
+      - PORT=5001
+      - SECRET_KEY=dev-secret-key-not-for-production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - dev-network
+
+volumes:
+  # 開發環境專用 volumes，與生產環境完全分離
+  dev_api_monitor_data:
+    driver: local
+  dev_api_monitor_logs:
+    driver: local
+
+networks:
+  dev-network:
+    driver: bridge

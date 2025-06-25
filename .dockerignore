@@ -81,11 +81,18 @@ admin_cookies.txt
 test1_cookies.txt
 test_cookies.txt
 
-# Database backup files (keep schema but exclude data)
-# Keep the empty database structure
-# Exclude any test databases
+# Database files - 完全排除本地資料
+data/
+data/*
+*.db
+*.sqlite
+*.sqlite3
 *_backup.*
 test_*.db
+
+# 確保不包含任何本地資料
+logs/
+backups/
 
 # Docker
 Dockerfile.*
