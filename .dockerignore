@@ -68,6 +68,10 @@ final_*.py
 add_time_fields.py
 create_test_results_table.py
 
+# Test reports and coverage
+test_report_*.txt
+coverage_report_*.json
+
 # Temporary files
 *.tmp
 *.temp

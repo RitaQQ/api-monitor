@@ -93,6 +93,10 @@ add_time_fields.py
 create_test_results_table.py
 final_*.py
 
+# Test reports and coverage
+test_report_*.txt
+coverage_report_*.json
+
 # Environment files
 .env
 .env.local
