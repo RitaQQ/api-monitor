@@ -44,7 +44,7 @@ LOG_LEVEL=INFO
 ## 預設管理員帳號
 
 ```
-用戶名: admin
+用戶名: admin8888
 密碼: admin555333
 ```
 

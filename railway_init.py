@@ -23,10 +23,10 @@ def railway_init():
             # db_manager 已經會自動初始化數據庫和創建管理員
             try:
                 # 觸發數據庫初始化
-                users = db_manager.execute_query("SELECT * FROM users WHERE username = 'admin'")
+                users = db_manager.execute_query("SELECT * FROM users WHERE username = 'admin8888'")
                 if users:
                     print("✅ 管理員用戶已創建成功")
-                    print("   用戶名: admin")
+                    print("   用戶名: admin8888")
                     print("   密碼: admin555333")
                 else:
                     print("⚠️ 管理員用戶創建失敗，但繼續部署")

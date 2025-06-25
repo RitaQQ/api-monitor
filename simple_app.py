@@ -102,7 +102,7 @@ if __name__ == '__main__':
     print("用戶管理: http://192.168.12.5:5001/user-management (需管理員權限)")
     print("")
     print("🔧 預設管理員帳號:")
-    print("   用戶名: admin")
+    print("   用戶名: admin8888")
     print("   密碼: admin555333")
     print("")
     print("按 Ctrl+C 停止服務")

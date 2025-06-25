@@ -53,7 +53,7 @@ pkill -f simple_app.py
 - **Local access**: http://127.0.0.1:5001
 - **LAN access**: http://192.168.12.5:5001 (or your actual IP)
 - Service is configured to listen on all interfaces (0.0.0.0) for LAN access
-- Default admin credentials: admin/admin555333
+- Default admin credentials: admin8888/admin555333
 
 ### Dependencies
 - `pip install -r requirements.txt` - Install Python dependencies

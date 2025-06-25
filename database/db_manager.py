@@ -83,7 +83,7 @@ class DatabaseManager:
         import hashlib
         
         admin_id = str(uuid.uuid4())
-        username = 'admin'
+        username = 'admin8888'
         password = 'admin555333'
         # 使用與 UserManager 相同的加密方式
         salt = "api_monitor_salt_2025"
