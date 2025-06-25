@@ -141,40 +141,6 @@
             border: 1px solid #cfc;
         }
         
-        .default-account {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 0.85em;
-            color: #555;
-        }
-        
-        .default-account h4 {
-            margin: 0 0 10px 0;
-            color: #667eea;
-            font-size: 1em;
-        }
-        
-        .credential-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
-            padding: 5px 0;
-        }
-        
-        .credential-label {
-            font-weight: 600;
-        }
-        
-        .credential-value {
-            font-family: 'Courier New', monospace;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 2px 8px;
-            border-radius: 4px;
-            color: #333;
-        }
         
         /* 背景動畫 */
         .floating-elements {
@@ -284,17 +250,6 @@
             </button>
         </form>
         
-        <div class="default-account">
-            <h4>🔧 預設管理員帳號</h4>
-            <div class="credential-item">
-                <span class="credential-label">用戶名:</span>
-                <span class="credential-value">admin</span>
-            </div>
-            <div class="credential-item">
-                <span class="credential-label">密碼:</span>
-                <span class="credential-value">admin123</span>
-            </div>
-        </div>
     </div>
     
     <script>
@@ -340,15 +295,6 @@
                 }
             });
             
-            // 自動填入預設帳號功能（開發用）
-            document.querySelector('.default-account').addEventListener('click', function() {
-                if (confirm('是否要自動填入預設管理員帳號？')) {
-                    document.getElementById('username').value = 'admin';
-                    document.getElementById('password').value = 'admin123';
-                    document.getElementById('username').focus();
-                    console.log('Auto-filled credentials');
-                }
-            });
             
             // 測試按鈕
             loginBtn.addEventListener('click', function(e) {

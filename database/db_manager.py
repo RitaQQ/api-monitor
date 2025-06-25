@@ -84,7 +84,7 @@ class DatabaseManager:
         
         admin_id = str(uuid.uuid4())
         username = 'admin'
-        password = 'admin123'
+        password = 'admin555333'
         # 使用與 UserManager 相同的加密方式
         salt = "api_monitor_salt_2025"
         password_hash = hashlib.sha256((password + salt).encode()).hexdigest()

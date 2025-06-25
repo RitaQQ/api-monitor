@@ -45,7 +45,7 @@ LOG_LEVEL=INFO
 
 ```
 用戶名: admin
-密碼: admin123
+密碼: admin555333
 ```
 
 ## 故障排除

@@ -258,7 +258,7 @@ python simple_app.py
 
 ```
 用戶名: admin
-密碼: admin123
+密碼: admin555333
 ```
 
 > ⚠️ **安全提醒**: 生產環境請立即修改預設密碼！

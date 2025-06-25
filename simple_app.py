@@ -103,7 +103,7 @@ if __name__ == '__main__':
     print("")
     print("🔧 預設管理員帳號:")
     print("   用戶名: admin")
-    print("   密碼: admin123")
+    print("   密碼: admin555333")
     print("")
     print("按 Ctrl+C 停止服務")
     

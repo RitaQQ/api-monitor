@@ -27,7 +27,7 @@ def railway_init():
                 if users:
                     print("✅ 管理員用戶已創建成功")
                     print("   用戶名: admin")
-                    print("   密碼: admin123")
+                    print("   密碼: admin555333")
                 else:
                     print("⚠️ 管理員用戶創建失敗，但繼續部署")
             except Exception as e:
