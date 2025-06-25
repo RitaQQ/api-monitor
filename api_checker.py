@@ -29,23 +29,24 @@ class APIChecker:
             url = api['url']
             headers = api.get('headers', {})
             
-            # 發送請求
-            if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=self.timeout)
-            elif method == 'POST':
-                data = api.get('request_body', '')
-                response = requests.post(url, data=data, headers=headers, timeout=self.timeout)
-            elif method == 'PUT':
-                data = api.get('request_body', '')
-                response = requests.put(url, data=data, headers=headers, timeout=self.timeout)
-            elif method == 'DELETE':
-                response = requests.delete(url, headers=headers, timeout=self.timeout)
-            else:
-                return 'unhealthy', 0.0, f'不支援的方法: {method}', ''
+            # 處理請求體和動態變數
+            data = api.get('body', api.get('request_body', ''))
+            if data and '{{timestamp}}' in data:
+                current_timestamp = str(int(time.time()))
+                data = data.replace('{{timestamp}}', current_timestamp)
+            
+            # 使用統一的 requests.request 方法
+            response = requests.request(
+                method=method,
+                url=url,
+                headers=headers,
+                data=data,
+                timeout=api.get('timeout', self.timeout)
+            )
             
             response_time = time.time() - start_time
             
-            # 檢查狀態碼
+            # 檢查狀態碼（保持原有逻輯）
             if 200 <= response.status_code < 300:
                 status = 'healthy'
                 error_message = ''
@@ -127,3 +128,90 @@ class APIChecker:
     def send_notification(self, api: dict):
         """發送通知"""
         print(f"⚠️ 發送通知: API {api['name']} 連續失敗 {api.get('error_count', 0)} 次")
+    
+    def check_api(self, api: dict) -> dict:
+        """為測試提供的統一接口方法，返回字典格式結果"""
+        import time
+        
+        # 直接做 HTTP 請求，而不通過 check_single_api
+        try:
+            start_time = time.time()
+            method = api.get('method', 'GET').upper()
+            url = api['url']
+            headers = api.get('headers', {})
+            timeout = api.get('timeout', self.timeout)
+            
+            # 處理請求體和動態變數
+            data = api.get('body', api.get('request_body', ''))
+            if data and '{{timestamp}}' in data:
+                current_timestamp = str(int(time.time()))
+                data = data.replace('{{timestamp}}', current_timestamp)
+            
+            # 發送請求
+            response = requests.request(
+                method=method,
+                url=url,
+                headers=headers,
+                data=data,
+                timeout=timeout
+            )
+            
+            response_time = time.time() - start_time
+            
+            # 處理特殊的狀態碼需求
+            expected_status = api.get('expected_status', 200)
+            if response.status_code == expected_status:
+                status = 'healthy'
+                error_message = ''
+            else:
+                status = 'unhealthy'
+                error_message = f'HTTP {response.status_code}'
+            
+            result = {
+                'status': status,
+                'response_time': response_time,
+                'timestamp': time.time(),
+                'response_content': response.text[:1000],
+                'status_code': response.status_code
+            }
+            
+            if error_message:
+                result['error_message'] = error_message
+            
+            # 檢查內容匹配
+            expected_content = api.get('expected_content')
+            if expected_content and response.text:
+                result['content_match'] = expected_content in response.text
+                if not result['content_match'] and status == 'healthy':
+                    result['status'] = 'unhealthy'
+                    result['error_message'] = f'Expected content "{expected_content}" not found in response'
+            
+            return result
+            
+        except requests.exceptions.Timeout:
+            return {
+                'status': 'unhealthy',
+                'response_time': timeout,
+                'timestamp': time.time(),
+                'response_content': '',
+                'status_code': 0,
+                'error_message': 'Request timeout'
+            }
+        except requests.exceptions.ConnectionError:
+            return {
+                'status': 'unhealthy',
+                'response_time': 0.0,
+                'timestamp': time.time(),
+                'response_content': '',
+                'status_code': 0,
+                'error_message': 'Connection failed'
+            }
+        except Exception as e:
+            return {
+                'status': 'unhealthy',
+                'response_time': 0.0,
+                'timestamp': time.time(),
+                'response_content': '',
+                'status_code': 0,
+                'error_message': str(e)
+            }

@@ -14,7 +14,7 @@ except ImportError:
 class StressTester:
     """API 壓力測試器"""
     
-    def __init__(self, data_manager):
+    def __init__(self, data_manager=None):
         self.data_manager = data_manager
         self.active_tests = {}  # 記錄正在執行的測試
     
@@ -267,8 +267,9 @@ class StressTester:
                 'median_response_time': 0.0
             }
         
-        successful_requests = [r for r in requests_data if r.get('success', False)]
-        failed_requests = [r for r in requests_data if not r.get('success', False)]
+        # 根據 status_code 判斷成功失敗
+        successful_requests = [r for r in requests_data if 200 <= r.get('status_code', 0) < 300]
+        failed_requests = [r for r in requests_data if not (200 <= r.get('status_code', 0) < 300)]
         response_times = [r.get('response_time', 0) for r in requests_data]
         
         return {
@@ -311,3 +312,117 @@ class StressTester:
         if api_id in self.active_tests:
             return self.active_tests[api_id]['status']
         return None
+    
+    def run_single_request(self, api: dict) -> dict:
+        """為測試提供的同步單請求方法"""
+        import requests
+        import time
+        
+        start_time = time.time()
+        try:
+            method = api.get('method', 'GET').upper()
+            url = api['url']
+            headers = api.get('headers', {})
+            timeout = api.get('timeout', 10)
+            
+            response = requests.request(
+                method=method,
+                url=url,
+                headers=headers,
+                data=api.get('body', ''),
+                timeout=timeout
+            )
+            
+            response_time = time.time() - start_time
+            
+            return {
+                'status_code': response.status_code,
+                'response_time': response_time,
+                'timestamp': time.time(),
+                'success': 200 <= response.status_code < 300
+            }
+            
+        except Exception as e:
+            return {
+                'status_code': 0,
+                'response_time': time.time() - start_time,
+                'timestamp': time.time(),
+                'success': False,
+                'error': str(e)
+            }
+    
+    def run_stress_test(self, api: dict, config: dict) -> dict:
+        """為測試提供的同步壓力測試方法"""
+        import threading
+        import time
+        import random
+        
+        concurrent_users = config.get('concurrent_users', 1)
+        requests_per_user = config.get('requests_per_user', 1)
+        ramp_up_time = config.get('ramp_up_time', 0)
+        
+        results = {
+            'requests': [],
+            'summary': {},
+            'config': config
+        }
+        
+        def worker():
+            """工作線程函數"""
+            for _ in range(requests_per_user):
+                request_result = self.run_single_request(api)
+                results['requests'].append(request_result)
+        
+        # 創建並啟動線程
+        threads = []
+        start_time = time.time()
+        
+        for i in range(concurrent_users):
+            thread = threading.Thread(target=worker)
+            threads.append(thread)
+            thread.start()
+            
+            # 漸進啟動
+            if ramp_up_time > 0 and i < concurrent_users - 1:
+                time.sleep(ramp_up_time / concurrent_users)
+        
+        # 等待所有線程完成
+        for thread in threads:
+            thread.join()
+        
+        # 計算統計信息
+        total_requests = len(results['requests'])
+        successful_requests = sum(1 for r in results['requests'] if r.get('success', False))
+        failed_requests = total_requests - successful_requests
+        
+        response_times = [r.get('response_time', 0) for r in results['requests']]
+        
+        results['summary'] = {
+            'total_requests': total_requests,
+            'successful_requests': successful_requests,
+            'failed_requests': failed_requests,
+            'average_response_time': sum(response_times) / len(response_times) if response_times else 0,
+            'min_response_time': min(response_times) if response_times else 0,
+            'max_response_time': max(response_times) if response_times else 0
+        }
+        
+        return results
+    
+    def calculate_percentiles(self, response_times: list) -> dict:
+        """計算百分位數"""
+        if not response_times:
+            return {'p50': 0, 'p90': 0, 'p95': 0, 'p99': 0}
+        
+        sorted_times = sorted(response_times)
+        n = len(sorted_times)
+        
+        def percentile(p):
+            index = int((p / 100) * (n - 1))
+            return sorted_times[min(index, n - 1)]
+        
+        return {
+            'p50': percentile(50),
+            'p90': percentile(90),
+            'p95': percentile(95),
+            'p99': percentile(99)
+        }
