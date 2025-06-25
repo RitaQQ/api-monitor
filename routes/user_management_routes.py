@@ -28,11 +28,15 @@ def register_user_management_routes(app, user_manager, user_story_manager, admin
             flash('用戶名和密碼不能為空', 'error')
             return redirect(url_for('user_management.user_management'))
         
-        success, message = user_manager.create_user(username, password, role, email)
-        if success:
-            flash(message, 'success')
-        else:
-            flash(message, 'error')
+        try:
+            # 調用 create_user_legacy 方法，它返回 (success, message) 格式
+            success, message = user_manager.create_user_legacy(username, password, role, email)
+            if success:
+                flash(message, 'success')
+            else:
+                flash(message, 'error')
+        except Exception as e:
+            flash(f'創建用戶時發生錯誤: {str(e)}', 'error')
         
         return redirect(url_for('user_management.user_management'))
 
@@ -41,7 +45,7 @@ def register_user_management_routes(app, user_manager, user_story_manager, admin
     def delete_user(user_id):
         """刪除用戶"""
         current_user_id = session['user_id']
-        success, message = user_manager.delete_user(user_id, current_user_id)
+        success, message = user_manager.delete_user_legacy(user_id, current_user_id)
         
         if success:
             flash(message, 'success')
