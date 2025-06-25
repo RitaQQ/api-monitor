@@ -4,7 +4,8 @@ from api_checker import APIChecker
 from stress_tester import StressTester
 from user_manager import UserManager
 from user_story_manager import UserStoryManager
-from test_case_app import create_test_case_routes, init_test_case_data
+from test_case_app import create_test_case_routes
+from test_case_manager import TestCaseManager
 from config import Config
 
 # 導入路由模組
@@ -31,7 +32,7 @@ def create_app():
     user_story_manager = UserStoryManager()
     
     # 初始化測試案例管理
-    test_case_manager = init_test_case_data()
+    test_case_manager = TestCaseManager()
     create_test_case_routes(app, test_case_manager)
     
     # 模板上下文處理器

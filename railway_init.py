@@ -62,45 +62,8 @@ def railway_init():
         print("🔄 繼續部署，應用將在運行時處理初始化")
 
 def _create_sample_data():
-    """創建範例資料以便測試"""
-    try:
-        from test_case_manager import TestCaseManager
-        
-        test_manager = TestCaseManager()
-        
-        # 檢查是否已有測試專案
-        existing_projects = test_manager.get_test_projects()
-        if existing_projects:
-            print("📊 測試專案已存在，跳過範例資料創建")
-            return
-        
-        # 創建範例測試專案
-        print("📝 創建範例測試專案...")
-        sample_project = test_manager.create_test_project(
-            name="範例測試專案",
-            description="這是一個範例測試專案，用於演示功能",
-            responsible_user_id=None  # 將使用預設管理員
-        )
-        
-        # 創建範例產品標籤
-        print("🏷️ 創建範例產品標籤...")
-        sample_tags = [
-            {"name": "前端功能", "description": "前端相關功能測試", "color": "#007bff"},
-            {"name": "後端API", "description": "後端API功能測試", "color": "#28a745"},
-            {"name": "資料庫", "description": "資料庫相關測試", "color": "#dc3545"}
-        ]
-        
-        for tag_data in sample_tags:
-            try:
-                test_manager.create_product_tag(**tag_data)
-            except Exception as e:
-                print(f"⚠️ 創建標籤 {tag_data['name']} 失敗: {e}")
-        
-        print(f"✅ 範例資料創建完成，專案ID: {sample_project.get('id') if sample_project else 'None'}")
-        
-    except Exception as e:
-        print(f"⚠️ 創建範例資料時發生錯誤: {e}")
-        # 不拋出異常，避免影響部署
+    """不再創建範例資料"""
+    print("📊 跳過範例資料創建，保持系統乾淨")
 
 if __name__ == "__main__":
     railway_init()

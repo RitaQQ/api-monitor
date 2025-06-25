@@ -6,6 +6,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Python Flask-based QA Management tool that provides comprehensive quality assurance features including test case management, project tracking, user management, API monitoring, stress testing, and a web dashboard. The system supports both scheduled background monitoring and on-demand operations.
 
+## Development Principles
+
+### Core Development Guidelines
+
+1. **模組化開發為主要思考邏輯**
+   - 每個功能應該設計為獨立、可重用的模組
+   - 遵循單一職責原則，確保每個模組只負責一個明確的功能
+   - 模組間通過清晰的接口進行通信
+   - 避免緊耦合，提高代碼的可維護性和可測試性
+
+2. **完成開發後請徹底自行驗證所有功能**
+   - 開發完成後必須進行全面的功能測試
+   - 測試所有用戶交互路徑和邊界條件
+   - 驗證錯誤處理和異常情況
+   - 確保新功能不會影響現有功能
+   - 在本地環境和 Docker 環境中都要測試
+
+3. **測試資料不得打包到 Docker**
+   - 任何示例資料、測試資料都不允許包含在 Docker 映像中
+   - 保持生產環境的乾淨性，避免測試資料洩露
+   - 初始化函數應該只創建必要的結構，不創建示例內容
+   - 部署後的系統應該是空白狀態，由用戶自行添加真實資料
+
+### Code Quality Standards
+
+- 遵循 Python PEP 8 編碼規範
+- 使用有意義的變數和函數命名
+- 添加適當的註釋和文檔字串
+- 實施錯誤處理和日誌記錄
+- 確保代碼的安全性，防範常見攻擊
+
 ## Development Commands
 
 ### Running the Application
