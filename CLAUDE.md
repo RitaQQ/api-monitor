@@ -616,3 +616,62 @@ FLASK_ENV=production
    - 測試各個模組的導入
    - 驗證數據庫初始化過程
    - 確認所有路由正確註冊
+
+## 生產環境資料保護
+
+### 資料與代碼分離原則
+
+**核心理念**: 生產環境的用戶資料必須與應用代碼完全分離，確保 git push 和重新部署不會影響既有資料。
+
+### Docker Volume 持久化策略
+
+**開發環境**:
+```yaml
+volumes:
+  - ./docker_data/data:/app/data      # 本地開發資料
+  - ./docker_data/logs:/app/logs      # 本地日誌
+```
+
+**生產環境**:
+```yaml
+volumes:
+  - /opt/api-monitor/data:/app/data   # 系統持久化資料
+  - /opt/api-monitor/logs:/app/logs   # 系統日誌
+  - /opt/api-monitor/backups:/app/backups  # 備份檔案
+```
+
+### 安全部署流程
+
+1. **自動備份**: 部署前自動備份當前資料
+2. **代碼更新**: 拉取最新代碼，不影響資料卷
+3. **容器重建**: 重新建置應用，資料保持在外部卷
+4. **驗證恢復**: 確認部署成功，必要時一鍵恢復
+
+### 部署命令
+
+**推薦方式**（全自動）:
+```bash
+./scripts/deploy_with_data_protection.sh
+```
+
+**手動方式**:
+```bash
+# 1. 備份資料
+./scripts/backup_data.sh
+
+# 2. 更新部署
+git pull && docker-compose -f docker-compose.prod.yml up -d --build
+
+# 3. 如需恢復
+./scripts/restore_data.sh <backup_name>
+```
+
+### 重要檔案
+
+- `scripts/backup_data.sh` - 資料備份腳本
+- `scripts/restore_data.sh` - 資料恢復腳本  
+- `scripts/deploy_with_data_protection.sh` - 安全部署腳本
+- `docker-compose.prod.yml` - 生產環境配置
+- `PRODUCTION_DEPLOYMENT.md` - 詳細部署指南
+
+**資料保護保證**: 遵循此流程，用戶的生產資料永遠不會因為代碼更新而遺失或被覆蓋。

@@ -11,10 +11,14 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      # 持久化數據庫
+      # 持久化數據庫和所有資料
       - api_monitor_data:/app/data
       # 持久化日誌
       - api_monitor_logs:/app/logs
+      # 持久化用戶上傳檔案
+      - api_monitor_uploads:/app/uploads
+      # 持久化備份檔案
+      - api_monitor_backups:/app/backups
     environment:
       - FLASK_ENV=production
       - FLASK_APP=simple_app.py
@@ -53,8 +57,28 @@ services:
 volumes:
   api_monitor_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./docker_data}/data
   api_monitor_logs:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./docker_data}/logs
+  api_monitor_uploads:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./docker_data}/uploads
+  api_monitor_backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./docker_data}/backups
 
 networks:
   api-monitor-network:

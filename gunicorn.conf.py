@@ -14,21 +14,19 @@ preload_app = True
 timeout = 30
 keepalive = 2
 
-# 日誌設置
-accesslog = '/app/logs/gunicorn-access.log'
-errorlog = '/app/logs/gunicorn-error.log'
+# 日誌設置 - 輸出到標準輸出以便 Docker 容器日誌收集
+accesslog = '-'
+errorlog = '-'
 loglevel = os.getenv('LOG_LEVEL', 'info').lower()
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 
 # 進程設置
 daemon = False
 pidfile = '/tmp/gunicorn.pid'
-user = 1000
-group = 1000
 tmp_upload_dir = None
 
-# 性能設置
-worker_tmp_dir = "/dev/shm"
+# 性能設置 - 使用 /tmp 避免權限問題
+worker_tmp_dir = "/tmp"
 capture_output = True
 enable_stdio_inheritance = True
 

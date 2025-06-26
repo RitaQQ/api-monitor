@@ -64,8 +64,9 @@ RUN groupadd -r appgroup && useradd -r -g appgroup -u 1000 appuser
 WORKDIR /app
 
 # 創建必要目錄並設置權限
-RUN mkdir -p /app/{data,logs,backups} \
-    && chown -R appuser:appgroup /app
+RUN mkdir -p /app/{data,logs,backups,uploads} \
+    && chown -R appuser:appgroup /app \
+    && chmod 755 /app/{data,logs,backups,uploads}
 
 # 複製應用代碼
 COPY --chown=appuser:appgroup . .
@@ -73,17 +74,8 @@ COPY --chown=appuser:appgroup . .
 # 切換到非 root 用戶
 USER appuser
 
-# 初始化數據庫（如果需要）
-RUN python -c "
-import os
-if not os.path.exists('/app/data/api_monitor.db'):
-    print('Initializing database...')
-    from database.db_manager import db_manager
-    db_manager.init_database()
-    print('Database initialized')
-else:
-    print('Database already exists')
-" 2>/dev/null || echo "Database initialization skipped"
+# 準備數據庫架構（運行時再初始化）
+RUN echo "Database will be initialized at runtime"
 
 # 暴露端口
 EXPOSE 5001
